@@ -2669,7 +2669,40 @@ function bindHomeEvents() {
 // 22. BOTTOM NAVIGATION
 // --------------------------------------------
 
+function ensureMarketplaceNavigationStyles() {
+  if (document.getElementById("zune-marketplace-navigation-responsive")) return;
+  const style = document.createElement("style");
+  style.id = "zune-marketplace-navigation-responsive";
+  style.textContent = `
+    @media (min-width: 760px) {
+      .z-marketplace { padding-top: 64px; }
+      .z-marketplace .z-bottom-nav {
+        top: 0; bottom: auto; left: 0; right: 0;
+        justify-content: center; gap: 18px;
+        padding: 9px 20px;
+        border-top: 0; border-bottom: 1px solid var(--border, #e4ebe7);
+        box-shadow: 0 6px 22px rgba(0,0,0,.07);
+        backdrop-filter: blur(16px);
+      }
+      .z-marketplace .z-nav-item {
+        flex: 0 0 auto; min-width: 94px; min-height: 44px;
+        flex-direction: row; gap: 8px; font-size: 12px;
+      }
+      .z-marketplace .z-nav-icon { width: 32px; height: 30px; }
+      .z-marketplace .z-home-header { top: 64px; }
+    }
+    @media (max-width: 759px) {
+      .z-marketplace { padding-top: 0; }
+      .z-marketplace .z-bottom-nav { top: auto; bottom: 0; }
+      .z-marketplace .z-home-header { top: 0; }
+    }
+    .z-marketplace .z-nav-item[data-nav="live"] { font-weight: 850; }
+  `;
+  document.head.appendChild(style);
+}
+
 function renderBottomNavigation() {
+  ensureMarketplaceNavigationStyles();
   const items = [
     {
       id: "home",
@@ -2750,11 +2783,11 @@ function bindNavigation() {
         window.location.assign("./account.html");
         return;
       }
-      if (page === "live" && !/\\/live\\.html$/.test(window.location.pathname)) {
+      if (page === "live" && !window.location.pathname.endsWith("/live.html")) {
         window.location.assign("./live.html?tab=live");
         return;
       }
-      if (page !== "live" && /\\/live\\.html$/.test(window.location.pathname)) {
+      if (page !== "live" && window.location.pathname.endsWith("/live.html")) {
         window.location.assign("./index.html?tab=" + encodeURIComponent(page));
         return;
       }
