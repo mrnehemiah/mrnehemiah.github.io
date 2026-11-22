@@ -3121,6 +3121,40 @@ function ensureLiveShoppingStyles() {
     .z-live-page .z-live-tabs{display:flex;gap:8px;overflow:auto;padding:2px 0 5px}
     .z-live-page .z-live-tab{flex:0 0 auto;padding:9px 13px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);font-size:11px;font-weight:800}
     .z-live-page .z-live-tab.active{border-color:var(--primary);background:var(--primary);color:#fff}
+    .z-live-refresh{margin-top:12px;padding:11px 16px;border:1px solid #ffffff55;border-radius:12px;background:#ffffff1c;color:#fff;font-size:12px;font-weight:900;cursor:pointer;backdrop-filter:blur(10px)}
+    .z-live-refresh:hover{background:#ffffff30;transform:translateY(-1px)}
+    .z-live-broadcast-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px}
+    .z-live-broadcast-card{min-width:0;overflow:hidden;padding:16px;border:1px solid var(--border);border-radius:20px;background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface) 90%,var(--primary) 10%));box-shadow:var(--shadow);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+    .z-live-broadcast-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--primary) 45%,var(--border));box-shadow:0 14px 30px rgba(0,0,0,.09)}
+    .z-live-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+    .z-live-status{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:color-mix(in srgb,var(--primary) 10%,var(--surface));color:var(--primary);font-size:9px;font-weight:950;letter-spacing:.6px}
+    .z-live-status.is-live{background:#e9233d18;color:#e9233d}
+    .z-live-status.is-past{background:color-mix(in srgb,var(--text-muted) 12%,var(--surface));color:var(--text-muted)}
+    .z-live-card-date{color:var(--text-muted);font-size:10px;font-weight:700;text-align:right}
+    .z-live-broadcast-card h3{margin:0 0 6px;color:var(--text);font-size:16px;font-weight:900;line-height:1.35}
+    .z-live-store-name{margin:0 0 8px;color:var(--primary);font-size:11px;font-weight:850}
+    .z-live-description{margin:0 0 12px;color:var(--text-muted);font-size:11px;line-height:1.55}
+    .z-live-card-actions{display:flex;align-items:center;gap:8px;margin-top:14px}
+    .z-live-watch-button{width:100%;padding:11px 14px;border:0;border-radius:12px;background:var(--primary);color:#fff;font-size:11px;font-weight:900;cursor:pointer;box-shadow:0 7px 16px color-mix(in srgb,var(--primary) 22%,transparent)}
+    .z-live-watch-button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .z-live-player-panel{margin:22px 0;padding:16px;border:1px solid var(--border);border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+    .z-live-player-panel>.z-live-section-head h2{font-size:19px;font-weight:950}
+    #z-live-close-player{padding:8px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-weight:800}
+    .z-live-video-wrap{position:relative;width:100%;overflow:hidden;aspect-ratio:16/9;border-radius:16px;background:#050807;box-shadow:0 12px 30px rgba(0,0,0,.2)}
+    .z-live-video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+    .z-live-player-store{margin:12px 0 4px;color:var(--text-muted);font-size:12px}
+    .z-live-pinned-products{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+    .z-live-pinned-products>strong{display:block;margin-bottom:10px;font-size:12px;font-weight:900}
+    .z-live-product-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:9px}
+    .z-live-product{display:flex;align-items:center;gap:10px;min-width:0;padding:9px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+    .z-live-product>img{width:54px;height:54px;flex:0 0 54px;object-fit:cover;border-radius:10px;background:var(--border)}
+    .z-live-product-info{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+    .z-live-product-info b{overflow:hidden;color:var(--text);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+    .z-live-product-info span{color:var(--primary);font-size:11px;font-weight:900}
+    .z-live-product>button{width:32px;height:32px;flex:0 0 32px;border:0;border-radius:10px;background:var(--primary);color:#fff;font-size:20px;font-weight:900}
+    .z-live-feed-error{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;padding:13px;border:1px solid #e5484d55;border-radius:14px;background:#e5484d0c;color:var(--text);font-size:11px}
+    .z-live-feed-error button{padding:8px 11px;border:0;border-radius:9px;background:var(--primary);color:#fff;font-weight:850}
+    @media(max-width:520px){.z-live-page{padding:14px 12px 110px}.z-live-hero{padding:22px 17px;border-radius:20px}.z-live-player-panel{padding:11px;border-radius:17px}.z-live-broadcast-grid{grid-template-columns:1fr}.z-live-broadcast-card{padding:14px}}
     .z-live-player-meta{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 16px;color:var(--text-muted);font-size:12px}
     .z-live-player-meta strong{color:var(--text);font-weight:900}
     .z-live-chat-panel{margin:18px 0;padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
@@ -3207,19 +3241,19 @@ function renderLivePage() {
         <section class="z-live-player-panel" id="z-live-player">
           <div class="z-live-section-head"><h2>${safe(selected.title)}</h2><button type="button" id="z-live-close-player">${sw ? "Funga" : "Close"} ×</button></div>
           ${videoId ? `<div class="z-live-video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0" title="${safe(selected.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>` : `<p>${sw ? "Video ya matangazo haya haipatikani kwa sasa." : "The video for this broadcast is not available yet."}</p>`}
-          <p class="z-live-player-store">\${sw ? "Duka:" : "Store:"} <strong>\${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
+          <p class="z-live-player-store">${sw ? "Duka:" : "Store:"} <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
           <div class="z-live-player-meta">
-            <span>👁 \${sw ? "Watazamaji:" : "Viewers:"} <strong>\${selected.concurrent_viewers == null ? (sw ? "Haipatikani" : "Unavailable") : new Intl.NumberFormat(sw ? "sw-TZ" : "en-TZ").format(Number(selected.concurrent_viewers))}</strong></span>
+            <span>👁 ${sw ? "Watazamaji:" : "Viewers:"} <strong>${selected.concurrent_viewers == null ? (sw ? "Haipatikani" : "Unavailable") : new Intl.NumberFormat(sw ? "sw-TZ" : "en-TZ").format(Number(selected.concurrent_viewers))}</strong></span>
           </div>
-          \${selected.section === "live" && videoId ? \`
+          ${selected.section === "live" && videoId ? `
             <section class="z-live-chat-panel" aria-label="YouTube Live Chat">
-              <div class="z-live-chat-head"><h3>💬 \${sw ? "Mazungumzo ya Live" : "Live chat"}</h3><span>\${sw ? "Mazungumzo ya YouTube" : "YouTube chat"}</span></div>
+              <div class="z-live-chat-head"><h3>💬 ${sw ? "Mazungumzo ya Live" : "Live chat"}</h3><span>${sw ? "Mazungumzo ya YouTube" : "YouTube chat"}</span></div>
               <div class="z-live-chat-desktop">
-                <iframe src="https://www.youtube.com/live_chat?v=\${videoId}&embed_domain=mrnehemiah.github.io" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                <iframe src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=mrnehemiah.github.io" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
               </div>
-              <a class="z-live-chat-mobile" href="https://www.youtube.com/live_chat?v=\${videoId}" target="_blank" rel="noopener noreferrer">\${sw ? "Fungua Live Chat kwenye YouTube" : "Open Live Chat on YouTube"} ↗</a>
-              <p class="z-live-chat-note">\${sw ? "Kwenye simu, YouTube hufungua Live Chat kupitia ukurasa/app yake. Ingia YouTube ili kutuma ujumbe." : "On mobile, YouTube opens Live Chat in its own page or app. Sign in to YouTube to send messages."}</p>
-            </section>\` : ""}
+              <a class="z-live-chat-mobile" href="https://www.youtube.com/live_chat?v=${videoId}" target="_blank" rel="noopener noreferrer">${sw ? "Fungua Live Chat kwenye YouTube" : "Open Live Chat on YouTube"} ↗</a>
+              <p class="z-live-chat-note">${sw ? "Kwenye simu, YouTube hufungua Live Chat kupitia ukurasa/app yake. Ingia YouTube ili kutuma ujumbe." : "On mobile, YouTube opens Live Chat in its own page or app. Sign in to YouTube to send messages."}</p>
+            </section>` : ""}
           ${selectedProducts.length ? `<div class="z-live-pinned-products"><strong>${sw ? "Nunua bidhaa zinazoonyeshwa" : "Shop featured products"}</strong><div class="z-live-product-row">${selectedProducts.map(product => `<div class="z-live-product">${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}<div class="z-live-product-info"><b>${safe(product.title)}</b><span>${money(product.price)}</span></div><button type="button" data-live-add-product="${safe(product.id)}">+</button></div>`).join("")}</div></div>` : ""}
         </section>` : ""}
       ${section("now", sw ? "LIVE SASA" : "LIVE NOW", sw ? "MATANGAZO YANAYOENDELEA" : "STREAMING RIGHT NOW", live, sw ? "Matangazo ya moja kwa moja yataonekana hapa yakianza." : "Public broadcasts will appear here when sellers go live.")}
