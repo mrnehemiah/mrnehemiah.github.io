@@ -3301,9 +3301,19 @@ async function loadMarketplaceLiveFeed(force = false) {
     const { data, error } = await supabase.functions.invoke("marketplace-live", { body: {} });
     if (error) throw error;
     if (!data?.ok || !Array.isArray(data.broadcasts)) throw new Error(data?.error || "Live feed response was invalid");
+    const previousSelection = String(homeState.liveSelectedId || "");
     homeState.liveBroadcasts = data.broadcasts;
     homeState.liveLoaded = true;
-    if (homeState.liveSelectedId && !homeState.liveBroadcasts.some(item => String(item.id) === String(homeState.liveSelectedId))) homeState.liveSelectedId = "";
+    if (previousSelection) {
+      const current = homeState.liveBroadcasts.find(item => String(item.id) === previousSelection);
+      if (!current) {
+        const nextLive = homeState.liveBroadcasts.find(item => item.section === "live");
+        homeState.liveSelectedId = nextLive ? String(nextLive.id) : "";
+      } else if (current.section !== "live") {
+        const nextLive = homeState.liveBroadcasts.find(item => item.section === "live" && String(item.id) !== previousSelection);
+        if (nextLive) homeState.liveSelectedId = String(nextLive.id);
+      }
+    }
   } catch (error) {
     console.error("ZUNE Marketplace Live feed:", error);
     homeState.liveError = language() === "sw" ? "Imeshindikana kupakia matangazo. Hakikisha intaneti ipo kisha jaribu tena." : "Could not load Live broadcasts. Check your connection and try again.";
