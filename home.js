@@ -64,6 +64,8 @@ const homeState = {
   liveLoaded: false,
   liveError: "",
   liveSelectedId: "",
+  liveLikedIds: new Set(),
+  liveGiftCounts: {},
 
   user: null,
   app: null,
@@ -3157,6 +3159,13 @@ function ensureLiveShoppingStyles() {
     @media(max-width:520px){.z-live-page{padding:14px 12px 110px}.z-live-hero{padding:22px 17px;border-radius:20px}.z-live-player-panel{padding:11px;border-radius:17px}.z-live-broadcast-grid{grid-template-columns:1fr}.z-live-broadcast-card{padding:14px}}
     .z-live-player-meta{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 16px;color:var(--text-muted);font-size:12px}
     .z-live-player-meta strong{color:var(--text);font-weight:900}
+    .z-live-viewer-controls{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+    .z-live-viewer-controls button{border:1px solid var(--border);border-radius:999px;padding:9px 13px;background:var(--surface);color:var(--text);font-size:12px;font-weight:850;cursor:pointer}
+    .z-live-viewer-controls button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .z-live-viewer-controls button.liked{background:#fff0f3;border-color:#ef476f;color:#d62958}
+    .z-live-swipe-hint{margin:5px 0 0;color:var(--text-muted);font-size:10px;text-align:center}
+    .z-live-gift-count{font-size:10px;color:var(--primary);font-weight:900}
+    .z-live-video-wrap{touch-action:pan-y}
     .z-live-chat-panel{margin:18px 0;padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
     .z-live-chat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
     .z-live-chat-head h3{font-size:15px;font-weight:900}
@@ -3207,6 +3216,16 @@ function liveBroadcastCard(item, sw) {
   `;
 }
 
+function moveLiveSelection(direction) {
+  const liveItems = (homeState.liveBroadcasts || []).filter(item => item.section === "live");
+  if (liveItems.length < 2) return;
+  const currentIndex = liveItems.findIndex(item => String(item.id) === String(homeState.liveSelectedId));
+  const nextIndex = (Math.max(0, currentIndex) + direction + liveItems.length) % liveItems.length;
+  homeState.liveSelectedId = String(liveItems[nextIndex].id);
+  renderMarketplacePage("live");
+  document.getElementById("z-live-player")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 function renderLivePage() {
   ensureLiveShoppingStyles();
   const sw = language() === "sw";
@@ -3245,6 +3264,17 @@ function renderLivePage() {
           <div class="z-live-player-meta">
             <span>👁 ${sw ? "Watazamaji:" : "Viewers:"} <strong>${selected.concurrent_viewers == null ? (sw ? "Haipatikani" : "Unavailable") : new Intl.NumberFormat(sw ? "sw-TZ" : "en-TZ").format(Number(selected.concurrent_viewers))}</strong></span>
           </div>
+          ${selected.section === "live" ? `
+            <div class="z-live-viewer-controls" aria-label="Live viewer controls">
+              <button type="button" data-live-prev>↑ ${sw ? "Live iliyotangulia" : "Previous Live"}</button>
+              <button type="button" data-live-next>↓ ${sw ? "Live inayofuata" : "Next Live"}</button>
+              <button type="button" data-live-like class="${homeState.liveLikedIds.has(String(selected.id)) ? "liked" : ""}">${homeState.liveLikedIds.has(String(selected.id)) ? "♥" : "♡"} ${sw ? "Penda" : "Like"}</button>
+              <button type="button" data-live-gift="👏">👏 ${sw ? "Makofi" : "Applause"}</button>
+              <button type="button" data-live-gift="⭐">⭐ ${sw ? "Nyota" : "Star"}</button>
+              <button type="button" data-live-gift="❤️">❤️ ${sw ? "Moyo" : "Heart"}</button>
+            </div>
+            <p class="z-live-swipe-hint">${sw ? "Telezesha juu kuona Live inayofuata, au chini kurudi iliyotangulia." : "Swipe up for the next Live, or down for the previous one."} <span class="z-live-gift-count" id="z-live-gift-count">${Number(homeState.liveGiftCounts[String(selected.id)] || 0)} ${sw ? "zawadi za bure zimetumwa kwenye kipindi hiki" : "free gifts sent in this session"}</span></p>
+          ` : ""}
           ${selected.section === "live" && videoId ? `
             <section class="z-live-chat-panel" aria-label="YouTube Live Chat">
               <div class="z-live-chat-head"><h3>💬 ${sw ? "Mazungumzo ya Live" : "Live chat"}</h3><span>${sw ? "Mazungumzo ya YouTube" : "YouTube chat"}</span></div>
@@ -3302,6 +3332,33 @@ function bindLivePage() {
     renderMarketplacePage("live");
     document.getElementById("z-live-player")?.scrollIntoView({behavior:"smooth",block:"start"});
   }));
+  document.querySelector("[data-live-prev]")?.addEventListener("click", () => moveLiveSelection(-1));
+  document.querySelector("[data-live-next]")?.addEventListener("click", () => moveLiveSelection(1));
+  document.querySelector("[data-live-like]")?.addEventListener("click", () => {
+    const id = String(homeState.liveSelectedId);
+    if (homeState.liveLikedIds.has(id)) homeState.liveLikedIds.delete(id); else homeState.liveLikedIds.add(id);
+    renderMarketplacePage("live");
+  });
+  document.querySelectorAll("[data-live-gift]").forEach(button => button.addEventListener("click", () => {
+    const id = String(homeState.liveSelectedId);
+    homeState.liveGiftCounts[id] = Number(homeState.liveGiftCounts[id] || 0) + 1;
+    const count = document.getElementById("z-live-gift-count");
+    if (count) count.textContent = `${homeState.liveGiftCounts[id]} ${language() === "sw" ? "zawadi za bure zimetumwa kwenye kipindi hiki" : "free gifts sent in this session"}`;
+    button.disabled = true;
+    setTimeout(() => { if (button.isConnected) button.disabled = false; }, 450);
+  }));
+  const liveVideo = document.querySelector("#z-live-player .z-live-video-wrap");
+  if (liveVideo) {
+    let startY = null;
+    liveVideo.addEventListener("touchstart", event => { startY = event.touches?.[0]?.clientY ?? null; }, {passive:true});
+    liveVideo.addEventListener("touchend", event => {
+      if (startY === null) return;
+      const endY = event.changedTouches?.[0]?.clientY ?? startY;
+      const delta = startY - endY;
+      startY = null;
+      if (Math.abs(delta) > 65) moveLiveSelection(delta > 0 ? 1 : -1);
+    }, {passive:true});
+  }
   document.getElementById("z-live-close-player")?.addEventListener("click", () => {
     homeState.liveSelectedId = "";
     renderMarketplacePage("live");
