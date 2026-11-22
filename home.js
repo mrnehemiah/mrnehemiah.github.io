@@ -59,6 +59,12 @@ const homeState = {
   cartProductsLoading: false,
   cartProductsError: false,
 
+  liveBroadcasts: [],
+  liveLoading: false,
+  liveLoaded: false,
+  liveError: "",
+  liveSelectedId: "",
+
   user: null,
   app: null,
   onLogout: null,
@@ -3120,42 +3126,135 @@ function ensureLiveShoppingStyles() {
   document.head.appendChild(style);
 }
 
+function liveBroadcastCard(item, sw) {
+  const storeName = safe(item.store?.name || "ZUNE Seller");
+  const products = Array.isArray(item.products) ? item.products : [];
+  const dateValue = item.section === "live" ? item.actual_start_time : item.scheduled_start_time;
+  const dateLabel = dateValue ? new Date(dateValue).toLocaleString(sw ? "sw-TZ" : "en-TZ", { dateStyle:"medium", timeStyle:"short" }) : "";
+  const isLive = item.section === "live";
+  const isPast = item.section === "past";
+  return `
+    <article class="z-live-broadcast-card">
+      <div class="z-live-card-top">
+        <span class="z-live-status ${isLive ? "is-live" : isPast ? "is-past" : "is-upcoming"}">${isLive ? "● LIVE NOW" : isPast ? (sw ? "IMEMALIZIKA" : "ENDED") : (sw ? "INAYOKUJA" : "UPCOMING")}</span>
+        <span class="z-live-card-date">${safe(dateLabel)}</span>
+      </div>
+      <h3>${safe(item.title)}</h3>
+      <p class="z-live-store-name">${storeName}</p>
+      ${item.description ? `<p class="z-live-description">${safe(item.description)}</p>` : ""}
+      <div class="z-live-card-actions">
+        <button type="button" class="z-live-watch-button" data-live-watch="${safe(item.id)}">${isPast ? (sw ? "Tazama rekodi" : "Watch replay") : isLive ? (sw ? "Tazama Live" : "Watch Live") : (sw ? "Angalia taarifa" : "View details")}</button>
+      </div>
+      ${products.length ? `
+        <div class="z-live-pinned-products">
+          <strong>${sw ? "Bidhaa kwenye matangazo" : "Products in this Live"}</strong>
+          <div class="z-live-product-row">
+            ${products.map(product => `
+              <div class="z-live-product">
+                ${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}
+                <div class="z-live-product-info"><b>${safe(product.title)}</b><span>${money(product.price)}</span></div>
+                <button type="button" data-live-add-product="${safe(product.id)}" aria-label="${sw ? "Ongeza kikapuni" : "Add to cart"}">+</button>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      ` : ""}
+    </article>
+  `;
+}
+
 function renderLivePage() {
   ensureLiveShoppingStyles();
   const sw = language() === "sw";
-  const sections = [
-    { id: "now", title: sw ? "LIVE SASA" : "LIVE NOW", subtitle: sw ? "MATANGAZO YANAYOENDELEA" : "STREAMING RIGHT NOW", icon: "●", empty: sw ? "Matangazo ya moja kwa moja yataonekana hapa yakianza." : "Live broadcasts will appear here when sellers go live." },
-    { id: "upcoming", title: sw ? "YANAYOKUJA" : "UPCOMING", subtitle: sw ? "RATIBA YA MATANGAZO" : "SCHEDULED BROADCASTS", icon: "◷", empty: sw ? "Matangazo yaliyopangwa yataonekana hapa." : "Scheduled broadcasts will appear here." },
-    { id: "past", title: sw ? "ZILIZOPITA" : "PAST LIVE", subtitle: sw ? "REKODI ZA MATANGAZO" : "RECENT REPLAYS", icon: "↺", empty: sw ? "Hakuna rekodi za matangazo zilizoonyeshwa hapa bado." : "No replay listings are available here yet." }
-  ];
+  const items = homeState.liveBroadcasts || [];
+  const selected = items.find(item => String(item.id) === String(homeState.liveSelectedId));
+  const live = items.filter(item => item.section === "live");
+  const upcoming = items.filter(item => item.section === "upcoming");
+  const past = items.filter(item => item.section === "past");
+  const section = (id, title, subtitle, rows, empty) => `
+    <section class="z-live-section" id="z-live-section-${id}">
+      <div class="z-live-section-head"><h2>${title}</h2><span>${subtitle}</span></div>
+      ${rows.length ? `<div class="z-live-broadcast-grid">${rows.map(item => liveBroadcastCard(item, sw)).join("")}</div>` : `<div class="z-live-empty"><span class="z-live-empty-icon">${id==="now"?"●":id==="upcoming"?"◷":"↺"}</span><div><strong>${sw ? "Hakuna matangazo kwa sasa" : "Nothing to show yet"}</strong><p>${empty}</p></div></div>`}
+    </section>`;
+  const selectedProducts = selected?.products || [];
+  const videoId = /^[a-zA-Z0-9_-]{6,20}$/.test(selected?.youtube_video_id || "") ? selected.youtube_video_id : "";
   return `
-    <section class="z-home z-live-shopping">
-      <main class="z-live-page">
-        <header class="z-live-hero">
-          <span class="z-live-kicker"><i class="z-live-pulse"></i> ZUNE LIVE SHOPPING</span>
-          <h1>${sw ? "Nunua ukiwa unatazama Live." : "Shop while you watch Live."}</h1>
-          <p>${sw ? "Tazama wauzaji wakionyesha bidhaa moja kwa moja, uliza maswali na gundua bidhaa unazoweza kununua." : "Watch sellers showcase products, ask questions and discover items you can buy."}</p>
-        </header>
-        <nav class="z-live-tabs" aria-label="${sw ? "Aina za matangazo" : "Broadcast categories"}" style="margin-top:18px">
-          <span class="z-live-tab active">${sw ? "Live sasa" : "Live now"}</span>
-          <span class="z-live-tab">${sw ? "Yanayokuja" : "Upcoming"}</span>
-          <span class="z-live-tab">${sw ? "Zilizopita" : "Past live"}</span>
-        </nav>
-        ${sections.map(section => `
-          <section class="z-live-section" aria-labelledby="z-live-${section.id}-title">
-            <div class="z-live-section-head">
-              <h2 id="z-live-${section.id}-title">${section.title}</h2>
-              <span>${section.subtitle}</span>
-            </div>
-            <div class="z-live-empty">
-              <span class="z-live-empty-icon" aria-hidden="true">${section.icon}</span>
-              <div><strong>${sw ? "Matangazo yataonekana hapa" : "Broadcasts will appear here"}</strong><p>${section.empty}</p></div>
-            </div>
-          </section>
-        `).join("")}
-      </main>
-    </section>
-  `;
+    <section class="z-home z-live-shopping"><main class="z-live-page">
+      <header class="z-live-hero">
+        <span class="z-live-kicker"><i class="z-live-pulse"></i> ZUNE LIVE SHOPPING</span>
+        <h1>${sw ? "Nunua ukiwa unatazama Live." : "Shop while you watch Live."}</h1>
+        <p>${sw ? "Tazama wauzaji wakionyesha bidhaa moja kwa moja, uliza maswali na gundua bidhaa unazoweza kununua." : "Watch sellers showcase products, ask questions and discover items you can buy."}</p>
+        <button type="button" class="z-live-refresh" id="z-live-refresh">${sw ? "↻ Sasisha matangazo" : "↻ Refresh broadcasts"}</button>
+      </header>
+      <nav class="z-live-tabs" aria-label="Live sections">
+        <button type="button" class="z-live-tab" data-live-scroll="now">${sw ? "Live sasa" : "Live now"} (${live.length})</button>
+        <button type="button" class="z-live-tab" data-live-scroll="upcoming">${sw ? "Yanayokuja" : "Upcoming"} (${upcoming.length})</button>
+        <button type="button" class="z-live-tab" data-live-scroll="past">${sw ? "Zilizopita" : "Past"} (${past.length})</button>
+      </nav>
+      ${homeState.liveLoading && !homeState.liveLoaded ? `<div class="z-live-empty"><div><strong>${sw ? "Inapakia matangazo..." : "Loading broadcasts..."}</strong></div></div>` : ""}
+      ${homeState.liveError ? `<div class="z-live-feed-error" role="alert">${safe(homeState.liveError)} <button type="button" id="z-live-retry">${sw ? "Jaribu tena" : "Try again"}</button></div>` : ""}
+      ${selected ? `
+        <section class="z-live-player-panel" id="z-live-player">
+          <div class="z-live-section-head"><h2>${safe(selected.title)}</h2><button type="button" id="z-live-close-player">${sw ? "Funga" : "Close"} ×</button></div>
+          ${videoId ? `<div class="z-live-video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0" title="${safe(selected.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>` : `<p>${sw ? "Video ya matangazo haya haipatikani kwa sasa." : "The video for this broadcast is not available yet."}</p>`}
+          <p class="z-live-player-store">${sw ? "Duka:" : "Store:"} <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
+          ${selectedProducts.length ? `<div class="z-live-pinned-products"><strong>${sw ? "Nunua bidhaa zinazoonyeshwa" : "Shop featured products"}</strong><div class="z-live-product-row">${selectedProducts.map(product => `<div class="z-live-product">${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}<div class="z-live-product-info"><b>${safe(product.title)}</b><span>${money(product.price)}</span></div><button type="button" data-live-add-product="${safe(product.id)}">+</button></div>`).join("")}</div></div>` : ""}
+        </section>` : ""}
+      ${section("now", sw ? "LIVE SASA" : "LIVE NOW", sw ? "MATANGAZO YANAYOENDELEA" : "STREAMING RIGHT NOW", live, sw ? "Matangazo ya moja kwa moja yataonekana hapa yakianza." : "Public broadcasts will appear here when sellers go live.")}
+      ${section("upcoming", sw ? "YANAYOKUJA" : "UPCOMING", sw ? "RATIBA YA MATANGAZO" : "SCHEDULED BROADCASTS", upcoming, sw ? "Matangazo ya umma yaliyopangwa yataonekana hapa." : "Upcoming public broadcasts will appear here.")}
+      ${section("past", sw ? "ZILIZOPITA" : "PAST LIVE", sw ? "REKODI ZA MATANGAZO" : "RECENT REPLAYS", past, sw ? "Rekodi za matangazo ya umma zitaonekana hapa." : "Public replay listings will appear here.")}
+    </main></section>`;
+}
+
+async function loadMarketplaceLiveFeed(force = false) {
+  if (homeState.liveLoading || (homeState.liveLoaded && !force)) return;
+  homeState.liveLoading = true;
+  homeState.liveError = "";
+  if (homeState.activeTab === "live") renderMarketplacePage("live");
+  try {
+    const { data, error } = await supabase.functions.invoke("marketplace-live", { body: {} });
+    if (error) throw error;
+    if (!data?.ok || !Array.isArray(data.broadcasts)) throw new Error(data?.error || "Live feed response was invalid");
+    homeState.liveBroadcasts = data.broadcasts;
+    homeState.liveLoaded = true;
+    if (homeState.liveSelectedId && !homeState.liveBroadcasts.some(item => String(item.id) === String(homeState.liveSelectedId))) homeState.liveSelectedId = "";
+  } catch (error) {
+    console.error("ZUNE Marketplace Live feed:", error);
+    homeState.liveError = language() === "sw" ? "Imeshindikana kupakia matangazo. Hakikisha intaneti ipo kisha jaribu tena." : "Could not load Live broadcasts. Check your connection and try again.";
+    homeState.liveLoaded = true;
+  } finally {
+    homeState.liveLoading = false;
+    if (homeState.activeTab === "live") renderMarketplacePage("live");
+  }
+}
+
+function bindLivePage() {
+  if (!homeState.liveLoaded && !homeState.liveLoading) loadMarketplaceLiveFeed();
+  document.getElementById("z-live-refresh")?.addEventListener("click", () => {
+    homeState.liveLoaded = false;
+    loadMarketplaceLiveFeed(true);
+  });
+  document.getElementById("z-live-retry")?.addEventListener("click", () => {
+    homeState.liveLoaded = false;
+    loadMarketplaceLiveFeed(true);
+  });
+  document.querySelectorAll("[data-live-scroll]").forEach(button => button.addEventListener("click", () => {
+    document.getElementById("z-live-section-" + button.dataset.liveScroll)?.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+  document.querySelectorAll("[data-live-watch]").forEach(button => button.addEventListener("click", () => {
+    homeState.liveSelectedId = button.dataset.liveWatch || "";
+    renderMarketplacePage("live");
+    document.getElementById("z-live-player")?.scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+  document.getElementById("z-live-close-player")?.addEventListener("click", () => {
+    homeState.liveSelectedId = "";
+    renderMarketplacePage("live");
+  });
+  document.querySelectorAll("[data-live-add-product]").forEach(button => button.addEventListener("click", () => {
+    const id = button.dataset.liveAddProduct;
+    const product = homeState.liveBroadcasts.flatMap(item => item.products || []).find(item => String(item.id) === String(id));
+    if (product) addToCart(product.id, product);
+  }));
 }
 
 // --------------------------------------------
@@ -3725,6 +3824,7 @@ async function renderMarketplacePage(page) {
       break;
 
     case "live":
+      bindLivePage();
       break;
 
     case "cart":
