@@ -46,3 +46,47 @@
 @media(min-width:820px){.icon-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.icon-admin form{grid-template-columns:1fr 1fr}.settings-wrap:has(.icon-gallery-intro){padding-top:28px}}
 @media(max-width:420px){.icon-gallery-intro{padding:17px 15px;gap:13px}.icon-gallery-mark{flex-basis:57px;width:57px;height:57px;border-radius:18px}.icon-gallery-intro h2{font-size:17px}.icon-admin{padding:15px}.icon-admin form{grid-template-columns:1fr}.icon-admin .settings-btn,#upload-status{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.icon-tile,.icon-tile button,.icon-admin input{transition:none}}
+
+
+/* ZUNE Icon Studio — 3D marketplace collection presentation */
+:root{--ig-ink:#f3fbf7;--ig-muted:#9eb5aa;--ig-line:rgba(193,235,215,.13);--ig-surface:#10251d}
+body:has(.icon-gallery-intro){background:
+ radial-gradient(ellipse at 85% 5%,rgba(16,185,129,.18),transparent 30%),
+ radial-gradient(ellipse at 5% 35%,rgba(59,130,246,.10),transparent 34%),
+ linear-gradient(160deg,#06140f 0%,#0b1d16 52%,#08130f 100%)!important;color:#f3fbf7}
+.settings-wrap:has(.icon-gallery-intro){max-width:960px;padding:22px 16px 42px}
+.settings-head h1{color:#f4fff9!important;font-weight:900;letter-spacing:-.8px}
+.settings-sub{color:#9eb5aa!important}
+.settings-head>button{background:linear-gradient(145deg,#183c2d,#0a2118)!important;color:#eafff3!important;border:1px solid rgba(255,255,255,.15)!important;box-shadow:0 8px 16px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.13)!important}
+.icon-gallery-intro{
+ border:1px solid rgba(167,243,208,.2)!important;border-radius:27px!important;
+ background:radial-gradient(circle at 88% 5%,rgba(110,231,183,.22),transparent 32%),linear-gradient(135deg,#123e2d,#0b251b 64%,#102c21)!important;
+ box-shadow:0 18px 35px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+.icon-gallery-intro:after{border-color:rgba(167,243,208,.17)!important;box-shadow:0 0 0 18px rgba(167,243,208,.035),0 0 0 36px rgba(167,243,208,.025)!important}
+.icon-gallery-mark{background:linear-gradient(145deg,#5ee7ad 0%,#0a9668 43%,#03432f 100%)!important;border:1px solid rgba(255,255,255,.4);box-shadow:0 15px 25px rgba(0,0,0,.3),inset 0 3px 5px rgba(255,255,255,.5),inset 0 -7px 10px rgba(0,34,22,.35)!important}
+.icon-gallery-mark:before{border-color:#eafff5!important;box-shadow:0 2px 5px rgba(0,0,0,.25)}
+.icon-gallery-intro h2{color:#f0fff7!important;font-size:clamp(21px,5vw,28px)!important;font-weight:900}
+.icon-gallery-intro p{color:#b7d3c5!important}
+.icon-admin{background:linear-gradient(145deg,#123c2b,#0d261c)!important;border:1px solid rgba(167,243,208,.17)!important;box-shadow:0 12px 25px rgba(0,0,0,.22)!important}
+.icon-admin h2,.icon-admin label{color:#e6fff1!important}
+.icon-admin input:not([type=checkbox]){background:#081a12!important;color:#f3fff8!important;border-color:rgba(167,243,208,.2)!important}
+.icon-gallery-toolbar h2{color:#effff6!important;font-size:18px!important;font-weight:900}
+.icon-gallery-toolbar span{color:#9eb5aa!important}
+.icon-tile{
+ border:1px solid rgba(190,235,211,.17)!important;border-radius:23px!important;
+ background:linear-gradient(150deg,#183c2c 0%,#10291e 58%,#0b1d15 100%)!important;
+ box-shadow:0 13px 22px rgba(0,0,0,.27),inset 0 1px 0 rgba(255,255,255,.12),inset 0 -2px 5px rgba(0,0,0,.25)!important;
+}
+.icon-tile:before{content:"";position:absolute;inset:0 0 auto;height:44%;background:linear-gradient(180deg,rgba(255,255,255,.09),transparent);pointer-events:none}
+.icon-tile.selected{border:1.5px solid #4adea3!important;background:linear-gradient(150deg,#174a34,#0c281d)!important;box-shadow:0 0 0 3px rgba(74,222,163,.12),0 16px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.18)!important}
+.icon-tile img{width:clamp(82px,24vw,116px)!important;border-radius:25%!important;box-shadow:0 14px 23px rgba(0,0,0,.38),inset 0 2px 3px rgba(255,255,255,.35)!important;transform:translateY(-2px)}
+.icon-tile strong{color:#f0fff6!important;font-size:13px!important;font-weight:850!important}
+.icon-tile small{color:#a6c2b4!important}
+.icon-tile button{background:linear-gradient(145deg,#25c58a,#087a55 62%,#045137)!important;border:1px solid rgba(255,255,255,.22)!important;box-shadow:0 7px 13px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.3)!important;color:#fff!important}
+.icon-tile button:disabled{background:linear-gradient(145deg,#d1fae5,#86efac)!important;color:#075b3d!important;border-color:#a7f3d0!important}
+.icon-grid>p{background:#10271c!important;color:#b6d2c3!important;border-color:rgba(167,243,208,.22)!important}
+.icon-status{color:#a9c8b8!important}
+.settings-footer{color:#668b78!important}
+@media(hover:hover){.icon-tile:hover{transform:translateY(-4px);border-color:rgba(110,231,183,.45)!important;box-shadow:0 19px 30px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.15)!important}}
+@media(prefers-reduced-motion:reduce){.icon-tile{transition:none!important}}
