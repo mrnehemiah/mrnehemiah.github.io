@@ -3121,6 +3121,16 @@ function ensureLiveShoppingStyles() {
     .z-live-page .z-live-tabs{display:flex;gap:8px;overflow:auto;padding:2px 0 5px}
     .z-live-page .z-live-tab{flex:0 0 auto;padding:9px 13px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);font-size:11px;font-weight:800}
     .z-live-page .z-live-tab.active{border-color:var(--primary);background:var(--primary);color:#fff}
+    .z-live-player-meta{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 16px;color:var(--text-muted);font-size:12px}
+    .z-live-player-meta strong{color:var(--text);font-weight:900}
+    .z-live-chat-panel{margin:18px 0;padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
+    .z-live-chat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .z-live-chat-head h3{font-size:15px;font-weight:900}
+    .z-live-chat-head span,.z-live-chat-note{color:var(--text-muted);font-size:10px}
+    .z-live-chat-desktop iframe{display:block;width:100%;height:430px;border:0;border-radius:12px;background:#fff}
+    .z-live-chat-mobile{display:none;padding:12px 14px;border-radius:12px;background:var(--primary);color:#fff;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
+    .z-live-chat-note{margin-top:9px;line-height:1.5}
+    @media(max-width:759px){.z-live-chat-desktop{display:none}.z-live-chat-mobile{display:block}}
     @media(min-width:760px){.z-live-page{padding:28px 24px 60px}.z-live-hero{padding:38px}.z-live-empty{padding:22px}}
   `;
   document.head.appendChild(style);
@@ -3197,7 +3207,19 @@ function renderLivePage() {
         <section class="z-live-player-panel" id="z-live-player">
           <div class="z-live-section-head"><h2>${safe(selected.title)}</h2><button type="button" id="z-live-close-player">${sw ? "Funga" : "Close"} ×</button></div>
           ${videoId ? `<div class="z-live-video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0" title="${safe(selected.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>` : `<p>${sw ? "Video ya matangazo haya haipatikani kwa sasa." : "The video for this broadcast is not available yet."}</p>`}
-          <p class="z-live-player-store">${sw ? "Duka:" : "Store:"} <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
+          <p class="z-live-player-store">\${sw ? "Duka:" : "Store:"} <strong>\${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
+          <div class="z-live-player-meta">
+            <span>👁 \${sw ? "Watazamaji:" : "Viewers:"} <strong>\${selected.concurrent_viewers == null ? (sw ? "Haipatikani" : "Unavailable") : new Intl.NumberFormat(sw ? "sw-TZ" : "en-TZ").format(Number(selected.concurrent_viewers))}</strong></span>
+          </div>
+          \${selected.section === "live" && videoId ? \`
+            <section class="z-live-chat-panel" aria-label="YouTube Live Chat">
+              <div class="z-live-chat-head"><h3>💬 \${sw ? "Mazungumzo ya Live" : "Live chat"}</h3><span>\${sw ? "Mazungumzo ya YouTube" : "YouTube chat"}</span></div>
+              <div class="z-live-chat-desktop">
+                <iframe src="https://www.youtube.com/live_chat?v=\${videoId}&embed_domain=mrnehemiah.github.io" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              </div>
+              <a class="z-live-chat-mobile" href="https://www.youtube.com/live_chat?v=\${videoId}" target="_blank" rel="noopener noreferrer">\${sw ? "Fungua Live Chat kwenye YouTube" : "Open Live Chat on YouTube"} ↗</a>
+              <p class="z-live-chat-note">\${sw ? "Kwenye simu, YouTube hufungua Live Chat kupitia ukurasa/app yake. Ingia YouTube ili kutuma ujumbe." : "On mobile, YouTube opens Live Chat in its own page or app. Sign in to YouTube to send messages."}</p>
+            </section>\` : ""}
           ${selectedProducts.length ? `<div class="z-live-pinned-products"><strong>${sw ? "Nunua bidhaa zinazoonyeshwa" : "Shop featured products"}</strong><div class="z-live-product-row">${selectedProducts.map(product => `<div class="z-live-product">${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}<div class="z-live-product-info"><b>${safe(product.title)}</b><span>${money(product.price)}</span></div><button type="button" data-live-add-product="${safe(product.id)}">+</button></div>`).join("")}</div></div>` : ""}
         </section>` : ""}
       ${section("now", sw ? "LIVE SASA" : "LIVE NOW", sw ? "MATANGAZO YANAYOENDELEA" : "STREAMING RIGHT NOW", live, sw ? "Matangazo ya moja kwa moja yataonekana hapa yakianza." : "Public broadcasts will appear here when sellers go live.")}
