@@ -90,3 +90,13 @@ body:has(.icon-gallery-intro){background:
 .settings-footer{color:#668b78!important}
 @media(hover:hover){.icon-tile:hover{transform:translateY(-4px);border-color:rgba(110,231,183,.45)!important;box-shadow:0 19px 30px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.15)!important}}
 @media(prefers-reduced-motion:reduce){.icon-tile{transition:none!important}}
+
+/* Visibility and mobile header fixes */
+#admin-tools[hidden]{display:none!important}
+body:has(.icon-gallery-intro) .settings-head{position:relative!important;top:auto!important;background:linear-gradient(160deg,#081a12,#0b2118)!important;border:0!important;border-radius:0 0 18px 18px!important;padding:14px 16px 18px!important;align-items:center!important}
+body:has(.icon-gallery-intro) .settings-head>div{min-width:0}
+body:has(.icon-gallery-intro) .settings-head h1{color:#f4fff9!important;line-height:1.2!important;overflow-wrap:anywhere}
+body:has(.icon-gallery-intro) .settings-head .settings-sub{color:#a9c8b8!important;line-height:1.4}
+.icon-admin .admin-help{grid-column:1/-1;margin:-5px 0 2px;color:#a9c8b8;font-size:12px;line-height:1.5}
+.icon-tile .delete-icon{background:linear-gradient(145deg,#7f1d1d,#b42318)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important}
+@media(max-width:420px){body:has(.icon-gallery-intro) .settings-head{padding:12px 14px 16px!important}}
