@@ -66,6 +66,7 @@ const homeState = {
   liveSelectedId: "",
   liveLikedIds: new Set(),
   liveGiftCounts: {},
+  liveMiniPlayer: false,
 
   user: null,
   app: null,
@@ -3164,6 +3165,12 @@ function ensureLiveShoppingStyles() {
     .z-live-viewer-controls button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
     .z-live-viewer-controls button.liked{background:#fff0f3;border-color:#ef476f;color:#d62958}
     .z-live-swipe-hint{margin:5px 0 0;color:var(--text-muted);font-size:10px;text-align:center}
+    .z-live-mini-player{position:fixed;z-index:9998;right:14px;bottom:88px;width:min(310px,calc(100vw - 28px));padding:9px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 18px 48px #0005}
+    .z-live-mini-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:11px}
+    .z-live-mini-head>div{display:flex;gap:5px}
+    .z-live-mini-head button{width:28px;height:26px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-weight:900}
+    .z-live-mini-video{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:10px;background:#050505}
+    .z-live-mini-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
     .z-live-gift-count{font-size:10px;color:var(--primary);font-weight:900}
     .z-live-video-wrap{touch-action:pan-y}
     .z-live-chat-panel{margin:18px 0;padding:14px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
@@ -3214,6 +3221,35 @@ function liveBroadcastCard(item, sw) {
       ` : ""}
     </article>
   `;
+}
+
+function preserveLiveMiniPlayer() {
+  const player = document.querySelector("#z-live-player .z-live-video-wrap iframe");
+  if (!player) return;
+  let mini = document.getElementById("z-live-mini-player");
+  if (!mini) {
+    mini = document.createElement("aside");
+    mini.id = "z-live-mini-player";
+    mini.className = "z-live-mini-player";
+    mini.innerHTML = `<div class="z-live-mini-head"><strong>${language()==="sw"?"ZUNE Live inaendelea":"ZUNE Live is playing"}</strong><div><button type="button" data-mini-expand aria-label="Expand Live">↗</button><button type="button" data-mini-close aria-label="Close Live">×</button></div></div><div class="z-live-mini-video"></div>`;
+    document.body.appendChild(mini);
+  }
+  mini.querySelector(".z-live-mini-video")?.appendChild(player);
+  homeState.liveMiniPlayer = true;
+}
+
+function renderLiveMiniPlayer() {
+  if (!homeState.liveMiniPlayer) return;
+  const mini = document.getElementById("z-live-mini-player");
+  if (!mini) return;
+  mini.querySelector("[data-mini-expand]")?.addEventListener("click", () => renderMarketplacePage("live"));
+  mini.querySelector("[data-mini-close]")?.addEventListener("click", () => closeLiveMiniPlayer(true));
+}
+
+function closeLiveMiniPlayer(clearSelection = true) {
+  document.getElementById("z-live-mini-player")?.remove();
+  homeState.liveMiniPlayer = false;
+  if (clearSelection) homeState.liveSelectedId = "";
 }
 
 function moveLiveSelection(direction) {
@@ -3845,6 +3881,8 @@ function ensureZuneProductFlagMotion(){
 }
 
 async function renderMarketplacePage(page) {
+  if (homeState.activeTab === "live" && page !== "live" && homeState.liveSelectedId) preserveLiveMiniPlayer();
+  if (page === "live" && homeState.liveMiniPlayer) closeLiveMiniPlayer(false);
   ensureZuneProductFlagMotion();
   ensureHomeVisualEnhancements();
   ensurePremiumSearchStyles();
@@ -3926,6 +3964,7 @@ async function renderMarketplacePage(page) {
     </div>
   `;
 
+  if (homeState.activeTab !== "live") renderLiveMiniPlayer();
   applyMarketplaceTemplate();
   renderSponsoredPlacementBlocks();
   bindSponsoredAdEvents();
