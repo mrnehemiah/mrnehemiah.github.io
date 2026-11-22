@@ -355,3 +355,10 @@
  .z-account-body .account-card-icon{box-shadow:0 6px 10px rgba(5,104,71,.25),inset 0 2px 3px rgba(255,255,255,.4)!important}
 }
 @media(prefers-reduced-motion:reduce){.z-account-body .account-card{transition:none!important}}
+
+/* ZUNE Delivery recruitment entry */
+.z-account-body .z-driver-account-panel{background:radial-gradient(circle at 90% 0%,rgba(16,185,129,.16),transparent 38%),linear-gradient(145deg,#073d30,#087a55)!important;color:#fff!important;border:1px solid rgba(255,255,255,.24)!important;box-shadow:0 14px 26px rgba(4,73,50,.2),inset 0 1px 0 rgba(255,255,255,.2)!important}
+.z-account-body .z-driver-account-panel .account-eyebrow{color:#a7f3d0!important}
+.z-account-body .z-driver-account-panel h2,.z-account-body .z-driver-account-panel p{color:#fff!important}
+.z-account-body .z-driver-account-panel p{line-height:1.6}
+.z-account-body .z-driver-account-panel .account-button{background:linear-gradient(145deg,#fff,#dcfce9)!important;color:#07583e!important}
