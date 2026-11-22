@@ -1215,6 +1215,17 @@ function addHomeStyles() {
 
   `;
 
+
+    .z-driver-recruitment{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;margin:20px 16px;padding:18px;border:1px solid rgba(16,130,91,.18);border-radius:22px;background:radial-gradient(circle at 8% 0%,rgba(91,234,179,.22),transparent 35%),linear-gradient(135deg,#062f26 0%,#087a55 58%,#10a878 100%);color:#fff;box-shadow:0 14px 28px rgba(4,73,50,.2),inset 0 1px 0 rgba(255,255,255,.22)}
+    .z-driver-recruitment-mark{width:58px;height:58px;display:grid;place-items:center;position:relative;border-radius:18px;background:linear-gradient(145deg,#fff,#b9f5d9);color:#07583e;font-size:27px;font-weight:950;box-shadow:0 8px 16px #001d143d,inset 0 2px 3px #fff}
+    .z-driver-recruitment-mark span{position:absolute;right:7px;top:4px;font-size:13px}
+    .z-driver-recruitment-kicker{display:block;font-size:10px;font-weight:900;letter-spacing:1.7px;color:#a7f3d0;margin-bottom:5px}
+    .z-driver-recruitment-copy h2{margin:0 0 5px;font-size:clamp(16px,3vw,21px);font-weight:900;color:#fff}
+    .z-driver-recruitment-copy p{margin:0;max-width:560px;color:#e1fff1;font-size:12px;line-height:1.55}
+    .z-driver-recruitment-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;padding:12px 15px;border-radius:13px;background:linear-gradient(145deg,#fff,#dcfce9);color:#07583e;text-decoration:none;font-size:12px;font-weight:900;box-shadow:0 6px 12px #001d143d,inset 0 1px 0 #fff}
+    .z-driver-recruitment-cta:focus-visible{outline:3px solid #fef08a;outline-offset:3px}
+    @media(max-width:620px){.z-driver-recruitment{grid-template-columns:auto minmax(0,1fr);gap:12px;margin:16px 12px;padding:15px}.z-driver-recruitment-mark{width:48px;height:48px;border-radius:15px}.z-driver-recruitment-cta{grid-column:1/-1;width:100%;min-height:44px}}
+
   document.head.appendChild(style);
 }
 
@@ -2382,6 +2393,15 @@ function renderHomePage() {
       <main class="z-home-content">
 
         ${renderHomeCarousel()}
+        <section class="z-driver-recruitment" aria-label="ZUNE Delivery driver recruitment">
+          <div class="z-driver-recruitment-mark" aria-hidden="true">Z<span>↗</span></div>
+          <div class="z-driver-recruitment-copy">
+            <span class="z-driver-recruitment-kicker">${language()==="sw"?"FURSA KWA MADEREVA":"DRIVER OPPORTUNITY"}</span>
+            <h2>${language()==="sw"?"Jiunge na ZUNE Delivery":"Become a ZUNE Delivery driver"}</h2>
+            <p>${language()==="sw"?"Tumia chombo chako kufanya delivery, pokea kazi na simamia safari zako kupitia akaunti moja.":"Use your vehicle to deliver orders, receive jobs and manage your routes in one driver account."}</p>
+          </div>
+          <a class="z-driver-recruitment-cta" href="https://mrnehemiah.github.io/Zune-delivery-/signup.html">${language()==="sw"?"Jisajili kama dereva":"Register as a driver"} <span aria-hidden="true">→</span></a>
+        </section>
 
 
         <section>
