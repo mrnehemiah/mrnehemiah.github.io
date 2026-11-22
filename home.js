@@ -3256,8 +3256,8 @@ function renderLiveViewer(selected, sw) {
         <button type="button" class="z-live-viewer-btn" data-live-close aria-label="${sw ? "Funga Live" : "Close Live"}">×</button>
         <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong>
         <div class="z-live-viewer-actions">
-          <span class="z-live-status is-live">● LIVE</span>
-          <button type="button" class="z-live-viewer-btn" data-live-minimize title="${sw ? "Punguza video" : "Minimize player"}">▣</button>
+          <span class="z-live-status ${selected.section === "live" ? "is-live" : "is-past"}">${selected.section === "live" ? "● LIVE" : (sw ? "IMEMALIZIKA" : "ENDED")}</span>
+          <button type="button" class="z-live-viewer-btn" data-live-minimize ${videoId ? "" : "disabled"} title="${sw ? "Punguza video" : "Minimize player"}">▣</button>
         </div>
       </header>
       <div class="z-live-viewer-stage">
@@ -3362,9 +3362,20 @@ async function loadMarketplaceLiveFeed(force = false) {
     const { data, error } = await supabase.functions.invoke("marketplace-live", { body: {} });
     if (error) throw error;
     if (!data?.ok || !Array.isArray(data.broadcasts)) throw new Error(data?.error || "Live feed response was invalid");
+    const previousSelected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
     homeState.liveBroadcasts = data.broadcasts;
     homeState.liveLoaded = true;
-    if (homeState.liveSelectedId && !homeState.liveBroadcasts.some(item => String(item.id) === String(homeState.liveSelectedId))) homeState.liveSelectedId = "";
+    if (homeState.liveSelectedId) {
+      const refreshedSelected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
+      const endedOrRemoved = !refreshedSelected || (previousSelected?.section === "live" && refreshedSelected.section !== "live");
+      if (endedOrRemoved && homeState.liveAutoNext) {
+        const nextLive = homeState.liveBroadcasts.find(item => item.section === "live" && String(item.id) !== String(homeState.liveSelectedId));
+        homeState.liveSelectedId = nextLive ? String(nextLive.id) : "";
+        homeState.liveGiftCount = 0;
+      } else if (!refreshedSelected) {
+        homeState.liveSelectedId = "";
+      }
+    }
   } catch (error) {
     console.error("ZUNE Marketplace Live feed:", error);
     homeState.liveError = language() === "sw" ? "Imeshindikana kupakia matangazo. Hakikisha intaneti ipo kisha jaribu tena." : "Could not load Live broadcasts. Check your connection and try again.";
@@ -3384,6 +3395,7 @@ function bindLivePage() {
     }, {passive:true});
     viewer.addEventListener("touchend", event => {
       if (!touchStartY || !event.changedTouches?.length) return;
+      if (event.target?.closest?.("button,a,input,iframe,.z-live-viewer-products,.z-live-viewer-chat")) { touchStartY = 0; return; }
       const delta = touchStartY - event.changedTouches[0].clientY;
       touchStartY = 0;
       if (Math.abs(delta) < 65) return;
