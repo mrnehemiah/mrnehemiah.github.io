@@ -307,6 +307,8 @@ function zIcon(name) {
 
     explore: '<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5M14 8l-2 5-5 2 2-5z"/>',
 
+    live: '<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/><path d="M3 7h2M19 7h2M3 17h2M19 17h2"/>',
+
     cart: '<path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>',
 
     notification: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
@@ -2675,6 +2677,11 @@ function renderBottomNavigation() {
       icon: "home"
     },
     {
+      id: "live",
+      label: "Live",
+      icon: "live"
+    },
+    {
       id: "explore",
       label: tx("explore"),
       icon: "explore"
@@ -2741,6 +2748,14 @@ function bindNavigation() {
       // Account is a dedicated standalone page.
       if (page === "me") {
         window.location.assign("./account.html");
+        return;
+      }
+      if (page === "live" && !/\\/live\\.html$/.test(window.location.pathname)) {
+        window.location.assign("./live.html?tab=live");
+        return;
+      }
+      if (page !== "live" && /\\/live\\.html$/.test(window.location.pathname)) {
+        window.location.assign("./index.html?tab=" + encodeURIComponent(page));
         return;
       }
 
@@ -3039,6 +3054,75 @@ function bindCartEvents() {
     homeState.cartProductsLoading = false;
     if (homeState.activeTab === "cart") renderMarketplacePage("cart");
   });
+}
+
+// --------------------------------------------
+// LIVE SHOPPING — MARKETPLACE PAGE
+// --------------------------------------------
+
+function ensureLiveShoppingStyles() {
+  if (document.getElementById("zune-live-shopping-page-styles")) return;
+  const style = document.createElement("style");
+  style.id = "zune-live-shopping-page-styles";
+  style.textContent = `
+    .z-live-page{max-width:1180px;margin:0 auto;padding:20px 15px 125px}
+    .z-live-hero{position:relative;overflow:hidden;padding:26px 22px;border-radius:24px;background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.2),transparent 32%),linear-gradient(135deg,#062f25,#087a55 58%,#0b9a68);color:#fff;box-shadow:0 16px 35px rgba(5,75,48,.2)}
+    .z-live-kicker{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #ffffff55;border-radius:999px;background:#ffffff18;font-size:10px;font-weight:900;letter-spacing:1.4px}
+    .z-live-pulse{width:8px;height:8px;border-radius:50%;background:#ff4b55;box-shadow:0 0 0 5px #ff4b5530}
+    .z-live-hero h1{margin:15px 0 8px;font-size:clamp(27px,5vw,42px);font-weight:950;line-height:1.08;letter-spacing:-1px;color:#fff}
+    .z-live-hero p{max-width:560px;color:#e0f3e9;font-size:13px;line-height:1.6}
+    .z-live-section{margin-top:24px}
+    .z-live-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .z-live-section-head h2{font-size:17px;font-weight:900}
+    .z-live-section-head span{color:var(--text-muted);font-size:10px;font-weight:800;letter-spacing:1px}
+    .z-live-empty{display:flex;align-items:center;gap:14px;padding:18px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
+    .z-live-empty-icon{width:48px;height:48px;flex:0 0 48px;display:grid;place-items:center;border-radius:15px;background:color-mix(in srgb,var(--primary) 10%,var(--surface));color:var(--primary);font-size:23px}
+    .z-live-empty strong{display:block;margin-bottom:4px;font-size:13px}
+    .z-live-empty p{color:var(--text-muted);font-size:11px;line-height:1.5}
+    .z-live-page .z-live-tabs{display:flex;gap:8px;overflow:auto;padding:2px 0 5px}
+    .z-live-page .z-live-tab{flex:0 0 auto;padding:9px 13px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);font-size:11px;font-weight:800}
+    .z-live-page .z-live-tab.active{border-color:var(--primary);background:var(--primary);color:#fff}
+    @media(min-width:760px){.z-live-page{padding:28px 24px 60px}.z-live-hero{padding:38px}.z-live-empty{padding:22px}}
+  `;
+  document.head.appendChild(style);
+}
+
+function renderLivePage() {
+  ensureLiveShoppingStyles();
+  const sw = language() === "sw";
+  const sections = [
+    { id: "now", title: sw ? "LIVE SASA" : "LIVE NOW", subtitle: sw ? "MATANGAZO YANAYOENDELEA" : "STREAMING RIGHT NOW", icon: "●", empty: sw ? "Matangazo ya moja kwa moja yataonekana hapa yakianza." : "Live broadcasts will appear here when sellers go live." },
+    { id: "upcoming", title: sw ? "YANAYOKUJA" : "UPCOMING", subtitle: sw ? "RATIBA YA MATANGAZO" : "SCHEDULED BROADCASTS", icon: "◷", empty: sw ? "Matangazo yaliyopangwa yataonekana hapa." : "Scheduled broadcasts will appear here." },
+    { id: "past", title: sw ? "ZILIZOPITA" : "PAST LIVE", subtitle: sw ? "REKODI ZA MATANGAZO" : "RECENT REPLAYS", icon: "↺", empty: sw ? "Hakuna rekodi za matangazo zilizoonyeshwa hapa bado." : "No replay listings are available here yet." }
+  ];
+  return `
+    <section class="z-home z-live-shopping">
+      <main class="z-live-page">
+        <header class="z-live-hero">
+          <span class="z-live-kicker"><i class="z-live-pulse"></i> ZUNE LIVE SHOPPING</span>
+          <h1>${sw ? "Nunua ukiwa unatazama Live." : "Shop while you watch Live."}</h1>
+          <p>${sw ? "Tazama wauzaji wakionyesha bidhaa moja kwa moja, uliza maswali na gundua bidhaa unazoweza kununua." : "Watch sellers showcase products, ask questions and discover items you can buy."}</p>
+        </header>
+        <nav class="z-live-tabs" aria-label="${sw ? "Aina za matangazo" : "Broadcast categories"}" style="margin-top:18px">
+          <span class="z-live-tab active">${sw ? "Live sasa" : "Live now"}</span>
+          <span class="z-live-tab">${sw ? "Yanayokuja" : "Upcoming"}</span>
+          <span class="z-live-tab">${sw ? "Zilizopita" : "Past live"}</span>
+        </nav>
+        ${sections.map(section => `
+          <section class="z-live-section" aria-labelledby="z-live-${section.id}-title">
+            <div class="z-live-section-head">
+              <h2 id="z-live-${section.id}-title">${section.title}</h2>
+              <span>${section.subtitle}</span>
+            </div>
+            <div class="z-live-empty">
+              <span class="z-live-empty-icon" aria-hidden="true">${section.icon}</span>
+              <div><strong>${sw ? "Matangazo yataonekana hapa" : "Broadcasts will appear here"}</strong><p>${section.empty}</p></div>
+            </div>
+          </section>
+        `).join("")}
+      </main>
+    </section>
+  `;
 }
 
 // --------------------------------------------
@@ -3544,6 +3628,10 @@ async function renderMarketplacePage(page) {
       content = renderCategoriesPage();
       break;
 
+    case "live":
+      content = renderLivePage();
+      break;
+
     case "cart":
       if (!cartModule) {
         app.innerHTML = '<section class="z-cart-loading" role="status" aria-live="polite"><div class="zune-wave"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia kikapu...</p></section>';
@@ -3601,6 +3689,9 @@ async function renderMarketplacePage(page) {
 
     case "categories":
       bindCategoriesPage();
+      break;
+
+    case "live":
       break;
 
     case "cart":
@@ -3690,7 +3781,7 @@ export async function renderMarketplaceHome({
 
   // Fungua tab iliyoombwa na kiungo cha Account, kama ipo.
   const requestedTab = new URLSearchParams(window.location.search).get("tab");
-  const allowedTabs = new Set(["home", "explore", "categories", "cart", "saved", "me"]);
+  const allowedTabs = new Set(["home", "live", "explore", "categories", "cart", "saved", "me"]);
   const initialTab = allowedTabs.has(requestedTab) ? requestedTab : "home";
 
   // Onyesha ukurasa ulioombwa mara moja.
