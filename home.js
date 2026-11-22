@@ -2108,6 +2108,7 @@ const ZUNE_HOME_SLIDES = [
  {k:"JENGA BIASHARA",sw:"Panua biashara yako mtandaoni",en:"Grow your business online",sd:"Anza safari yako ya kuuza na ZUNE.",ed:"Start your selling journey with ZUNE.",sc:"Fungua akaunti",ec:"Get started",a:"account",img:"https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=1400&q=85"},
  {k:"GUNDUA ZAIDI",sw:"Kuna mengi ya kugundua",en:"There is more to discover",sd:"Vinjari bidhaa kutoka makundi tofauti.",ed:"Explore products across different categories.",sc:"Gundua sasa",ec:"Discover now",a:"explore",img:"https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85"},
  {k:"ZUNE KWA WOTE",sw:"Nunua na uza kwa urahisi",en:"Buy and sell with ease",sd:"Soko linalowaunganisha wanunuzi na wauzaji.",ed:"A marketplace connecting buyers and sellers.",sc:"Tembelea soko",ec:"Visit marketplace",a:"products",img:"https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1400&q=85"},
+ {k:"ZUNE DELIVERY · FURSA KWA MADEREVA",sw:"Jiunge na timu ya madereva wa ZUNE",en:"Ride with ZUNE Delivery",sd:"Tafuta nafasi ya udereva, sajili taarifa zako na wasilisha nyaraka zako ili zikaguliwe. Anza safari yako ya kufanya delivery na ZUNE.",ed:"Apply to become a ZUNE driver, submit your details and documents for review. Start your delivery journey with ZUNE.",sc:"Jisajili kama dereva",ec:"Register as a driver",a:"delivery",img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1400&q=85"},
  {k:"ZUNE STATUS",sw:"Onyesha kinachoendelea dukani kwa Status",en:"Bring your store to life with Status",sd:"Weka picha au video za bidhaa na taarifa mpya. Wateja wataziona kwenye ukurasa wa maduka maarufu; Status huisha baada ya muda.",ed:"Post product photos, short videos and store updates. Customers can view them from Featured Stores; each Status expires automatically.",sc:"Fungua Seller Dashboard",ec:"Open Seller Dashboard",a:"seller",img:"https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=85"},
 ];
 function renderHomeCarousel(){
@@ -2133,7 +2134,8 @@ function bindCarouselEvents(){
  }));
  el.querySelector("[data-slide-action]")?.addEventListener("click",()=>{
   const a=el.querySelector("[data-slide-action]").dataset.slideAction;
-  if(a==="account")window.location.assign("./account.html");
+  if(a==="delivery")window.location.assign("https://mrnehemiah.github.io/Zune-delivery-/signup.html");
+  else if(a==="account")window.location.assign("./account.html");
   else if(a==="seller")window.location.assign("https://mrnehemiah.github.io/zuneacts/");
   else if(a==="categories")renderMarketplacePage("explore");
   else if(a==="stores")document.getElementById("z-featured-stores")?.scrollIntoView({behavior:"smooth"});
@@ -2392,15 +2394,7 @@ function renderHomePage() {
       <main class="z-home-content">
 
         ${renderHomeCarousel()}
-        <section class="z-driver-recruitment" aria-label="ZUNE Delivery driver recruitment">
-          <div class="z-driver-recruitment-mark" aria-hidden="true">Z<span>↗</span></div>
-          <div class="z-driver-recruitment-copy">
-            <span class="z-driver-recruitment-kicker">${language()==="sw"?"FURSA KWA MADEREVA":"DRIVER OPPORTUNITY"}</span>
-            <h2>${language()==="sw"?"Jiunge na ZUNE Delivery":"Become a ZUNE Delivery driver"}</h2>
-            <p>${language()==="sw"?"Tumia chombo chako kufanya delivery, pokea kazi na simamia safari zako kupitia akaunti ya dereva ya ZUNE Delivery.":"Use your vehicle to deliver orders, receive jobs and manage your routes in one driver account."}</p>
-          </div>
-          <a class="z-driver-recruitment-cta" href="https://mrnehemiah.github.io/Zune-delivery-/signup.html">${language()==="sw"?"Jisajili kama dereva":"Register as a driver"} <span aria-hidden="true">→</span></a>
-        </section>
+
 
 
         <section>
