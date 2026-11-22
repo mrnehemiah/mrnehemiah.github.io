@@ -64,6 +64,11 @@ const homeState = {
   liveLoaded: false,
   liveError: "",
   liveSelectedId: "",
+  liveMiniPlayer: false,
+  liveGiftCount: 0,
+  liveLikedIds: {},
+  liveAutoNext: true,
+  liveRefreshTimer: null,
 
   user: null,
   app: null,
@@ -3166,6 +3171,38 @@ function ensureLiveShoppingStyles() {
     .z-live-chat-note{margin-top:9px;line-height:1.5}
     @media(max-width:759px){.z-live-chat-desktop{display:none}.z-live-chat-mobile{display:block}}
     @media(min-width:760px){.z-live-page{padding:28px 24px 60px}.z-live-hero{padding:38px}.z-live-empty{padding:22px}}
+    .z-live-viewer{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;overflow:auto;background:#070b09;color:#fff;overscroll-behavior:contain;touch-action:pan-y}
+    .z-live-viewer-top{position:sticky;top:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:linear-gradient(#050807ed,#05080799);backdrop-filter:blur(12px)}
+    .z-live-viewer-top strong{font-size:13px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .z-live-viewer-actions{display:flex;align-items:center;gap:7px}
+    .z-live-viewer-btn{min-width:38px;min-height:38px;border:1px solid #ffffff35;border-radius:12px;background:#ffffff16;color:#fff;font-size:12px;font-weight:850}
+    .z-live-viewer-stage{position:relative;width:100%;max-height:56vh;aspect-ratio:16/9;margin:auto 0;background:#000;display:grid;place-items:center}
+    .z-live-viewer-stage iframe{width:100%;height:100%;border:0}
+    .z-live-viewer-side{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:9px;z-index:3}
+    .z-live-viewer-side button{width:45px;height:45px;border:1px solid #ffffff45;border-radius:50%;background:#101a16dd;color:#fff;font-size:19px;box-shadow:0 5px 16px #0006}
+    .z-live-viewer-side button.active{background:#e83e68;border-color:#e83e68}
+    .z-live-viewer-details{padding:14px 15px 26px;display:flex;flex-direction:column;gap:10px}
+    .z-live-viewer-store{font-size:12px;color:#b9f3d9;font-weight:850}
+    .z-live-viewer-title{font-size:17px;font-weight:950;line-height:1.3}
+    .z-live-viewer-meta{font-size:11px;color:#c3d0ca}
+    .z-live-viewer-products{display:flex;gap:9px;overflow-x:auto;padding:2px 0 8px}
+    .z-live-viewer-product{flex:0 0 220px;display:flex;align-items:center;gap:9px;padding:9px;border:1px solid #ffffff2b;border-radius:13px;background:#ffffff12;color:#fff}
+    .z-live-viewer-product img{width:48px;height:48px;object-fit:cover;border-radius:9px}
+    .z-live-viewer-product span{display:block;font-size:10px;color:#b9f3d9;font-weight:850;margin-top:4px}
+    .z-live-viewer-product button{margin-left:auto;border:0;border-radius:9px;padding:8px 10px;background:#0b9668;color:#fff;font-weight:900}
+    .z-live-viewer-chat{display:none;padding:12px;border:1px solid #ffffff25;border-radius:14px;background:#ffffff0d}
+    .z-live-viewer-chat.open{display:block}
+    .z-live-viewer-chat iframe{width:100%;height:310px;border:0;border-radius:10px;background:#fff}
+    .z-live-viewer-chat a{display:block;padding:11px;border-radius:10px;background:#0b9668;color:#fff;text-align:center;text-decoration:none;font-size:12px;font-weight:900}
+    .z-live-viewer-hint{font-size:10px;color:#aebdb5;text-align:center;padding:0 10px 8px}
+    .z-live-mini{position:fixed;right:12px;bottom:86px;z-index:1100;width:min(270px,calc(100vw - 24px));overflow:hidden;border:1px solid #ffffff40;border-radius:16px;background:#101713;color:#fff;box-shadow:0 14px 38px #0006}
+    .z-live-mini-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:11px;font-weight:900}
+    .z-live-mini-head button{border:0;background:#ffffff20;color:#fff;border-radius:8px;padding:5px 8px}
+    .z-live-mini-video{position:relative;aspect-ratio:16/9;background:#000}
+    .z-live-mini-video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+    .z-live-mini-expand{width:100%;padding:9px;border:0;background:#087a55;color:#fff;font-size:11px;font-weight:900}
+    @media(min-width:760px){.z-live-mini{right:22px;bottom:24px;width:300px}}
+    @media(prefers-reduced-motion:reduce){.z-live-viewer-btn,.z-live-viewer-side button{transition:none}}
   `;
   document.head.appendChild(style);
 }
@@ -3207,6 +3244,79 @@ function liveBroadcastCard(item, sw) {
   `;
 }
 
+function renderLiveViewer(selected, sw) {
+  const videoId = /^[a-zA-Z0-9_-]{6,20}$/.test(selected?.youtube_video_id || "") ? selected.youtube_video_id : "";
+  const liveItems = (homeState.liveBroadcasts || []).filter(item => item.section === "live");
+  const currentIndex = liveItems.findIndex(item => String(item.id) === String(selected.id));
+  const products = Array.isArray(selected.products) ? selected.products : [];
+  const liked = !!homeState.liveLikedIds[String(selected.id)];
+  const viewers = selected.concurrent_viewers == null ? (sw ? "Haipatikani" : "Unavailable") : new Intl.NumberFormat(sw ? "sw-TZ" : "en-TZ").format(Number(selected.concurrent_viewers));
+  return `
+    <section class="z-live-viewer" id="z-live-viewer" data-live-swipe="true" aria-label="${sw ? "Mtazamaji wa ZUNE Live" : "ZUNE Live viewer"}">
+      <header class="z-live-viewer-top">
+        <button type="button" class="z-live-viewer-btn" data-live-close aria-label="${sw ? "Funga Live" : "Close Live"}">×</button>
+        <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong>
+        <div class="z-live-viewer-actions">
+          <span class="z-live-status ${selected.section === "live" ? "is-live" : "is-past"}">${selected.section === "live" ? "● LIVE" : (sw ? "IMEMALIZIKA" : "ENDED")}</span>
+          <button type="button" class="z-live-viewer-btn" data-live-minimize ${videoId ? "" : "disabled"} title="${sw ? "Punguza video" : "Minimize player"}">▣</button>
+        </div>
+      </header>
+      <div class="z-live-viewer-stage">
+        ${videoId ? `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&controls=1&rel=0" title="${safe(selected.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="eager"></iframe>` : `<p>${sw ? "Video haipatikani kwa sasa." : "Video is not available right now."}</p>`}
+        <div class="z-live-viewer-side">
+          <button type="button" data-live-like class="${liked ? "active" : ""}" aria-label="Like">♥</button>
+          <button type="button" data-live-gift aria-label="Send free gift">🎁</button>
+          <button type="button" data-live-chat-toggle aria-label="Chat">💬</button>
+          <button type="button" data-live-share aria-label="Share">↗</button>
+        </div>
+      </div>
+      <div class="z-live-viewer-details">
+        <div class="z-live-viewer-store">${safe(selected.store?.name || "ZUNE Seller")} · 👁 ${viewers} ${sw ? "watazamaji" : "viewers"}</div>
+        <div class="z-live-viewer-title">${safe(selected.title)}</div>
+        ${selected.description ? `<div class="z-live-viewer-meta">${safe(selected.description)}</div>` : ""}
+        <div class="z-live-viewer-meta" id="z-live-gift-count">${sw ? "Zawadi za bure zilizotumwa:" : "Free reactions sent:"} ${homeState.liveGiftCount}</div>
+        ${products.length ? `<strong style="font-size:12px">${sw ? "Nunua bidhaa za Live" : "Shop products from this Live"}</strong><div class="z-live-viewer-products">${products.map(product => `<div class="z-live-viewer-product">${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}<div><b>${safe(product.title)}</b><span>${money(product.price)}</span></div><button type="button" data-live-add-product="${safe(product.id)}">+</button></div>`).join("")}</div>` : ""}
+        <section class="z-live-viewer-chat" id="z-live-viewer-chat">
+          ${videoId ? `<div class="z-live-chat-desktop"><iframe src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=mrnehemiah.github.io" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><a href="https://www.youtube.com/live_chat?v=${videoId}" target="_blank" rel="noopener noreferrer">${sw ? "Fungua Chat kwenye YouTube" : "Open chat on YouTube"} ↗</a>` : ""}
+          <p class="z-live-viewer-meta">${sw ? "Chat inadhibitiwa na YouTube. ZUNE haitoi uwezo wa kufuta au kuzuia maoni ya watazamaji kupitia player hii." : "Chat is hosted by YouTube. ZUNE cannot delete or block viewer messages from this embedded player."}</p>
+        </section>
+        <div class="z-live-viewer-actions">
+          <button type="button" class="z-live-viewer-btn" data-live-prev ${currentIndex <= 0 ? "disabled" : ""}>↑ ${sw ? "Iliyopita" : "Previous"}</button>
+          <button type="button" class="z-live-viewer-btn" data-live-next ${currentIndex < 0 || currentIndex >= liveItems.length - 1 ? "disabled" : ""}>${sw ? "Inayofuata" : "Next"} ↓</button>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#d7e5de"><input type="checkbox" data-live-auto-next ${homeState.liveAutoNext ? "checked" : ""}> ${sw ? "Auto Next" : "Auto Next"}</label>
+        </div>
+        <div class="z-live-viewer-hint">${sw ? "Telezesha juu kwenda Live inayofuata au chini kurudi nyuma." : "Swipe up for the next Live or down to go back."}</div>
+      </div>
+    </section>`;
+}
+
+function renderLiveMiniPlayer() {
+  if (!homeState.liveMiniPlayer || !homeState.liveSelectedId) return "";
+  const selected = (homeState.liveBroadcasts || []).find(item => String(item.id) === String(homeState.liveSelectedId));
+  const videoId = /^[a-zA-Z0-9_-]{6,20}$/.test(selected?.youtube_video_id || "") ? selected.youtube_video_id : "";
+  if (!selected || !videoId) return "";
+  return `
+    <aside class="z-live-mini" aria-label="ZUNE Live mini player">
+      <div class="z-live-mini-head"><span>● ${safe(selected.store?.name || "ZUNE Live")}</span><button type="button" data-live-mini-close aria-label="Close mini player">×</button></div>
+      <div class="z-live-mini-video"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&controls=1&rel=0" title="${safe(selected.title)}" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy"></iframe></div>
+      <button type="button" class="z-live-mini-expand" data-live-mini-expand>${language()==="sw" ? "Fungua Live" : "Open Live"}</button>
+    </aside>`;
+}
+
+function bindLivePageMiniPlayer() {
+}
+
+function moveLiveSelection(direction) {
+  const liveItems = (homeState.liveBroadcasts || []).filter(item => item.section === "live");
+  const index = liveItems.findIndex(item => String(item.id) === String(homeState.liveSelectedId));
+  const next = liveItems[index + direction];
+  if (!next) return;
+  homeState.liveSelectedId = String(next.id);
+  homeState.liveGiftCount = 0;
+  homeState.liveMiniPlayer = false;
+  renderMarketplacePage("live");
+}
+
 function renderLivePage() {
   ensureLiveShoppingStyles();
   const sw = language() === "sw";
@@ -3237,54 +3347,112 @@ function renderLivePage() {
       </nav>
       ${homeState.liveLoading && !homeState.liveLoaded ? `<div class="z-live-empty"><div><strong>${sw ? "Inapakia matangazo..." : "Loading broadcasts..."}</strong></div></div>` : ""}
       ${homeState.liveError ? `<div class="z-live-feed-error" role="alert">${safe(homeState.liveError)} <button type="button" id="z-live-retry">${sw ? "Jaribu tena" : "Try again"}</button></div>` : ""}
-      ${selected ? `
-        <section class="z-live-player-panel" id="z-live-player">
-          <div class="z-live-section-head"><h2>${safe(selected.title)}</h2><button type="button" id="z-live-close-player">${sw ? "Funga" : "Close"} ×</button></div>
-          ${videoId ? `<div class="z-live-video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0" title="${safe(selected.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>` : `<p>${sw ? "Video ya matangazo haya haipatikani kwa sasa." : "The video for this broadcast is not available yet."}</p>`}
-          <p class="z-live-player-store">${sw ? "Duka:" : "Store:"} <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
-          <div class="z-live-player-meta">
-            <span>👁 ${sw ? "Watazamaji:" : "Viewers:"} <strong>${selected.concurrent_viewers == null ? (sw ? "Haipatikani" : "Unavailable") : new Intl.NumberFormat(sw ? "sw-TZ" : "en-TZ").format(Number(selected.concurrent_viewers))}</strong></span>
-          </div>
-          ${selected.section === "live" && videoId ? `
-            <section class="z-live-chat-panel" aria-label="YouTube Live Chat">
-              <div class="z-live-chat-head"><h3>💬 ${sw ? "Mazungumzo ya Live" : "Live chat"}</h3><span>${sw ? "Mazungumzo ya YouTube" : "YouTube chat"}</span></div>
-              <div class="z-live-chat-desktop">
-                <iframe src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=mrnehemiah.github.io" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
-              </div>
-              <a class="z-live-chat-mobile" href="https://www.youtube.com/live_chat?v=${videoId}" target="_blank" rel="noopener noreferrer">${sw ? "Fungua Live Chat kwenye YouTube" : "Open Live Chat on YouTube"} ↗</a>
-              <p class="z-live-chat-note">${sw ? "Kwenye simu, YouTube hufungua Live Chat kupitia ukurasa/app yake. Ingia YouTube ili kutuma ujumbe." : "On mobile, YouTube opens Live Chat in its own page or app. Sign in to YouTube to send messages."}</p>
-            </section>` : ""}
-          ${selectedProducts.length ? `<div class="z-live-pinned-products"><strong>${sw ? "Nunua bidhaa zinazoonyeshwa" : "Shop featured products"}</strong><div class="z-live-product-row">${selectedProducts.map(product => `<div class="z-live-product">${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}<div class="z-live-product-info"><b>${safe(product.title)}</b><span>${money(product.price)}</span></div><button type="button" data-live-add-product="${safe(product.id)}">+</button></div>`).join("")}</div></div>` : ""}
-        </section>` : ""}
+      ${selected && !homeState.liveMiniPlayer ? renderLiveViewer(selected, sw) : ""}
       ${section("now", sw ? "LIVE SASA" : "LIVE NOW", sw ? "MATANGAZO YANAYOENDELEA" : "STREAMING RIGHT NOW", live, sw ? "Matangazo ya moja kwa moja yataonekana hapa yakianza." : "Public broadcasts will appear here when sellers go live.")}
       ${section("upcoming", sw ? "YANAYOKUJA" : "UPCOMING", sw ? "RATIBA YA MATANGAZO" : "SCHEDULED BROADCASTS", upcoming, sw ? "Matangazo ya umma yaliyopangwa yataonekana hapa." : "Upcoming public broadcasts will appear here.")}
       ${section("past", sw ? "ZILIZOPITA" : "PAST LIVE", sw ? "REKODI ZA MATANGAZO" : "RECENT REPLAYS", past, sw ? "Rekodi za matangazo ya umma zitaonekana hapa." : "Public replay listings will appear here.")}
     </main></section>`;
 }
 
-async function loadMarketplaceLiveFeed(force = false) {
+async function loadMarketplaceLiveFeed(force = false, quiet = false) {
   if (homeState.liveLoading || (homeState.liveLoaded && !force)) return;
+  let shouldRerender = !quiet;
   homeState.liveLoading = true;
   homeState.liveError = "";
-  if (homeState.activeTab === "live") renderMarketplacePage("live");
+  if (homeState.activeTab === "live" && !quiet) renderMarketplacePage("live");
   try {
     const { data, error } = await supabase.functions.invoke("marketplace-live", { body: {} });
     if (error) throw error;
     if (!data?.ok || !Array.isArray(data.broadcasts)) throw new Error(data?.error || "Live feed response was invalid");
+    const previousFeedShape = homeState.liveBroadcasts.map(item => String(item.id) + ":" + item.section).join("|");
+    const previousSelected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
     homeState.liveBroadcasts = data.broadcasts;
+    const nextFeedShape = homeState.liveBroadcasts.map(item => String(item.id) + ":" + item.section).join("|");
+    if (previousFeedShape !== nextFeedShape) shouldRerender = true;
     homeState.liveLoaded = true;
-    if (homeState.liveSelectedId && !homeState.liveBroadcasts.some(item => String(item.id) === String(homeState.liveSelectedId))) homeState.liveSelectedId = "";
+    if (homeState.liveSelectedId) {
+      const refreshedSelected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
+      const endedOrRemoved = !refreshedSelected || (previousSelected?.section === "live" && refreshedSelected.section !== "live");
+      if (endedOrRemoved && homeState.liveAutoNext) {
+        shouldRerender = true;
+        const nextLive = homeState.liveBroadcasts.find(item => item.section === "live" && String(item.id) !== String(homeState.liveSelectedId));
+        homeState.liveSelectedId = nextLive ? String(nextLive.id) : "";
+        homeState.liveGiftCount = 0;
+      } else if (!refreshedSelected) {
+        shouldRerender = true;
+        homeState.liveSelectedId = "";
+      }
+    }
   } catch (error) {
     console.error("ZUNE Marketplace Live feed:", error);
     homeState.liveError = language() === "sw" ? "Imeshindikana kupakia matangazo. Hakikisha intaneti ipo kisha jaribu tena." : "Could not load Live broadcasts. Check your connection and try again.";
     homeState.liveLoaded = true;
   } finally {
     homeState.liveLoading = false;
-    if (homeState.activeTab === "live") renderMarketplacePage("live");
+    if (homeState.activeTab === "live" && shouldRerender) renderMarketplacePage("live");
   }
 }
 
 function bindLivePage() {
+  if (homeState.liveRefreshTimer) clearInterval(homeState.liveRefreshTimer);
+  homeState.liveRefreshTimer = setInterval(() => {
+    if (homeState.activeTab === "live") loadMarketplaceLiveFeed(true, true);
+  }, 30000);
+  const viewer = document.getElementById("z-live-viewer");
+  if (viewer) {
+    let touchStartY = 0;
+    viewer.addEventListener("touchstart", event => {
+      if (event.touches?.length === 1) touchStartY = event.touches[0].clientY;
+    }, {passive:true});
+    viewer.addEventListener("touchend", event => {
+      if (!touchStartY || !event.changedTouches?.length) return;
+      if (event.target?.closest?.("button,a,input,iframe,.z-live-viewer-products,.z-live-viewer-chat")) { touchStartY = 0; return; }
+      const delta = touchStartY - event.changedTouches[0].clientY;
+      touchStartY = 0;
+      if (Math.abs(delta) < 65) return;
+      moveLiveSelection(delta > 0 ? 1 : -1);
+    }, {passive:true});
+  }
+  document.querySelector("[data-live-close]")?.addEventListener("click", () => {
+    homeState.liveSelectedId = "";
+    homeState.liveMiniPlayer = false;
+    renderMarketplacePage("live");
+  });
+  document.querySelector("[data-live-minimize]")?.addEventListener("click", () => {
+    homeState.liveMiniPlayer = true;
+    renderMarketplacePage(homeState.activeTab);
+  });
+  document.querySelector("[data-live-prev]")?.addEventListener("click", () => moveLiveSelection(-1));
+  document.querySelector("[data-live-next]")?.addEventListener("click", () => moveLiveSelection(1));
+  document.querySelector("[data-live-auto-next]")?.addEventListener("change", event => { homeState.liveAutoNext = !!event.target.checked; });
+  document.querySelector("[data-live-like]")?.addEventListener("click", event => {
+    const id = String(homeState.liveSelectedId);
+    homeState.liveLikedIds[id] = !homeState.liveLikedIds[id];
+    event.currentTarget.classList.toggle("active", homeState.liveLikedIds[id]);
+  });
+  document.querySelector("[data-live-gift]")?.addEventListener("click", () => {
+    homeState.liveGiftCount += 1;
+    const count = document.getElementById("z-live-gift-count");
+    if (count) count.textContent = (language()==="sw" ? "Zawadi za bure zilizotumwa: " : "Free reactions sent: ") + homeState.liveGiftCount;
+  });
+  document.querySelector("[data-live-chat-toggle]")?.addEventListener("click", () => {
+    document.getElementById("z-live-viewer-chat")?.classList.toggle("open");
+  });
+  document.querySelector("[data-live-share]")?.addEventListener("click", async () => {
+    const selected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
+    const url = selected?.watch_url || (selected?.youtube_video_id ? "https://www.youtube.com/watch?v="+encodeURIComponent(selected.youtube_video_id) : location.href);
+    try { if (navigator.share) await navigator.share({title:selected?.title || "ZUNE Live",url}); else if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url); }
+    catch (error) { if (error?.name !== "AbortError") console.warn("ZUNE Live share:", error); }
+  });
+  document.querySelector("[data-live-mini-close]")?.addEventListener("click", () => {
+    homeState.liveMiniPlayer = false;
+    homeState.liveSelectedId = "";
+    renderMarketplacePage(homeState.activeTab);
+  });
+  document.querySelector("[data-live-mini-expand]")?.addEventListener("click", () => {
+    homeState.liveMiniPlayer = false;
+    renderMarketplacePage("live");
+  });
   if (!homeState.liveLoaded && !homeState.liveLoading) loadMarketplaceLiveFeed();
   document.getElementById("z-live-refresh")?.addEventListener("click", () => {
     homeState.liveLoaded = false;
@@ -3299,13 +3467,10 @@ function bindLivePage() {
   }));
   document.querySelectorAll("[data-live-watch]").forEach(button => button.addEventListener("click", () => {
     homeState.liveSelectedId = button.dataset.liveWatch || "";
+    homeState.liveGiftCount = 0;
+    homeState.liveMiniPlayer = false;
     renderMarketplacePage("live");
-    document.getElementById("z-live-player")?.scrollIntoView({behavior:"smooth",block:"start"});
   }));
-  document.getElementById("z-live-close-player")?.addEventListener("click", () => {
-    homeState.liveSelectedId = "";
-    renderMarketplacePage("live");
-  });
   document.querySelectorAll("[data-live-add-product]").forEach(button => button.addEventListener("click", () => {
     const id = button.dataset.liveAddProduct;
     const product = homeState.liveBroadcasts.flatMap(item => item.products || []).find(item => String(item.id) === String(id));
@@ -3782,6 +3947,10 @@ async function renderMarketplacePage(page) {
   ensureHomeVisualEnhancements();
   ensurePremiumSearchStyles();
   homeState.activeTab = page;
+  if (page !== "live" && homeState.liveRefreshTimer) {
+    clearInterval(homeState.liveRefreshTimer);
+    homeState.liveRefreshTimer = null;
+  }
   if (page !== "home" && homeState.carouselTimer) {
     clearInterval(homeState.carouselTimer);
     homeState.carouselTimer = null;
@@ -3854,6 +4023,8 @@ async function renderMarketplacePage(page) {
 
       ${content}
 
+      ${renderLiveMiniPlayer()}
+
       ${renderBottomNavigation()}
 
     </div>
@@ -3863,6 +4034,7 @@ async function renderMarketplacePage(page) {
   renderSponsoredPlacementBlocks();
   bindSponsoredAdEvents();
   bindNavigation();
+  bindLivePageMiniPlayer();
 
   switch (homeState.activeTab) {
     case "home":
