@@ -209,11 +209,20 @@ public class MainActivity extends Activity {
             if (selected < 0) return false;
             try {
                 PackageManager pm = getPackageManager();
-                for (int i = 0; i < aliases.length; i++) {
-                    android.content.ComponentName component = new android.content.ComponentName(MainActivity.this, "com.zune.app." + aliases[i]);
-                    pm.setComponentEnabledSetting(component,
-                        i == selected ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                // Enable the new launcher entry first so the app never temporarily has no launcher icon.
+                android.content.ComponentName chosen = new android.content.ComponentName(
+                        MainActivity.this, "com.zune.app." + aliases[selected]);
+                pm.setComponentEnabledSetting(chosen,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                         PackageManager.DONT_KILL_APP);
+                // Then disable every other alias, including the default launcher entry.
+                for (int i = 0; i < aliases.length; i++) {
+                    if (i == selected) continue;
+                    android.content.ComponentName component = new android.content.ComponentName(
+                            MainActivity.this, "com.zune.app." + aliases[i]);
+                    pm.setComponentEnabledSetting(component,
+                            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                            PackageManager.DONT_KILL_APP);
                 }
                 getSharedPreferences("zune_icon", MODE_PRIVATE).edit().putString("selected", iconKey).apply();
                 return true;
@@ -221,6 +230,11 @@ public class MainActivity extends Activity {
                 android.util.Log.e("ZUNE-ICON", "Unable to change launcher icon", error);
                 return false;
             }
+        }
+
+        @JavascriptInterface
+        public String getSelectedLauncherIcon() {
+            return getSharedPreferences("zune_icon", MODE_PRIVATE).getString("selected", "default");
         }
     }
 
