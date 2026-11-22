@@ -3221,6 +3221,7 @@ async function loadMarketplaceLiveFeed(force = false) {
   } catch (error) {
     console.error("ZUNE Marketplace Live feed:", error);
     homeState.liveError = language() === "sw" ? "Imeshindikana kupakia matangazo. Hakikisha intaneti ipo kisha jaribu tena." : "Could not load Live broadcasts. Check your connection and try again.";
+    homeState.liveLoaded = true;
   } finally {
     homeState.liveLoading = false;
     if (homeState.activeTab === "live") renderMarketplacePage("live");
