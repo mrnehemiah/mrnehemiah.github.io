@@ -2397,7 +2397,7 @@ function renderHomePage() {
           <div class="z-driver-recruitment-copy">
             <span class="z-driver-recruitment-kicker">${language()==="sw"?"FURSA KWA MADEREVA":"DRIVER OPPORTUNITY"}</span>
             <h2>${language()==="sw"?"Jiunge na ZUNE Delivery":"Become a ZUNE Delivery driver"}</h2>
-            <p>${language()==="sw"?"Tumia chombo chako kufanya delivery, pokea kazi na simamia safari zako kupitia akaunti moja.":"Use your vehicle to deliver orders, receive jobs and manage your routes in one driver account."}</p>
+            <p>${language()==="sw"?"Tumia chombo chako kufanya delivery, pokea kazi na simamia safari zako kupitia akaunti ya dereva ya ZUNE Delivery.":"Use your vehicle to deliver orders, receive jobs and manage your routes in one driver account."}</p>
           </div>
           <a class="z-driver-recruitment-cta" href="https://mrnehemiah.github.io/Zune-delivery-/signup.html">${language()==="sw"?"Jisajili kama dereva":"Register as a driver"} <span aria-hidden="true">→</span></a>
         </section>
