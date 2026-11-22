@@ -68,6 +68,7 @@ const homeState = {
   liveGiftCount: 0,
   liveLikedIds: {},
   liveAutoNext: true,
+  liveRefreshTimer: null,
 
   user: null,
   app: null,
@@ -3353,26 +3354,32 @@ function renderLivePage() {
     </main></section>`;
 }
 
-async function loadMarketplaceLiveFeed(force = false) {
+async function loadMarketplaceLiveFeed(force = false, quiet = false) {
   if (homeState.liveLoading || (homeState.liveLoaded && !force)) return;
+  let shouldRerender = !quiet;
   homeState.liveLoading = true;
   homeState.liveError = "";
-  if (homeState.activeTab === "live") renderMarketplacePage("live");
+  if (homeState.activeTab === "live" && !quiet) renderMarketplacePage("live");
   try {
     const { data, error } = await supabase.functions.invoke("marketplace-live", { body: {} });
     if (error) throw error;
     if (!data?.ok || !Array.isArray(data.broadcasts)) throw new Error(data?.error || "Live feed response was invalid");
+    const previousFeedShape = homeState.liveBroadcasts.map(item => String(item.id) + ":" + item.section).join("|");
     const previousSelected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
     homeState.liveBroadcasts = data.broadcasts;
+    const nextFeedShape = homeState.liveBroadcasts.map(item => String(item.id) + ":" + item.section).join("|");
+    if (previousFeedShape !== nextFeedShape) shouldRerender = true;
     homeState.liveLoaded = true;
     if (homeState.liveSelectedId) {
       const refreshedSelected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
       const endedOrRemoved = !refreshedSelected || (previousSelected?.section === "live" && refreshedSelected.section !== "live");
       if (endedOrRemoved && homeState.liveAutoNext) {
+        shouldRerender = true;
         const nextLive = homeState.liveBroadcasts.find(item => item.section === "live" && String(item.id) !== String(homeState.liveSelectedId));
         homeState.liveSelectedId = nextLive ? String(nextLive.id) : "";
         homeState.liveGiftCount = 0;
       } else if (!refreshedSelected) {
+        shouldRerender = true;
         homeState.liveSelectedId = "";
       }
     }
@@ -3382,11 +3389,15 @@ async function loadMarketplaceLiveFeed(force = false) {
     homeState.liveLoaded = true;
   } finally {
     homeState.liveLoading = false;
-    if (homeState.activeTab === "live") renderMarketplacePage("live");
+    if (homeState.activeTab === "live" && shouldRerender) renderMarketplacePage("live");
   }
 }
 
 function bindLivePage() {
+  if (homeState.liveRefreshTimer) clearInterval(homeState.liveRefreshTimer);
+  homeState.liveRefreshTimer = setInterval(() => {
+    if (homeState.activeTab === "live") loadMarketplaceLiveFeed(true, true);
+  }, 30000);
   const viewer = document.getElementById("z-live-viewer");
   if (viewer) {
     let touchStartY = 0;
@@ -3936,6 +3947,10 @@ async function renderMarketplacePage(page) {
   ensureHomeVisualEnhancements();
   ensurePremiumSearchStyles();
   homeState.activeTab = page;
+  if (page !== "live" && homeState.liveRefreshTimer) {
+    clearInterval(homeState.liveRefreshTimer);
+    homeState.liveRefreshTimer = null;
+  }
   if (page !== "home" && homeState.carouselTimer) {
     clearInterval(homeState.carouselTimer);
     homeState.carouselTimer = null;
