@@ -497,18 +497,18 @@ function addHomeStyles() {
     }
 
 
-    .z-home-carousel{position:relative;overflow:hidden;min-height:230px;margin:0 0 25px;border-radius:22px;isolation:isolate;background:var(--primary);color:#fff;touch-action:pan-y}
-    .z-slide-image{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover}
-    .z-home-carousel:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(10,18,15,.9),rgba(10,18,15,.58) 60%,rgba(10,18,15,.12))}
-    .z-slide-copy{position:relative;z-index:1;min-height:230px;max-width:560px;padding:27px 23px 49px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
-    .z-slide-kicker{margin-bottom:10px;font-size:10px;font-weight:900;letter-spacing:1.4px;color:#fff}
+    .z-home-carousel{position:relative;overflow:hidden;min-height:250px;margin:0 0 25px;border:1px solid rgba(255,255,255,.45);border-radius:24px;isolation:isolate;background:#073d2b;color:#fff;touch-action:pan-y;transform:translateZ(0);box-shadow:0 16px 34px rgba(7,55,36,.22),0 5px 0 rgba(5,70,46,.12),inset 0 1px 0 rgba(255,255,255,.28)}
+    .z-slide-image{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.035);filter:saturate(1.08) contrast(1.04);transition:transform 7s ease}
+    .z-home-carousel:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(4,25,17,.88) 0%,rgba(4,25,17,.68) 48%,rgba(4,25,17,.12) 100%),linear-gradient(0deg,rgba(0,0,0,.28),transparent 45%);pointer-events:none}.z-home-carousel:hover .z-slide-image{transform:scale(1.09)}
+    .z-slide-copy{position:relative;z-index:1;min-height:250px;max-width:560px;padding:29px 23px 54px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;transform:translateZ(24px);text-shadow:0 2px 12px rgba(0,0,0,.3)}
+    .z-slide-kicker{display:inline-flex;align-items:center;min-height:25px;margin-bottom:11px;padding:5px 10px;border:1px solid rgba(255,255,255,.38);border-radius:999px;background:rgba(255,255,255,.16);backdrop-filter:blur(10px);font-size:10px;font-weight:900;letter-spacing:1.4px;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.16)}
     .z-slide-copy h2{max-width:460px;margin:0 0 9px;font-size:clamp(22px,4vw,32px);line-height:1.12;font-weight:900;color:#fff}
     .z-slide-copy p{max-width:430px;margin:0 0 16px;font-size:13px;line-height:1.55;color:#fff}
-    .z-slide-cta{min-height:39px;padding:0 17px;border:0;border-radius:11px;background:#fff;color:#17231e;font-size:12px;font-weight:900;cursor:pointer}
+    .z-slide-cta{min-height:43px;padding:0 19px;border:1px solid rgba(255,255,255,.75);border-radius:13px;background:linear-gradient(180deg,#fff 0%,#eaf5ef 100%);color:#07583d;font-size:12px;font-weight:950;cursor:pointer;box-shadow:0 6px 0 #b8d7c7,0 11px 22px rgba(0,0,0,.24);transform:translateY(-2px);transition:transform .18s ease,box-shadow .18s ease}.z-slide-cta:active{transform:translateY(3px);box-shadow:0 2px 0 #b8d7c7,0 5px 12px rgba(0,0,0,.2)}
     .z-slide-controls{position:absolute;z-index:2;left:18px;right:18px;bottom:12px;display:flex;align-items:center;justify-content:space-between}
-    .z-slide-dots{display:flex;align-items:center;gap:6px}
-    .z-slide-dot{width:7px;height:7px;padding:0;border:0;border-radius:20px;background:rgba(255,255,255,.55);cursor:pointer}
-    .z-slide-dot.active{width:22px;background:#fff}
+    .z-slide-dots{display:flex;align-items:center;gap:5px;max-width:calc(100% - 82px);overflow-x:auto;padding:5px 2px;scrollbar-width:none}.z-slide-dots::-webkit-scrollbar{display:none}
+    .z-slide-dot{flex:0 0 6px;width:6px;height:6px;padding:0;border:0;border-radius:20px;background:rgba(255,255,255,.58);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+    .z-slide-dot.active{flex-basis:20px;width:20px;background:#fff}
     .z-slide-arrows{display:flex;gap:7px}
     .z-slide-arrow{width:29px;height:29px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.55);border-radius:50%;background:rgba(0,0,0,.18);color:#fff;font-size:17px;cursor:pointer}
     .z-category-heading-actions{display:flex;align-items:center;gap:8px}
@@ -2110,11 +2110,21 @@ const ZUNE_HOME_SLIDES = [
  {k:"ZUNE KWA WOTE",sw:"Nunua na uza kwa urahisi",en:"Buy and sell with ease",sd:"Soko linalowaunganisha wanunuzi na wauzaji.",ed:"A marketplace connecting buyers and sellers.",sc:"Tembelea soko",ec:"Visit marketplace",a:"products",img:"https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1400&q=85"},
  {k:"ZUNE DELIVERY · FURSA KWA MADEREVA",sw:"Jiunge na timu ya madereva wa ZUNE",en:"Ride with ZUNE Delivery",sd:"Tafuta nafasi ya udereva, sajili taarifa zako na wasilisha nyaraka zako ili zikaguliwe. Anza safari yako ya kufanya delivery na ZUNE.",ed:"Apply to become a ZUNE driver, submit your details and documents for review. Start your delivery journey with ZUNE.",sc:"Ingia kama dereva",ec:"Driver sign in",a:"delivery",img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1400&q=85"},
  {k:"ZUNE STATUS",sw:"Onyesha kinachoendelea dukani kwa Status",en:"Bring your store to life with Status",sd:"Weka picha au video za bidhaa na taarifa mpya. Wateja wataziona kwenye ukurasa wa maduka maarufu; Status huisha baada ya muda.",ed:"Post product photos, short videos and store updates. Customers can view them from Featured Stores; each Status expires automatically.",sc:"Fungua Seller Dashboard",ec:"Open Seller Dashboard",a:"seller",img:"https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1400&q=85"},
+,
+ {k:"FASHION & STYLE",sw:"Mtindo unaokufaa unakusubiri",en:"Find your style",sd:"Gundua mavazi, viatu na accessories kutoka maduka mbalimbali.",ed:"Explore clothing, shoes and accessories from different stores.",sc:"Gundua fashion",ec:"Explore fashion",a:"categories",img:"https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?auto=format&fit=crop&w=1600&q=85"},
+ {k:"HOME & LIVING",sw:"Boresha nyumba yako",en:"Make your space feel like home",sd:"Pata samani na mapambo yanayokufaa.",ed:"Discover furniture and home essentials.",sc:"Angalia bidhaa",ec:"Explore products",a:"products",img:"https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1600&q=85"},
+ {k:"BEAUTY & CARE",sw:"Jitunze kwa namna unayoipenda",en:"Your beauty, your way",sd:"Gundua bidhaa za urembo na kujitunza.",ed:"Discover beauty and personal care products.",sc:"Gundua bidhaa",ec:"Explore products",a:"products",img:"https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1600&q=85"},
+ {k:"KIDS & FAMILY",sw:"Mahitaji ya familia sehemu moja",en:"For every member of the family",sd:"Gundua bidhaa za watoto na familia.",ed:"Find products for kids and the whole family.",sc:"Angalia bidhaa",ec:"Explore products",a:"categories",img:"https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?auto=format&fit=crop&w=1600&q=85"},
+ {k:"SPORTS & FITNESS",sw:"Anza safari yako ya afya na fitness",en:"Move more. Feel stronger.",sd:"Pata vifaa vya michezo na mazoezi.",ed:"Explore sports and fitness essentials.",sc:"Gundua sasa",ec:"Explore now",a:"categories",img:"https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=85"},
+ {k:"FOOD & GROCERY",sw:"Mahitaji ya kila siku karibu nawe",en:"Everyday essentials, made easy",sd:"Gundua vyakula na bidhaa za matumizi ya kila siku.",ed:"Discover food and everyday essentials.",sc:"Angalia makundi",ec:"Browse categories",a:"categories",img:"https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=85"},
+ {k:"TRENDING PRODUCTS",sw:"Bidhaa zinazovuma sokoni",en:"What's trending right now",sd:"Angalia bidhaa zinazovutia wanunuzi.",ed:"Explore products catching shoppers' attention.",sc:"Tazama bidhaa",ec:"See products",a:"products",img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1600&q=85"},
+ {k:"GIFT IDEAS",sw:"Zawadi yenye maana kwa kila tukio",en:"Make every moment special",sd:"Gundua mawazo ya zawadi kwa watu unaowajali.",ed:"Find thoughtful gift ideas for people you care about.",sc:"Gundua zawadi",ec:"Explore gift ideas",a:"explore",img:"https://images.unsplash.com/photo-1512909006721-3d6018887383?auto=format&fit=crop&w=1600&q=85"},
+ {k:"DISCOVER ZUNE",sw:"Kuna mengi zaidi ya kugundua!",en:"There is more to discover!",sd:"Tembelea ZUNE na ugundue bidhaa, maduka na fursa mbalimbali.",ed:"Explore products, stores and opportunities across ZUNE.",sc:"Anza sasa",ec:"Start exploring",a:"explore",img:"https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1600&q=85"}
 ];
 function renderHomeCarousel(){
  const slide=ZUNE_HOME_SLIDES[homeState.carouselIndex%ZUNE_HOME_SLIDES.length],sw=language()==="sw";
  return `<section class="z-home-carousel" id="z-home-carousel" aria-label="ZUNE promotions">
- <img class="z-slide-image" src="${safe(slide.img)}" alt="" loading="eager">
+ <img class="z-slide-image" src="${safe(slide.img)}" alt="${safe(sw?slide.sw:slide.en)}" loading="${homeState.carouselIndex===0?"eager":"lazy"}" fetchpriority="${homeState.carouselIndex===0?"high":"auto"}">
  <div class="z-slide-copy"><span class="z-slide-kicker">${slide.k}</span><h2>${sw?slide.sw:slide.en}</h2><p>${sw?slide.sd:slide.ed}</p><button type="button" class="z-slide-cta" data-slide-action="${slide.a}">${sw?slide.sc:slide.ec} →</button></div>
  <div class="z-slide-controls"><div class="z-slide-dots">${ZUNE_HOME_SLIDES.map((x,i)=>`<button type="button" class="z-slide-dot ${i===homeState.carouselIndex?"active":""}" data-slide-index="${i}" aria-label="Slide ${i+1}"></button>`).join("")}</div>
  <div class="z-slide-arrows"><button type="button" class="z-slide-arrow" data-slide-prev aria-label="Previous slide">‹</button><button type="button" class="z-slide-arrow" data-slide-next aria-label="Next slide">›</button></div></div></section>`;
