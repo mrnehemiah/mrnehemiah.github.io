@@ -100,3 +100,31 @@ body:has(.icon-gallery-intro) .settings-head .settings-sub{color:#a9c8b8!importa
 .icon-admin .admin-help{grid-column:1/-1;margin:-5px 0 2px;color:#a9c8b8;font-size:12px;line-height:1.5}
 .icon-tile .delete-icon{background:linear-gradient(145deg,#7f1d1d,#b42318)!important;color:#fff!important;border:1px solid rgba(255,255,255,.22)!important}
 @media(max-width:420px){body:has(.icon-gallery-intro) .settings-head{padding:12px 14px 16px!important}}
+
+
+/* Marketplace icon cards are rendered as tactile 3D assets. */
+body:has(.icon-gallery-intro){perspective:1400px}
+.icon-grid{perspective:1100px;transform-style:preserve-3d}
+.icon-tile{
+ position:relative;isolation:isolate;overflow:hidden;
+ transform-style:preserve-3d;
+ background:linear-gradient(145deg,rgba(26,58,45,.98),rgba(8,25,18,.98))!important;
+ border:1px solid rgba(167,243,208,.18)!important;
+ box-shadow:0 18px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.13),inset 0 -2px 0 rgba(0,0,0,.22)!important;
+ transition:transform .24s ease,box-shadow .24s ease!important;
+}
+.icon-tile:before{
+ content:"";position:absolute;inset:0 0 auto;height:45%;z-index:0;pointer-events:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.12),transparent);
+}
+.icon-tile img{position:relative;z-index:1;filter:drop-shadow(0 13px 12px rgba(0,0,0,.32));transform:translateZ(22px)}
+.icon-tile strong,.icon-tile small{position:relative;z-index:1;transform:translateZ(12px);color:#f3fbf7}
+.icon-tile small{color:#a8c5b7}
+.icon-tile button{position:relative;z-index:1;transform:translateZ(14px);box-shadow:0 8px 15px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.22)}
+.icon-tile.selected{border-color:rgba(110,231,183,.68)!important;box-shadow:0 0 0 2px rgba(16,185,129,.2),0 22px 38px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.18)!important}
+.icon-tile .delete-icon{background:linear-gradient(145deg,#7f1d1d,#450a0a)!important;color:#fff!important;border-color:rgba(254,202,202,.24)!important}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ .icon-tile:hover{transform:translateY(-5px) rotateX(2deg) rotateY(-2deg);box-shadow:0 25px 42px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.18)!important}
+ .icon-tile:hover img{transform:translateZ(30px) scale(1.035)}
+}
+@media(prefers-reduced-motion:reduce){.icon-tile,.icon-tile img{transition:none!important;transform:none!important}}
