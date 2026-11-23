@@ -80,7 +80,7 @@ function styles(){
 
 function productCard(p,actions=""){
  const image=p.image_url || (Array.isArray(p.image_urls)?p.image_urls[0]:"") || "";
- return `<article class="z-feature-product" data-tilt-card><img loading="lazy" src="${esc(image)}" alt="${esc(p.title)}" onerror="this.style.display='none'"><strong>${esc(p.title)}</strong><small>${money(p.price)}</small><div class="z-feature-row">${actions}</div></article>`;
+ return `<article class="z-feature-product" data-tilt-card><img loading="lazy" src="${esc(image)}" alt="${esc(p.title)}" onerror="this.style.display='none'"><strong>${esc(p.title)}</strong><small>${money(p.price)}</small><div class="z-feature-row"><button class="z-feature-secondary" data-feature-open-product="${esc(p.id)}">${tr("Angalia","View",ctx.language)}</button>${actions}</div></article>`;
 }
 function productOptions(){
  return '<option value="">'+tr("Chagua bidhaa","Choose a product",ctx.language)+'</option>'+catalog.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title)+' — '+money(p.price)+'</option>').join("");
@@ -112,9 +112,9 @@ function render(){
  ].map(row=>'<tr><th>'+row[0]+'</th>'+compareRows.map(p=>'<td>'+esc(row[1](p))+'</td>').join("")+'</tr>').join("")+'</tbody></table></div>':empty(tr("Ongeza bidhaa ili kuanza kulinganisha.","Add products to start comparing.",lang));
  const alerts=alertRows.length?'<div class="z-feature-list">'+alertRows.map(a=>'<div class="z-feature-list-item"><div><strong>'+esc(a.product?.title||tr("Bidhaa","Product",lang))+'</strong><small>'+(a.target_price?tr("Lengo: ","Target: ",lang)+money(a.target_price):tr("Taarifa kwa kila punguzo","Alert on any price drop",lang))+'</small></div><button class="z-feature-secondary" data-delete-alert="'+esc(a.id)+'">'+tr("Ondoa","Remove",lang)+'</button></div>').join("")+'</div>':empty(tr("Bado huna arifa za kushuka kwa bei.","You have no price alerts yet.",lang));
  const rewards='<div class="z-feature-balance"><div><small>'+tr("SALIO LA POINTI","POINTS BALANCE",lang)+'</small><strong>'+Number(rewardAccount?.points_balance||0).toLocaleString()+'</strong><small>'+tr("Pointi za ZUNE Rewards","ZUNE Rewards points",lang)+'</small></div><span style="font-size:38px">◆</span></div><p class="z-feature-muted">'+tr("Unapata pointi baada ya oda kukamilika. Kiwango cha sasa: pointi 1 kwa kila TSh 1,000 ya oda (kinaweza kubadilishwa na Admin).","Points are credited after an order is completed. Current rate: 1 point per TSh 1,000 (Admin configurable).",lang)+'</p><div id="z-feature-ledger"></div>';
- const referral='<div class="z-feature-row"><div style="flex:1"><label class="z-feature-muted">'+tr("Code yako ya mwaliko","Your referral code",lang)+'</label><input id="z-feature-referral-code" readonly value="'+esc(ctx.referralCode||"")+'"></div><button class="z-feature-primary" id="z-feature-create-code">'+tr("Tengeneza code","Get code",lang)+'</button></div><div class="z-feature-row" style="margin-top:10px"><input id="z-feature-apply-code" placeholder="'+tr("Weka code ya rafiki","Enter a friend's code",lang)+'"><button class="z-feature-secondary" id="z-feature-apply">'+tr("Tumia","Apply",lang)+'</button></div><div class="z-feature-status" id="z-feature-apply-status"></div><p class="z-feature-muted">'+tr("Rafiki yako akifanya oda yake ya kwanza ikamilike, nyote wawili mnapata pointi za zawadi.","When your friend completes their first order, both of you receive reward points.",lang)+'</p>';
+ const referral='<div class="z-feature-row"><div style="flex:1"><label class="z-feature-muted">'+tr("Code yako ya mwaliko","Your referral code",lang)+'</label><input id="z-feature-referral-code" readonly value="'+esc(ctx.referralCode||"")+'"></div><button class="z-feature-primary" id="z-feature-create-code">'+tr("Tengeneza code","Get code",lang)+'</button></div><div class="z-feature-status" id="z-feature-referral-status"></div><div class="z-feature-row" style="margin-top:10px"><input id="z-feature-apply-code" placeholder="'+tr("Weka code ya rafiki","Enter a friend's code",lang)+'"><button class="z-feature-secondary" id="z-feature-apply">'+tr("Tumia","Apply",lang)+'</button></div><div class="z-feature-status" id="z-feature-apply-status"></div><p class="z-feature-muted">'+tr("Rafiki yako akifanya oda yake ya kwanza ikamilike, nyote wawili mnapata pointi za zawadi.","When your friend completes their first order, both of you receive reward points.",lang)+'</p>';
  const review='<form id="z-feature-review-form" class="z-feature-form"><select name="order_id" required>'+buyerOrders.map(o=>'<option value="'+esc(o.id)+'">'+esc(o.product?.title||"Order")+' · '+esc(o.order_number||o.id.slice(0,8))+'</option>').join("")+'</select><select name="rating" required><option value="5">★★★★★ 5</option><option value="4">★★★★☆ 4</option><option value="3">★★★☆☆ 3</option><option value="2">★★☆☆☆ 2</option><option value="1">★☆☆☆☆ 1</option></select><textarea name="review_text" maxlength="2500" placeholder="'+tr("Andika uzoefu wako wa bidhaa...","Share your experience with this product...",lang)+'" required></textarea><input type="file" name="media" accept="image/jpeg,image/png,image/webp" multiple><button class="z-feature-primary" type="submit">'+tr("Tuma tathmini","Submit review",lang)+'</button><div class="z-feature-status" id="z-feature-review-status"></div></form>';
- const reviews=ctx.reviews.length?'<div class="z-feature-list">'+ctx.reviews.map(r=>'<div class="z-feature-list-item"><div><strong>'+esc(r.product?.title||"Product")+' · '+("★".repeat(r.rating))+'</strong><small>'+esc(r.review_text||"")+'</small></div><span class="z-feature-pill">'+tr("Imethibitishwa","Verified",lang)+'</span></div>').join("")+'</div>':empty(tr("Hakuna tathmini mpya zilizoidhinishwa bado.","No approved reviews to show yet.",lang));
+ const reviews=ctx.reviews.length?'<div class="z-feature-list">'+ctx.reviews.map(r=>'<div class="z-feature-list-item"><div><strong>'+esc(r.product?.title||"Product")+' · '+("★".repeat(r.rating))+'</strong><small>'+esc(r.review_text||"")+'</small>'+(r.media_signed_urls||[]).map(url=>'<img src="'+esc(url)+'" alt="Review photo" style="width:52px;height:52px;object-fit:cover;border-radius:8px;margin:6px 5px 0 0">').join("")+'</div><span class="z-feature-pill">'+tr("Imethibitishwa","Verified",lang)+'</span></div>').join("")+'</div>':empty(tr("Hakuna tathmini mpya zilizoidhinishwa bado.","No approved reviews to show yet.",lang));
  const support='<form id="z-feature-ticket-form" class="z-feature-form"><select name="category"><option value="order">'+tr("Tatizo la oda","Order issue",lang)+'</option><option value="account">'+tr("Akaunti","Account",lang)+'</option><option value="payment">'+tr("Malipo","Payment",lang)+'</option><option value="delivery">'+tr("Delivery","Delivery",lang)+'</option><option value="other">'+tr("Nyingine","Other",lang)+'</option></select><input name="subject" maxlength="120" placeholder="'+tr("Kichwa cha tatizo","Issue subject",lang)+'" required><textarea name="message" maxlength="5000" placeholder="'+tr("Eleza unachohitaji msaada...","Describe what you need help with...",lang)+'" required></textarea><button class="z-feature-primary">'+tr("Fungua ombi la msaada","Create support ticket",lang)+'</button></form><div class="z-feature-status" id="z-feature-ticket-status"></div><div class="z-feature-list" style="margin-top:12px">'+(tickets.length?tickets.map(t=>'<div class="z-feature-list-item"><div><strong>'+esc(t.category)+' · '+esc(t.message.slice(0,65))+'</strong><small>'+esc(t.status)+' · '+new Date(t.created_at).toLocaleDateString()+'</small></div><button class="z-feature-secondary" data-ticket="'+esc(t.id)+'">'+tr("Fungua","Open",lang)+'</button></div>').join(""):empty(tr("Bado huna maombi ya msaada.","You have no support tickets yet.",lang)))+'</div><div id="z-feature-ticket-thread"></div>';
  const dispute='<form id="z-feature-dispute-form" class="z-feature-form"><select name="order_id" required>'+buyerOrders.map(o=>'<option value="'+esc(o.id)+'">'+esc(o.product?.title||"Order")+' · '+esc(o.order_number||o.id.slice(0,8))+'</option>').join("")+'</select><select name="issue_type"><option value="not_received">'+tr("Sijapokea bidhaa","Item not received",lang)+'</option><option value="damaged">'+tr("Bidhaa imeharibika","Item damaged",lang)+'</option><option value="not_as_described">'+tr("Si kama ilivyoelezwa","Not as described",lang)+'</option><option value="wrong_item">'+tr("Nimepokea bidhaa isiyo sahihi","Wrong item",lang)+'</option><option value="other">'+tr("Nyingine","Other",lang)+'</option></select><textarea name="description" maxlength="5000" required placeholder="'+tr("Eleza tatizo kwa kina...","Describe the issue in detail...",lang)+'"></textarea><button class="z-feature-primary">'+tr("Fungua dispute","Open dispute",lang)+'</button></form><div class="z-feature-status" id="z-feature-dispute-status"></div><div class="z-feature-list" style="margin-top:12px">'+(disputes.length?disputes.map(d=>'<div class="z-feature-list-item"><div><strong>'+esc(d.case_number)+' · '+esc(d.issue_type)+'</strong><small>'+esc(d.status)+' · '+new Date(d.created_at).toLocaleDateString()+'</small></div></div>').join(""):empty(tr("Hakuna dispute zilizo wazi.","No disputes yet.",lang)))+'</div>';
  const assistant='<div class="z-feature-chat"><p class="z-feature-muted">'+tr("Eleza unachotafuta, bajeti au matumizi. Msaidizi atalinganisha maelezo yako na bidhaa halisi zilizopo sokoni.","Describe what you need, your budget or intended use. The assistant matches your request against real marketplace products.",lang)+'</p><form id="z-feature-ai-form" class="z-feature-form"><input name="prompt" maxlength="500" placeholder="'+tr("Mfano: simu yenye kamera nzuri chini ya TSh 500,000","Example: a phone with a good camera under TSh 500,000",lang)+'" required><button class="z-feature-primary">'+tr("Tafuta mapendekezo","Find recommendations",lang)+'</button></form><div id="z-feature-ai-answer" class="z-feature-answer" hidden></div></div>';
@@ -169,6 +169,13 @@ async function loadData(){
  disputes=disputeQ.data||[];
  buyerOrders=(ordersQ.data||[]).filter(o=>o.status==="completed").map(o=>({...o,product:byId.get(String(o.product_id))})).filter(o=>o.product);
  ctx.reviews=(reviewsQ.data||[]).map(x=>({...x,product:byId.get(String(x.product_id))}));
+ for (const review of ctx.reviews) {
+  const signed = await Promise.all((review.media_urls || []).map(async path => {
+   const {data,error}=await supabase.storage.from("zune-review-media").createSignedUrl(path,3600);
+   return error ? "" : data.signedUrl;
+  }));
+  review.media_signed_urls = signed.filter(Boolean);
+ }
 }
 
 function bindTilt(root){
@@ -186,6 +193,7 @@ function status(id,message){const el=ctx.root.querySelector("#"+id);if(el)el.tex
 
 async function bind(){
  const root=ctx.root,lang=ctx.language,user=ctx.user;
+ root.addEventListener("click",event=>{const button=event.target.closest("[data-feature-open-product]");if(!button)return;const product=catalog.find(p=>String(p.id)===button.dataset.featureOpenProduct);if(product)ctx.onOpenProduct?.(product);});
  root.querySelector("[data-features-home]")?.addEventListener("click",()=>ctx.onHome?.());
  root.querySelectorAll("[data-jump]").forEach(b=>b.addEventListener("click",()=>root.querySelector("#z-feature-"+b.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"})));
  root.querySelector("#z-feature-compare-form")?.addEventListener("submit",async e=>{
@@ -203,7 +211,7 @@ async function bind(){
  });
  root.querySelectorAll("[data-delete-alert]").forEach(b=>b.addEventListener("click",async()=>{await supabase.from("price_drop_alerts").delete().eq("id",b.dataset.deleteAlert).eq("user_id",user.id);await refresh();}));
  root.querySelector("#z-feature-create-code")?.addEventListener("click",async()=>{
-  const {data,error}=await supabase.rpc("zune_create_referral_code");if(error){status("z-feature-referral-code",error.message);return;}
+  const {data,error}=await supabase.rpc("zune_create_referral_code");if(error){status("z-feature-referral-status",error.message);return;}
   const input=root.querySelector("#z-feature-referral-code");if(input)input.value=data||"";
  });
  root.querySelector("#z-feature-apply")?.addEventListener("click",async()=>{
@@ -219,7 +227,7 @@ async function bind(){
     if(file.size>6*1024*1024)throw new Error(tr("Picha isizidi 6MB.","Each image must be under 6MB.",lang));
     const path=user.id+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
     const up=await supabase.storage.from("zune-review-media").upload(path,file,{upsert:false,contentType:file.type});if(up.error)throw up.error;
-    const pub=supabase.storage.from("zune-review-media").getPublicUrl(path);media.push(pub.data.publicUrl);
+    media.push(path);
    }
    const {error}=await supabase.from("product_reviews").insert({product_id:order.product_id,buyer_id:user.id,order_id:order.id,rating:Number(d.get("rating")),review_text:String(d.get("review_text")||"").trim(),media_urls:media});
    if(error)throw error;status("z-feature-review-status",tr("Tathmini imetumwa na inasubiri ukaguzi.","Review submitted and awaiting moderation.",lang));f.reset();await refresh();
@@ -261,11 +269,11 @@ async function refresh(){
  if(ledger)ledger.innerHTML=ctx.ledger.length?'<div class="z-feature-list">'+ctx.ledger.map(x=>'<div class="z-feature-list-item"><div><strong>'+esc(x.description)+'</strong><small>'+new Date(x.created_at).toLocaleDateString()+'</small></div><span class="z-feature-pill">+'+Number(x.points)+'</span></div>').join("")+'</div>':empty(tr("Bado hakuna pointi zilizopatikana.","No reward points earned yet.",ctx.language));
 }
 
-export async function mountMarketplaceFeatures({root,user,language="sw",onHome}){
+export async function mountMarketplaceFeatures({root,user,language="sw",onHome,onOpenProduct}){
  styles();
  if(!root)return;
  if(!user?.id){root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Ingia kwenye akaunti yako ili kutumia vipengele hivi.","Sign in to use these features.",language))+'</div></div>';return;}
- ctx={root,user,language,onHome,wishlist:[],ledger:[],referralCode:"",reviews:[]};
+ ctx={root,user,language,onHome,onOpenProduct,wishlist:[],ledger:[],referralCode:"",reviews:[]};
  root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Inapakia zana zako za ununuzi...","Loading your shopping tools...",language))+'</div></div>';
  await loadData();root.innerHTML=render();await bind();
  const ledger=root.querySelector("#z-feature-ledger");

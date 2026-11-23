@@ -4025,7 +4025,8 @@ async function renderMarketplacePage(page) {
           root: app.querySelector("#z-feature-suite-root"),
           user: homeState.user,
           language: language(),
-          onHome: () => renderMarketplacePage("home")
+          onHome: () => renderMarketplacePage("home"),
+          onOpenProduct: product => openProductDetails(product)
         });
       } catch (error) {
         console.error("ZUNE feature suite could not be loaded:", error);
