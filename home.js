@@ -2393,16 +2393,6 @@ function renderHomePage() {
               ${zIcon("account")}
             </button>
 
-            <button
-              type="button"
-              class="z-icon-button"
-              data-open-features
-              aria-label="ZUNE Shopping Tools"
-              title="ZUNE Shopping Tools"
-            >
-              <span aria-hidden="true">✦</span>
-            </button>
-
           </div>
 
         </div>
@@ -3609,6 +3599,9 @@ function renderAccountPage() {
       <button type="button" class="z-account-shortcut" data-account-saved><span class="shortcut-icon saved">♡</span><span><strong>${label("Zilizohifadhiwa","Saved items")}</strong><small>${label("Bidhaa ulizopenda","Your favourites")}</small></span><b>›</b></button>
       <button type="button" class="z-account-shortcut" data-account-cart><span class="shortcut-icon">🛒</span><span><strong>${label("Kikapu changu","My cart")}</strong><small>${label("Bidhaa ulizochagua","Items you selected")}</small></span><b>›</b></button>
     </div></section>
+    <section class="z-account-section"><div class="z-account-section-heading"><div><span class="z-account-eyebrow">${label("ZUNE SHOPPING TOOLS","ZUNE SHOPPING TOOLS")}</span><h2>${label("Zana za ununuzi","Shopping tools")}</h2></div></div>
+      <button type="button" class="z-account-menu-row" data-account-shopping-tools><span class="shortcut-icon">✦</span><span><strong>${label("ZUNE Shopping Tools","ZUNE Shopping Tools")}</strong><small>${label("Wishlist, kulinganisha bidhaa, reviews, alerts, rewards na zaidi","Wishlist, product comparison, reviews, alerts, rewards and more")}</small></span><b>›</b></button>
+    </section>
     ${customerVerificationContent}
     ${sellerContent}
     ${renderThemeSettings()}
@@ -3687,6 +3680,7 @@ function bindAccountEvents() {
   document.querySelector("[data-account-orders]")?.addEventListener("click",()=>navigateWithZuneWave(()=>{const app=homeState.app;app.innerHTML=`<section class="z-home z-account-page"><main class="z-home-content"><button type="button" class="z-primary-button" id="z-orders-back">← ${language()==="sw"?"Rudi Akaunti":"Back to Account"}</button><h1 class="z-page-title">${language()==="sw"?"Oda zangu":"My Orders"}</h1><section class="z-account-section"><p>${language()==="sw"?"Oda zako zitaonekana hapa baada ya kufanya manunuzi.":"Your orders will appear here after you make a purchase."}</p></section></main></section>`;document.getElementById("z-orders-back")?.addEventListener("click",()=>renderMarketplacePage("me"));}));
   document.querySelector("[data-account-saved]")?.addEventListener("click",()=>navigateWithZuneWave(()=>renderMarketplacePage("saved")));
   document.querySelector("[data-account-cart]")?.addEventListener("click",()=>navigateWithZuneWave(()=>renderMarketplacePage("cart")));
+  document.querySelector("[data-account-shopping-tools]")?.addEventListener("click",()=>navigateWithZuneWave(()=>renderMarketplacePage("features")));
   document.getElementById("z-logout-button")?.addEventListener("click",async()=>{
     if (typeof homeState.onLogout === "function") { await homeState.onLogout(); return; }
     const {error} = await supabase.auth.signOut({scope: "local"}); if (error) alert(error.message);
