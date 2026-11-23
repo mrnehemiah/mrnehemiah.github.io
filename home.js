@@ -3183,6 +3183,35 @@ function ensureLiveShoppingStyles() {
     .z-live-chat-note{margin-top:9px;line-height:1.5}
     @media(max-width:759px){.z-live-chat-desktop{display:none}.z-live-chat-mobile{display:block}}
     @media(min-width:760px){.z-live-page{padding:28px 24px 60px}.z-live-hero{padding:38px}.z-live-empty{padding:22px}}
+    /* Immersive, one-stream-at-a-time viewer. The close control returns to the Live directory. */
+    .z-live-immersive{background:#050807!important;color:#fff!important}
+    .z-live-immersive .z-live-page{max-width:100%;min-height:calc(100svh - 70px);padding:0 0 24px}
+    .z-live-immersive .z-live-hero,.z-live-immersive>.z-live-page>.z-live-tabs,.z-live-immersive .z-live-section{display:none!important}
+    .z-live-immersive .z-live-player-panel{position:relative;display:flex;flex-direction:column;gap:10px;min-height:calc(100svh - 82px);margin:0;padding:12px 12px 22px;border:0;border-radius:0;background:#050807;color:#fff;box-shadow:none}
+    .z-live-immersive .z-live-player-panel>.z-live-section-head{position:sticky;top:0;z-index:4;margin:0;padding:5px 0 9px;background:#050807}
+    .z-live-immersive .z-live-player-panel>.z-live-section-head h2{color:#fff;font-size:16px;line-height:1.3}
+    .z-live-immersive #z-live-close-player{flex:0 0 auto;border-color:#ffffff44;background:#ffffff18;color:#fff}
+    .z-live-immersive .z-live-video-wrap{flex:1 0 auto;min-height:min(58svh,620px);max-height:72svh;aspect-ratio:auto;border-radius:16px}
+    .z-live-immersive .z-live-player-store,.z-live-immersive .z-live-player-meta{color:#e3eee8}
+    .z-live-immersive .z-live-viewer-controls{display:flex;flex-wrap:wrap;gap:7px}
+    .z-live-immersive .z-live-viewer-controls button{min-height:39px;padding:8px 11px;border:1px solid #ffffff38;border-radius:999px;background:#ffffff16;color:#fff;font-size:11px;font-weight:850}
+    .z-live-immersive .z-live-viewer-controls button.liked{background:#d92e5b;border-color:#d92e5b}
+    .z-live-immersive .z-live-swipe-hint{color:#d6e6dd;font-size:10px;line-height:1.5}
+    .z-live-immersive .z-live-gift-count{display:block;margin-top:4px;color:#8de2ba}
+    .z-live-immersive .z-live-chat-panel{margin:8px 0 0;background:#101915;border-color:#ffffff25;color:#fff}
+    .z-live-immersive .z-live-chat-head h3{color:#fff}
+    .z-live-immersive .z-live-chat-head span,.z-live-immersive .z-live-chat-note{color:#c1d1c8}
+    .z-live-immersive .z-live-pinned-products{border-color:#ffffff28}
+    .z-live-immersive .z-live-pinned-products>strong{color:#fff}
+    .z-live-immersive .z-live-product{background:#101915;border-color:#ffffff25}
+    .z-live-immersive .z-live-product-info b{color:#fff}
+    @media(max-width:759px){
+      .z-live-immersive .z-live-page{padding-bottom:12px}
+      .z-live-immersive .z-live-player-panel{min-height:calc(100svh - 62px);padding:9px 10px 18px}
+      .z-live-immersive .z-live-video-wrap{min-height:52svh;max-height:66svh}
+      .z-live-immersive .z-live-viewer-controls button{flex:1 1 calc(33.333% - 7px)}
+    }
+    @media(prefers-reduced-motion:reduce){.z-live-immersive *{scroll-behavior:auto!important;transition:none!important}}
   `;
   document.head.appendChild(style);
 }
@@ -3279,7 +3308,7 @@ function renderLivePage() {
   const selectedProducts = selected?.products || [];
   const videoId = /^[a-zA-Z0-9_-]{6,20}$/.test(selected?.youtube_video_id || "") ? selected.youtube_video_id : "";
   return `
-    <section class="z-home z-live-shopping"><main class="z-live-page">
+    <section class="z-home z-live-shopping ${selected?.section === "live" ? "z-live-immersive" : ""}"><main class="z-live-page">
       <header class="z-live-hero">
         <span class="z-live-kicker"><i class="z-live-pulse"></i> ZUNE LIVE SHOPPING</span>
         <h1>${sw ? "Nunua ukiwa unatazama Live." : "Shop while you watch Live."}</h1>
