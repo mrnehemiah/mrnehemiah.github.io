@@ -3358,7 +3358,17 @@ async function loadMarketplaceLiveFeed(force = false) {
         homeState.liveSelectedId = nextLive ? String(nextLive.id) : "";
       } else if (current.section !== "live") {
         const nextLive = homeState.liveBroadcasts.find(item => item.section === "live" && String(item.id) !== previousSelection);
-        if (nextLive) homeState.liveSelectedId = String(nextLive.id);
+        homeState.liveSelectedId = nextLive ? String(nextLive.id) : "";
+      }
+    }
+    if (homeState.liveMiniPlayer && homeState.activeTab !== "live") {
+      const selected = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId));
+      const videoId = /^[a-zA-Z0-9_-]{6,20}$/.test(selected?.youtube_video_id || "") ? selected.youtube_video_id : "";
+      const miniFrame = document.querySelector("#z-live-mini-player .z-live-mini-video iframe");
+      if (miniFrame && videoId) {
+        miniFrame.src = "https://www.youtube-nocookie.com/embed/" + videoId + "?autoplay=1&playsinline=1&rel=0";
+      } else if (miniFrame && !videoId) {
+        closeLiveMiniPlayer(true);
       }
     }
   } catch (error) {
