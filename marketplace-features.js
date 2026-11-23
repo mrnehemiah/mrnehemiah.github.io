@@ -271,7 +271,7 @@ async function bind(){
 async function refresh(nextTool=selectedTool){
  selectedTool=nextTool||"";
  await loadData();ctx.root.innerHTML=render();
- if(selectedTool){const shell=document.createElement("div");shell.innerHTML=ctx.root.innerHTML;shell.querySelector(".z-feature-hero")?.remove();shell.querySelector(".z-feature-grid")?.remove();shell.querySelectorAll(".z-feature-section").forEach(el=>{if(el.id!=="z-feature-"+selectedTool)el.remove();});ctx.root.innerHTML=shell.innerHTML;}
+ if(selectedTool){const shell=document.createElement("div");shell.innerHTML=ctx.root.innerHTML;const back=shell.querySelector("[data-features-home]");if(back)back.textContent="← "+tr("Rudi kwenye zana","Back to tools",ctx.language);shell.querySelector(".z-feature-hero")?.remove();shell.querySelector(".z-feature-grid")?.remove();shell.querySelectorAll(".z-feature-section").forEach(el=>{if(el.id!=="z-feature-"+selectedTool)el.remove();});ctx.root.innerHTML=shell.innerHTML;}
  await bind();
  const ledger=ctx.root.querySelector("#z-feature-ledger");
  if(ledger)ledger.innerHTML=ctx.ledger.length?'<div class="z-feature-list">'+ctx.ledger.map(x=>'<div class="z-feature-list-item"><div><strong>'+esc(x.description)+'</strong><small>'+new Date(x.created_at).toLocaleDateString()+'</small></div><span class="z-feature-pill">+'+Number(x.points)+'</span></div>').join("")+'</div>':empty(tr("Bado hakuna pointi zilizopatikana.","No reward points earned yet.",ctx.language));
