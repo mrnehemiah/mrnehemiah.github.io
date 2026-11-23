@@ -67,6 +67,7 @@ const homeState = {
   liveLikedIds: new Set(),
   liveGiftCounts: {},
   liveMiniPlayer: false,
+  liveAutoNextTimer: null,
 
   user: null,
   app: null,
@@ -3319,7 +3320,7 @@ function renderLivePage() {
               <button type="button" data-live-gift="⭐">⭐ ${sw ? "Nyota" : "Star"}</button>
               <button type="button" data-live-gift="❤️">❤️ ${sw ? "Moyo" : "Heart"}</button>
             </div>
-            <p class="z-live-swipe-hint">${sw ? "Telezesha juu kuona Live inayofuata, au chini kurudi iliyotangulia." : "Swipe up for the next Live, or down for the previous one."} <span class="z-live-gift-count" id="z-live-gift-count">${Number(homeState.liveGiftCounts[String(selected.id)] || 0)} ${sw ? "zawadi za bure zimetumwa kwenye kipindi hiki" : "free gifts sent in this session"}</span></p>
+            <p class="z-live-swipe-hint">${sw ? "Telezesha juu kuona Live inayofuata, au chini kurudi iliyotangulia." : "Swipe up for the next Live, or down for the previous one."} <span class="z-live-gift-count" id="z-live-gift-count">${Number(selected.gift_count || homeState.liveGiftCounts[String(selected.id)] || 0)} ${sw ? "zawadi zimetumwa" : "gifts sent"}</span></p>
           ` : ""}
           ${selected.section === "live" && videoId ? `
             <section class="z-live-chat-panel" aria-label="YouTube Live Chat">
@@ -3371,6 +3372,12 @@ async function loadMarketplaceLiveFeed(force = false) {
 }
 
 function bindLivePage() {
+  if (!homeState.liveAutoNextTimer) {
+    homeState.liveAutoNextTimer = window.setInterval(() => {
+      const watchingLive = homeState.liveBroadcasts.find(item => String(item.id) === String(homeState.liveSelectedId) && item.section === "live");
+      if (watchingLive && (homeState.activeTab === "live" || homeState.liveMiniPlayer)) loadMarketplaceLiveFeed(true);
+    }, 30000);
+  }
   if (!homeState.liveLoaded && !homeState.liveLoading) loadMarketplaceLiveFeed();
   document.getElementById("z-live-refresh")?.addEventListener("click", () => {
     homeState.liveLoaded = false;
@@ -3395,13 +3402,26 @@ function bindLivePage() {
     if (homeState.liveLikedIds.has(id)) homeState.liveLikedIds.delete(id); else homeState.liveLikedIds.add(id);
     renderMarketplacePage("live");
   });
-  document.querySelectorAll("[data-live-gift]").forEach(button => button.addEventListener("click", () => {
-    const id = String(homeState.liveSelectedId);
-    homeState.liveGiftCounts[id] = Number(homeState.liveGiftCounts[id] || 0) + 1;
+  document.querySelectorAll("[data-live-gift]").forEach(button => button.addEventListener("click", async () => {
+    const id = String(homeState.liveSelectedId || "");
+    const giftType = button.dataset.liveGift === "👏" ? "applause" : button.dataset.liveGift === "⭐" ? "star" : "heart";
     const count = document.getElementById("z-live-gift-count");
-    if (count) count.textContent = `${homeState.liveGiftCounts[id]} ${language() === "sw" ? "zawadi za bure zimetumwa kwenye kipindi hiki" : "free gifts sent in this session"}`;
+    if (!id || button.disabled) return;
     button.disabled = true;
-    setTimeout(() => { if (button.isConnected) button.disabled = false; }, 450);
+    try {
+      const {data,error} = await supabase.rpc("zune_send_live_gift", {p_broadcast_id:id,p_gift_type:giftType});
+      if (error) throw error;
+      const total = Number(data?.gift_count || 0);
+      homeState.liveGiftCounts[id] = total;
+      const selected = homeState.liveBroadcasts.find(item => String(item.id) === id);
+      if (selected) selected.gift_count = total;
+      if (count) count.textContent = `${total} ${language() === "sw" ? "zawadi zimetumwa" : "gifts sent"}`;
+    } catch (error) {
+      console.warn("ZUNE Live gift:", error);
+      if (count) count.textContent = error?.message || (language() === "sw" ? "Ingia ili kutuma zawadi." : "Sign in to send a gift.");
+    } finally {
+      setTimeout(() => { if (button.isConnected) button.disabled = false; }, 700);
+    }
   }));
   const liveVideo = document.querySelector("#z-live-player .z-live-video-wrap");
   if (liveVideo) {
