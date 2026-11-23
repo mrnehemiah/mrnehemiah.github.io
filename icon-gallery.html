@@ -1,6 +1,65 @@
 <!doctype html>
-<html lang="sw"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#087A55"><title>Icon Studio · ZUNE</title><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./settings.css"><link rel="stylesheet" href="./icon-gallery.css?v=20261123-marketplace-assets-3d"></head>
-<body><main class="settings-wrap"><header class="settings-head"><button id="back" aria-label="Back">‹</button><div><h1>Icon Studio</h1><p class="settings-sub">3D icon styles kutoka Marketplace Assets</p></div></header>
-<section class="icon-gallery-intro"><div class="icon-gallery-mark">Z</div><div><h2>Make ZUNE yours.</h2><p>Chagua 3D launcher style au icon iliyochapishwa kwenye Marketplace Assets.</p></div></section>
-<div id="admin-tools" class="icon-admin" hidden><h2>Usimamizi wa Icons</h2><p class="admin-help">Admin pekee: ongeza, ficha, chapisha au futa 3D app icons ndani ya Marketplace Assets.</p><form id="icon-form"><label>Jina la icon<input name="name" maxlength="60" required placeholder="Mfano: ZUNE Emerald"></label><label>Picha (PNG, JPG au WebP; hadi 2MB)<input name="image" type="file" accept="image/png,image/jpeg,image/webp" required></label><label class="icon-check"><input name="active" type="checkbox" checked> Ionekane kwa watumiaji</label><button class="settings-btn" type="submit">Pakia icon</button><p id="upload-status" role="status"></p></form></div>
-<div class="icon-gallery-toolbar"><h2>Marketplace Assets · 3D App Icons</h2><span id="selected-label"></span></div><div id="icon-grid" class="icon-grid"><p>Inapakia icons...</p></div><p id="gallery-status" class="icon-status" role="status"></p><footer class="settings-footer">ⓏⓊⓃⒺ MARKETPLACE</footer></main><script type="module" src="./icon-gallery.js?v=20261123-marketplace-assets-3d"></script></body></html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087A55">
+<title>Icon Studio · ZUNE</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./settings.css">
+<link rel="stylesheet" href="./icon-gallery.css?v=20261123-icon-studio-marketplace-v2">
+</head>
+<body>
+<main class="settings-wrap">
+ <header class="settings-head">
+  <button id="back" type="button" aria-label="Back">‹</button>
+  <div><h1>Icon Studio</h1><p class="settings-sub">Marketplace Themes · Icon Collections · My Icon</p></div>
+ </header>
+ <section class="icon-gallery-intro">
+  <div class="icon-gallery-mark">Z</div>
+  <div><h2>Make ZUNE yours.</h2><p>Chagua Theme ya Marketplace, kagua 3D preview, kisha tumia Theme au Icon unayoipenda. Catalog hii inatumia Marketplace Assets moja kwa moja.</p></div>
+ </section>
+ <nav class="icon-studio-tabs" role="tablist" aria-label="Icon Studio sections">
+  <button type="button" class="active" data-studio-tab="themes" role="tab" aria-selected="true">Themes</button>
+  <button type="button" data-studio-tab="icons" role="tab" aria-selected="false">Icon Collections</button>
+  <button type="button" data-studio-tab="mine" role="tab" aria-selected="false">My Icon</button>
+ </nav>
+ <div id="admin-tools" class="icon-admin" hidden aria-hidden="true">
+  <h2>Marketplace Asset Management</h2>
+  <p class="admin-help">Admin pekee: ongeza 3D app icon, chapisha au ifiche kwa wateja, na futa asset isiyohitajika. Wateja hawaoni zana hizi.</p>
+  <form id="icon-form">
+   <label>Jina la icon<input name="name" maxlength="60" required placeholder="Mfano: ZUNE Emerald"></label>
+   <label>Picha (PNG, JPG au WebP; hadi 2MB)<input name="image" type="file" accept="image/png,image/jpeg,image/webp" required></label>
+   <label class="icon-check"><input name="active" type="checkbox" checked> Ionekane kwa watumiaji</label>
+   <button class="settings-btn" type="submit">Ongeza kwenye Marketplace Assets</button>
+   <p id="upload-status" role="status"></p>
+  </form>
+ </div>
+ <section id="themes-panel" class="icon-studio-panel">
+  <div class="icon-gallery-toolbar"><h2>Marketplace Themes</h2><span>Official theme catalog</span></div>
+  <div id="theme-grid" class="icon-grid"><p>Inapakia Themes...</p></div>
+ </section>
+ <section id="icons-panel" class="icon-studio-panel" hidden>
+  <div class="icon-gallery-toolbar"><h2>Icon Collections</h2><span>3D Premium launcher styles</span></div>
+  <div id="icon-grid" class="icon-grid"><p>Inapakia icons...</p></div>
+ </section>
+ <section id="mine-panel" class="icon-studio-panel" hidden>
+  <div class="icon-gallery-toolbar"><h2>My Icon</h2><span>Theme na icon ulizochagua</span></div>
+  <div id="my-selection"></div>
+ </section>
+ <p id="gallery-status" class="icon-status" role="status" aria-live="polite"></p>
+ <footer class="settings-footer">ⓏⓊⓃⒺ MARKETPLACE</footer>
+</main>
+<div id="icon-preview-modal" class="icon-preview-modal" aria-hidden="true">
+ <div class="icon-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="icon-preview-title">
+  <button id="icon-preview-close" type="button" class="icon-preview-close" aria-label="Funga">×</button>
+  <span class="ig-preview-kicker">ZUNE MARKETPLACE</span>
+  <h2 id="icon-preview-title">Preview</h2>
+  <div id="icon-preview-art" class="icon-preview-art"></div>
+  <p id="icon-preview-description"></p>
+  <button id="icon-preview-apply" type="button" class="settings-btn">Apply</button>
+ </div>
+</div>
+<script type="module" src="./icon-gallery.js?v=20261123-icon-studio-marketplace-v2"></script>
+</body>
+</html>
