@@ -1,10 +1,4 @@
 import { supabase } from "./supabase.js";
-const $=s=>document.querySelector(s), grid=$("#icon-grid"),status=$("#gallery-status");
-const chosen=localStorage.getItem("zune_selected_app_icon")||"";
-let admin=false,icons=[];
-$("#back").onclick=()=>history.length>1?history.back():location.assign("./settings.html");
-const say=(s,bad=false)=>{status.textContent=s;status.style.color=bad?"#b42318":"var(--primary,#087a55)";};
-function url(path){return supabase.storage.from("zune-app-icons").getPublicUrl(path).data.publicUrl;}
 function nativePreview(choice){
 const art={
 default:'<path d="M24 38h60l-7 48H31z" fill="url(#a)"/><path d="M35 39V28a19 19 0 0 1 38 0v11" fill="none" stroke="#D1FAE5" stroke-width="7" stroke-linecap="round"/><path d="M30 48h49" stroke="#A7F3D0" stroke-width="5"/>',
