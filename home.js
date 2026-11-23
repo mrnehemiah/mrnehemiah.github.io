@@ -3179,7 +3179,11 @@ function ensureLiveShoppingStyles() {
     .z-live-chat-head h3{font-size:15px;font-weight:900}
     .z-live-chat-head span,.z-live-chat-note{color:var(--text-muted);font-size:10px}
     .z-live-chat-desktop iframe{display:block;width:100%;height:430px;border:0;border-radius:12px;background:#fff}
-    .z-live-chat-mobile{display:none;padding:12px 14px;border-radius:12px;background:var(--primary);color:#fff;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
+    .z-live-chat-mobile{display:none}
+    .z-live-chat-mobile>button{width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--primary);color:#fff;text-align:center;font-size:12px;font-weight:900;cursor:pointer}
+    .z-live-chat-mobile-panel[hidden]{display:none!important}
+    .z-live-chat-mobile-panel iframe{display:block;width:100%;height:min(55svh,480px);min-height:320px;margin-top:10px;border:0;border-radius:12px;background:#fff}
+    .z-live-chat-mobile-panel>a{display:inline-flex;margin-top:8px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:11px;font-weight:850;text-decoration:none}
     .z-live-chat-note{margin-top:9px;line-height:1.5}
     @media(max-width:759px){.z-live-chat-desktop{display:none}.z-live-chat-mobile{display:block}}
     @media(min-width:760px){.z-live-page{padding:28px 24px 60px}.z-live-hero{padding:38px}.z-live-empty{padding:22px}}
@@ -3347,8 +3351,14 @@ function renderLivePage() {
               <div class="z-live-chat-desktop">
                 <iframe src="https://www.youtube.com/live_chat?v=${videoId}&embed_domain=mrnehemiah.github.io" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
               </div>
-              <a class="z-live-chat-mobile" href="https://www.youtube.com/live_chat?v=${videoId}" target="_blank" rel="noopener noreferrer">${sw ? "Fungua Live Chat kwenye YouTube" : "Open Live Chat on YouTube"} ↗</a>
-              <p class="z-live-chat-note">${sw ? "Kwenye simu, YouTube hufungua Live Chat kupitia ukurasa/app yake. Ingia YouTube ili kutuma ujumbe." : "On mobile, YouTube opens Live Chat in its own page or app. Sign in to YouTube to send messages."}</p>
+              <div class="z-live-chat-mobile">
+                <button type="button" data-live-chat-toggle aria-expanded="false">${sw ? "Fungua mazungumzo ndani ya ZUNE ↓" : "Open chat inside ZUNE ↓"}</button>
+                <div class="z-live-chat-mobile-panel" data-live-chat-panel hidden>
+                  <iframe data-live-chat-frame data-src="https://www.youtube.com/live_chat?is_popout=1&v=${safe(videoId)}&embed_domain=mrnehemiah.github.io" src="about:blank" title="YouTube Live Chat" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                  <a href="https://www.youtube.com/live_chat?v=${safe(videoId)}" target="_blank" rel="noopener noreferrer">${sw ? "Fungua kwenye YouTube ikiwa chat haionekani" : "Open in YouTube if chat does not load"} ↗</a>
+                </div>
+              </div>
+              <p class="z-live-chat-note">${sw ? "Ingia kwenye akaunti ya YouTube ili kutuma ujumbe. Ikiwa iframe haitumiki kwenye kifaa chako, tumia kiungo cha YouTube." : "Sign in to YouTube to send messages. If the embedded chat is not supported on your device, use the YouTube link."}</p>
             </section>` : ""}
           ${selectedProducts.length ? `<div class="z-live-pinned-products"><strong>${sw ? "Nunua bidhaa zinazoonyeshwa" : "Shop featured products"}</strong><div class="z-live-product-row">${selectedProducts.map(product => `<div class="z-live-product">${product.image_url ? `<img src="${safe(product.image_url)}" alt="${safe(product.title)}" loading="lazy">` : ""}<div class="z-live-product-info"><b>${safe(product.title)}</b><span>${money(product.price)}</span></div><button type="button" data-live-add-product="${safe(product.id)}">+</button></div>`).join("")}</div></div>` : ""}
         </section>` : ""}
@@ -3479,6 +3489,21 @@ function bindLivePage() {
       if (Math.abs(delta) > 65) moveLiveSelection(delta > 0 ? 1 : -1);
     }, {passive:true});
   }
+  document.querySelector("[data-live-chat-toggle]")?.addEventListener("click", event => {
+    const button = event.currentTarget;
+    const panel = document.querySelector("[data-live-chat-panel]");
+    const frame = panel?.querySelector("[data-live-chat-frame]");
+    const expanded = button.getAttribute("aria-expanded") === "true";
+    if (!panel) return;
+    panel.hidden = expanded;
+    button.setAttribute("aria-expanded", String(!expanded));
+    button.textContent = expanded
+      ? (language() === "sw" ? "Fungua mazungumzo ndani ya ZUNE ↓" : "Open chat inside ZUNE ↓")
+      : (language() === "sw" ? "Funga mazungumzo ↑" : "Close chat ↑");
+    if (!expanded && frame?.dataset.src && frame.getAttribute("src") === "about:blank") {
+      frame.setAttribute("src", frame.dataset.src);
+    }
+  });
   document.getElementById("z-live-close-player")?.addEventListener("click", () => {
     homeState.liveSelectedId = "";
     renderMarketplacePage("live");
