@@ -4136,7 +4136,8 @@ async function renderMarketplacePage(page) {
         await reelsModule.mountZuneReels({
           root: app.querySelector("#z-reels-root"),
           user: homeState.user,
-          onHome: () => renderMarketplacePage("home")
+          onHome: () => renderMarketplacePage("home"),
+          onOpenProduct: product => openProductDetails(product)
         });
       } catch (error) {
         console.error("ZUNE Reels could not be loaded:", error);
