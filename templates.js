@@ -1,18 +1,7 @@
 import { supabase } from "./supabase.js";
 
 const root=document.getElementById("tg-root");
-const names=[
- {id:"classic",name:"ZUNE Classic",desc:"Muundo wa kawaida wenye sehemu zilizo wazi na bidhaa zinazoonekana haraka."},
- {id:"editorial",name:"Editorial Grid",desc:"Muundo wa kisasa unaosisitiza picha kubwa na mpangilio wa magazeti."},
- {id:"hero",name:"Mega Showcase",desc:"Banner kubwa ya utambulisho ikifuatiwa na makundi na bidhaa."},
- {id:"compact",name:"Compact Shop",desc:"Muundo mfupi unaoonyesha bidhaa nyingi kwa nafasi ndogo."},
- {id:"boutique",name:"Boutique",desc:"Muonekano wa duka la kipekee wenye nafasi na picha zinazovutia."},
- {id:"catalog",name:"Catalog Pro",desc:"Makundi pembeni na eneo la bidhaa lililopangwa kama katalogi."},
- {id:"stories",name:"Visual Stories",desc:"Makundi ya picha na sehemu za kugundua bidhaa kwa mtiririko."},
- {id:"minimal",name:"Minimal",desc:"Muundo safi usio na vitu vingi, unaoweka bidhaa mbele."},
- {id:"deals",name:"Deals Focus",desc:"Sehemu ya ofa na bidhaa zinazopendekezwa zinaonekana mapema."},
- {id:"showcase",name:"Premium Showcase",desc:"Muundo wa maonyesho wenye sehemu kubwa na product grid rahisi."}
-];
+let names=[];
 let user=null,profile={},store=null,mode="customer",selected={customer:"classic",store:"classic"},previewId=null;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const key=(kind)=>"zune_template_"+kind+":"+user.id;
@@ -69,6 +58,10 @@ async function init(){
  const {data,error:profileError}=await supabase.from("profiles").select("id,role").eq("id",user.id).maybeSingle();if(profileError)throw profileError;profile=profile||data||{};
  profile=data||{};
  if(profile.role==="vendor"){const {data:storeData,error:storeError}=await supabase.from("stores").select("id,storefront_template").eq("owner_id",user.id).maybeSingle();if(storeError)throw storeError;store=storeData||null;}
+ const {data:themeAssets,error:themeError}=await supabase.from("zune_theme_assets").select("id,title,description,config,layout,is_featured,created_at").eq("asset_kind","theme").eq("status","published").in("scope",["official","community"]).order("is_featured",{ascending:false}).order("created_at",{ascending:false});
+ if(themeError)throw themeError;
+ names=(themeAssets||[]).map(asset=>({id:asset.config?.template_id||asset.layout?.template_id,name:asset.title,desc:asset.description,assetId:asset.id})).filter(asset=>asset.id);
+ if(!names.length)throw new Error("Marketplace theme catalog is empty.");
  loadChoices();render();
 }
 init().catch(e=>{console.error("ZUNE templates:",e);root.innerHTML='<div class="tg-empty">Imeshindikana kupakia templates. Tafadhali jaribu tena.</div>';});
