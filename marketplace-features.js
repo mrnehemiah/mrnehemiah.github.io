@@ -11,6 +11,7 @@ let rewardAccount = null;
 let tickets = [];
 let disputes = [];
 let buyerOrders = [];
+let selectedTool = "";
 
 function styles(){
  if(document.getElementById("zune-feature-suite-css")) return;
@@ -103,7 +104,7 @@ function render(){
   ["↗",tr("Referral Program","Referral Program",lang),"referrals",tr("Alika rafiki, pata zawadi","Invite friends and earn rewards",lang)],
   ["☏",tr("Support & Disputes","Support & Disputes",lang),"support",tr("Msaada na utatuzi wa changamoto","Get help and resolve order issues",lang)]
  ];
- const cards=tiles.map(t=>'<button type="button" class="z-feature-tile" data-jump="'+t[2]+'" data-tilt-card><span class="z-feature-icon">'+t[0]+'</span><strong>'+t[1]+'</strong><small>'+t[3]+'</small></button>').join("");
+ const cards=tiles.map(t=>'<button type="button" class="z-feature-tile" data-open-tool="'+t[2]+'" data-tilt-card><span class="z-feature-icon">'+t[0]+'</span><strong>'+t[1]+'</strong><small>'+t[3]+'</small></button>').join("");
  const wishlist=ctx.wishlist.length?'<div class="z-feature-product-grid">'+ctx.wishlist.map(p=>productCard(p,'<button class="z-feature-secondary" data-compare="'+esc(p.id)+'">'+tr("Linganisha","Compare",lang)+'</button>')).join("")+'</div>':empty(tr("Hujahifadhi bidhaa bado. Bonyeza alama ya moyo kwenye bidhaa.","No saved products yet. Tap the heart on a product to save it.",lang));
  const compare=compareRows.length?'<div class="z-feature-table-wrap"><table class="z-feature-compare"><thead><tr><th>'+tr("Kipengele","Feature",lang)+'</th>'+compareRows.map(p=>'<th>'+esc(p.title)+'<button class="z-feature-secondary" data-remove-compare="'+esc(p.id)+'">×</button></th>').join("")+'</tr></thead><tbody>'+[
   [tr("Bei","Price",lang),p=>money(p.price)],
@@ -198,8 +199,8 @@ function status(id,message){const el=ctx.root.querySelector("#"+id);if(el)el.tex
 async function bind(){
  const root=ctx.root,lang=ctx.language,user=ctx.user;
  root.addEventListener("click",event=>{const button=event.target.closest("[data-feature-open-product]");if(!button)return;const product=catalog.find(p=>String(p.id)===button.dataset.featureOpenProduct);if(product)ctx.onOpenProduct?.(product);});
- root.querySelector("[data-features-home]")?.addEventListener("click",()=>ctx.onHome?.());
- root.querySelectorAll("[data-jump]").forEach(b=>b.addEventListener("click",()=>root.querySelector("#z-feature-"+b.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"})));
+ root.querySelector("[data-features-home]")?.addEventListener("click",()=>{if(selectedTool){refresh("");}else{ctx.onHome?.();}});
+ root.querySelectorAll("[data-open-tool]").forEach(b=>b.addEventListener("click",()=>refresh(b.dataset.openTool)));
  root.querySelector("#z-feature-compare-form")?.addEventListener("submit",async e=>{
   e.preventDefault();const id=new FormData(e.currentTarget).get("product_id");if(!id)return;
   const {error}=await supabase.from("zune_comparison_items").insert({user_id:user.id,product_id:id});
@@ -267,8 +268,11 @@ async function bind(){
  bindTilt(root);
 }
 
-async function refresh(){
- await loadData();ctx.root.innerHTML=render();await bind();
+async function refresh(nextTool=selectedTool){
+ selectedTool=nextTool||"";
+ await loadData();ctx.root.innerHTML=render();
+ if(selectedTool){const shell=document.createElement("div");shell.innerHTML=ctx.root.innerHTML;shell.querySelector(".z-feature-hero")?.remove();shell.querySelector(".z-feature-grid")?.remove();shell.querySelectorAll(".z-feature-section").forEach(el=>{if(el.id!=="z-feature-"+selectedTool)el.remove();});ctx.root.innerHTML=shell.innerHTML;}
+ await bind();
  const ledger=ctx.root.querySelector("#z-feature-ledger");
  if(ledger)ledger.innerHTML=ctx.ledger.length?'<div class="z-feature-list">'+ctx.ledger.map(x=>'<div class="z-feature-list-item"><div><strong>'+esc(x.description)+'</strong><small>'+new Date(x.created_at).toLocaleDateString()+'</small></div><span class="z-feature-pill">+'+Number(x.points)+'</span></div>').join("")+'</div>':empty(tr("Bado hakuna pointi zilizopatikana.","No reward points earned yet.",ctx.language));
 }
@@ -279,7 +283,7 @@ export async function mountMarketplaceFeatures({root,user,language="sw",onHome,o
  if(!document.getElementById("zune-marketplace-3d-overrides")){const link=document.createElement("link");link.id="zune-marketplace-3d-overrides";link.rel="stylesheet";link.href="./marketplace-features.css?v=20261123-3d";document.head.appendChild(link);}
 
  if(!user?.id){root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Ingia kwenye akaunti yako ili kutumia vipengele hivi.","Sign in to use these features.",language))+'</div></div>';return;}
- ctx={root,user,language,onHome,onOpenProduct,wishlist:[],ledger:[],referralCode:"",reviews:[]};
+ selectedTool="";ctx={root,user,language,onHome,onOpenProduct,wishlist:[],ledger:[],referralCode:"",reviews:[]};
  root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Inapakia zana zako za ununuzi...","Loading your shopping tools...",language))+'</div></div>';
  await loadData();root.innerHTML=render();await bind();
  const ledger=root.querySelector("#z-feature-ledger");
