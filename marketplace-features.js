@@ -276,6 +276,8 @@ async function refresh(){
 export async function mountMarketplaceFeatures({root,user,language="sw",onHome,onOpenProduct}){
  styles();
  if(!root)return;
+ if(!document.getElementById("zune-marketplace-3d-overrides")){const link=document.createElement("link");link.id="zune-marketplace-3d-overrides";link.rel="stylesheet";link.href="./marketplace-features.css?v=20261123-3d";document.head.appendChild(link);}
+
  if(!user?.id){root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Ingia kwenye akaunti yako ili kutumia vipengele hivi.","Sign in to use these features.",language))+'</div></div>';return;}
  ctx={root,user,language,onHome,onOpenProduct,wishlist:[],ledger:[],referralCode:"",reviews:[]};
  root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Inapakia zana zako za ununuzi...","Loading your shopping tools...",language))+'</div></div>';

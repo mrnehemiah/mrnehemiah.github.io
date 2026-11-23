@@ -1,0 +1,40 @@
+/* ZUNE Marketplace premium 3D visual layer — overrides existing feature suite without replacing its workflows. */
+.z-feature-page{min-height:100vh;padding:18px 14px 115px;background:radial-gradient(ellipse at 80% 0%,rgba(26,151,108,.28),transparent 38%),linear-gradient(145deg,#061713,#0b2921 58%,#06130f)!important;color:#effbf5!important;perspective:1400px}
+.z-feature-wrap{max-width:1220px;margin:auto}
+.z-feature-top{color:#e9fff4}
+.z-feature-back{background:#ffffff0d!important;border:1px solid #ffffff28!important;color:#dffbed!important;backdrop-filter:blur(12px)}
+.z-feature-kicker{color:#6ce4b3!important;letter-spacing:.2em}
+.z-feature-hero{position:relative;isolation:isolate;overflow:hidden;border:1px solid #b5f6d533;background:linear-gradient(118deg,#103d30f5,#0b241df2 62%,#14543f)!important;box-shadow:0 30px 80px #0009,inset 0 1px #ffffff2b!important;transform-style:preserve-3d;min-height:245px}
+.z-feature-hero:before{width:260px!important;height:260px!important;right:4%!important;top:-75px!important;background:radial-gradient(circle at 32% 25%,#e4fff3,#48d8a2 38%,#086044 72%)!important;box-shadow:inset -20px -25px 32px #032c20aa,0 35px 55px #0008!important;transform:rotateX(26deg) rotateY(-28deg) rotateZ(14deg)!important;animation:zune3d-float 7s ease-in-out infinite}
+.z-feature-hero:after{width:160px!important;height:160px!important;right:19%!important;bottom:-100px!important;background:linear-gradient(145deg,#ffffff55,#ffffff08)!important;transform:rotateX(58deg) rotateZ(-25deg)!important}
+.z-feature-hero h1{color:#f3fff9;text-shadow:0 4px 25px #0005;max-width:660px}
+.z-feature-hero p{color:#c6e8d7!important;max-width:590px}
+.z-feature-orbit span{background:#ffffff12!important;border-color:#ffffff32!important;color:#d7f6e6;backdrop-filter:blur(14px);box-shadow:inset 0 1px #ffffff22}
+.z-feature-grid{gap:14px}
+.z-feature-tile{background:linear-gradient(145deg,#174737,#0a211b)!important;border:1px solid #a6e6c52b!important;color:#effbf5!important;box-shadow:0 18px 35px #0006,inset 0 1px #ffffff20!important;transform:perspective(850px) rotateX(2deg) rotateY(-1deg);transform-style:preserve-3d}
+.z-feature-tile:hover{box-shadow:0 25px 45px #0009,inset 0 1px #ffffff25!important}
+.z-feature-icon{background:linear-gradient(145deg,#d7ffeb,#43d49c)!important;color:#073c2a;box-shadow:0 12px 25px #0006,inset 0 1px #fff!important}
+.z-feature-tile strong{color:#f0fff7}
+.z-feature-tile small{color:#a9cdbb!important}
+.z-feature-section{background:linear-gradient(145deg,#14392deF,#0b211ceF)!important;border:1px solid #a9e8c52b!important;color:#f0fff7!important;box-shadow:0 20px 45px #0006,inset 0 1px #ffffff16!important;backdrop-filter:blur(18px);transform-style:preserve-3d}
+.z-feature-section h2{color:#f2fff8}
+.z-feature-muted{color:#b0cebf!important}
+.z-feature-form input,.z-feature-form select,.z-feature-form textarea,.z-feature-section input{background:#061a15!important;border-color:#ffffff2c!important;color:#f1fff8!important}
+.z-feature-form input::placeholder,.z-feature-form textarea::placeholder,.z-feature-section input::placeholder{color:#7f9e8d}
+.z-feature-primary{background:linear-gradient(125deg,#1a9b6b,#56e2ad)!important;color:#052b1e!important;box-shadow:0 10px 25px #0abf8040!important}
+.z-feature-secondary{background:#ffffff0c!important;color:#d9f6e7!important;border:1px solid #ffffff2b!important}
+.z-feature-product{background:linear-gradient(145deg,#153d30,#0a211b)!important;border-color:#a5e2c52c!important;color:#effbf5!important;box-shadow:0 16px 35px #0007,inset 0 1px #ffffff18!important;transform:perspective(850px) rotateX(1.5deg) rotateY(-1deg);backface-visibility:hidden}
+.z-feature-product img{box-shadow:0 10px 24px #0005}
+.z-feature-product strong{color:#f0fff7}
+.z-feature-product small{color:#a8d8bd!important}
+.z-feature-empty{background:#ffffff08;border-color:#8ccfb12e!important;color:#b6d5c4!important}
+.z-feature-list-item,.z-feature-compare td,.z-feature-compare th{background:#ffffff0a!important;border-color:#ffffff20!important;color:#e9fff3!important}
+.z-feature-compare th{background:#1a4a37!important;color:#c8f8df!important}
+.z-feature-pill{background:#164c37!important;color:#8df0be!important}
+.z-feature-balance{background:linear-gradient(125deg,#073b30,#0d895e)!important;box-shadow:0 20px 35px #0007,inset 0 1px #ffffff30}
+.z-feature-answer{background:#143b2e!important;color:#d9f8e7!important;border:1px solid #ffffff1d}
+.z-feature-status{color:#a7d8be!important}
+@keyframes zune3d-float{0%,100%{transform:rotateX(26deg) rotateY(-28deg) rotateZ(14deg) translateY(0)}50%{transform:rotateX(31deg) rotateY(-19deg) rotateZ(9deg) translateY(-13px)}}
+@media(min-width:700px){.z-feature-hero{padding:38px!important}.z-feature-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.z-feature-section{padding:23px!important}.z-feature-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:699px){.z-feature-hero:before{width:155px!important;height:155px!important;right:-35px!important;top:-40px!important}.z-feature-hero h1,.z-feature-hero p{position:relative;z-index:1}.z-feature-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.z-feature-hero:before{animation:none!important}.z-feature-tile,.z-feature-product{transform:none!important;transition:none!important}}
