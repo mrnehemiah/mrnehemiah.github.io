@@ -3314,7 +3314,7 @@ function renderLivePage() {
       ${homeState.liveError ? `<div class="z-live-feed-error" role="alert">${safe(homeState.liveError)} <button type="button" id="z-live-retry">${sw ? "Jaribu tena" : "Try again"}</button></div>` : ""}
       ${selected ? `
         <section class="z-live-player-panel" id="z-live-player">
-          <div class="z-live-section-head"><h2>${safe(selected.title)}</h2><button type="button" id="z-live-close-player">${sw ? "Funga" : "Close"} ×</button></div>
+          <div class="z-live-section-head z-live-swipe-zone" data-live-swipe-zone tabindex="0" role="group" aria-label="${sw ? "Eneo la kubadilisha matangazo ya Live" : "Live stream navigation area"}"><h2>${safe(selected.title)}</h2><button type="button" id="z-live-close-player">${sw ? "Funga" : "Close"} ×</button></div>
           ${videoId ? `<div class="z-live-video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0" title="${safe(selected.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>` : `<p>${sw ? "Video ya matangazo haya haipatikani kwa sasa." : "The video for this broadcast is not available yet."}</p>`}
           <p class="z-live-player-store">${sw ? "Duka:" : "Store:"} <strong>${safe(selected.store?.name || "ZUNE Seller")}</strong></p>
           <div class="z-live-player-meta">
@@ -3463,18 +3463,34 @@ function bindLivePage() {
       }
     })();
   }));
-  const liveVideo = document.querySelector("#z-live-player .z-live-video-wrap");
-  if (liveVideo) {
+  // Use ZUNE-owned controls for gestures; YouTube iframe touch events do not bubble here.
+  document.querySelectorAll("#z-live-player [data-live-swipe-zone]").forEach(zone => {
     let startY = null;
-    liveVideo.addEventListener("touchstart", event => { startY = event.touches?.[0]?.clientY ?? null; }, {passive:true});
-    liveVideo.addEventListener("touchend", event => {
-      if (startY === null) return;
-      const endY = event.changedTouches?.[0]?.clientY ?? startY;
-      const delta = startY - endY;
-      startY = null;
-      if (Math.abs(delta) > 65) moveLiveSelection(delta > 0 ? 1 : -1);
+    let startX = null;
+    zone.addEventListener("touchstart", event => {
+      if (event.target?.closest?.("button,a,input,select,textarea")) { startY = null; startX = null; return; }
+      startY = event.touches?.[0]?.clientY ?? null;
+      startX = event.touches?.[0]?.clientX ?? null;
     }, {passive:true});
-  }
+    zone.addEventListener("touchend", event => {
+      if (startY === null || startX === null) return;
+      const endY = event.changedTouches?.[0]?.clientY ?? startY;
+      const endX = event.changedTouches?.[0]?.clientX ?? startX;
+      const deltaY = startY - endY;
+      const deltaX = Math.abs(startX - endX);
+      startY = null;
+      startX = null;
+      if (Math.abs(deltaY) > 55 && Math.abs(deltaY) > deltaX * 1.2) moveLiveSelection(deltaY > 0 ? 1 : -1);
+    }, {passive:true});
+    zone.addEventListener("touchcancel", () => { startY = null; startX = null; }, {passive:true});
+    zone.addEventListener("keydown", event => {
+      if (event.target?.closest?.("button,a,input,select,textarea")) return;
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        moveLiveSelection(event.key === "ArrowUp" ? 1 : -1);
+      }
+    });
+  });
   document.querySelector("[data-live-chat-toggle]")?.addEventListener("click", event => {
     const button = event.currentTarget;
     const panel = document.querySelector("[data-live-chat-panel]");
