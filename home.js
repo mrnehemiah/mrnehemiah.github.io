@@ -2393,6 +2393,16 @@ function renderHomePage() {
               ${zIcon("account")}
             </button>
 
+            <button
+              type="button"
+              class="z-icon-button"
+              data-open-features
+              aria-label="ZUNE Shopping Tools"
+              title="ZUNE Shopping Tools"
+            >
+              <span aria-hidden="true">✦</span>
+            </button>
+
           </div>
 
         </div>
@@ -3949,6 +3959,10 @@ async function renderMarketplacePage(page) {
       content = renderAccountPage();
       break;
 
+    case "features":
+      content = '<div id="z-feature-suite-root"></div>';
+      break;
+
     default:
       homeState.activeTab = "home";
       content = renderHomePage();
@@ -3969,6 +3983,9 @@ async function renderMarketplacePage(page) {
   renderSponsoredPlacementBlocks();
   bindSponsoredAdEvents();
   bindNavigation();
+  app.querySelectorAll("[data-open-features]").forEach(button => {
+    button.addEventListener("click", () => renderMarketplacePage("features"));
+  });
 
   switch (homeState.activeTab) {
     case "home":
@@ -3999,6 +4016,22 @@ async function renderMarketplacePage(page) {
 
     case "me":
       bindAccountEvents();
+      break;
+
+    case "features":
+      try {
+        const featureModule = await import("./marketplace-features.js?v=20261123-3d-suite");
+        await featureModule.mountMarketplaceFeatures({
+          root: app.querySelector("#z-feature-suite-root"),
+          user: homeState.user,
+          language: language(),
+          onHome: () => renderMarketplacePage("home")
+        });
+      } catch (error) {
+        console.error("ZUNE feature suite could not be loaded:", error);
+        const featureRoot = app.querySelector("#z-feature-suite-root");
+        if (featureRoot) featureRoot.innerHTML = '<section class="z-empty-state"><h2>Vipengele havijafunguka</h2><p>Tafadhali jaribu tena.</p></section>';
+      }
       break;
   }
 
@@ -4076,7 +4109,7 @@ export async function renderMarketplaceHome({
 
   // Fungua tab iliyoombwa na kiungo cha Account, kama ipo.
   const requestedTab = new URLSearchParams(window.location.search).get("tab");
-  const allowedTabs = new Set(["home", "live", "explore", "categories", "cart", "saved", "me"]);
+  const allowedTabs = new Set(["home", "live", "explore", "categories", "cart", "saved", "me", "features"]);
   const initialTab = allowedTabs.has(requestedTab) ? requestedTab : "home";
 
   // Onyesha ukurasa ulioombwa mara moja.
