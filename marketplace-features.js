@@ -73,6 +73,7 @@ function styles(){
  .z-feature-review-media{display:flex;gap:8px;flex-wrap:wrap}
  .z-feature-review-media img{width:62px;height:62px;object-fit:cover;border-radius:10px}
  @media(min-width:700px){.z-feature-page{padding:26px 22px 80px}.z-feature-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.z-feature-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.z-feature-section{padding:22px}.z-feature-hero{padding:34px}.z-feature-hero:before{width:280px;height:280px;right:60px;top:-110px}}
+ @media(hover:none){.z-feature-tile{transform:perspective(900px) rotateX(1.2deg) rotateY(-.8deg)}.z-feature-product{transform:perspective(900px) rotateX(1deg) rotateY(.6deg)}.z-feature-tile:active,.z-feature-product:active{transform:perspective(900px) rotateX(4deg) rotateY(-3deg) translateZ(8px)}}
  @media(prefers-reduced-motion:reduce){.z-feature-tile,.z-feature-product{transition:none;transform:none!important}}
  `;
  document.head.appendChild(s);
@@ -179,14 +180,17 @@ async function loadData(){
 }
 
 function bindTilt(root){
- if(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || !window.matchMedia?.("(hover: hover)").matches) return;
+ if(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
  root.querySelectorAll("[data-tilt-card]").forEach(card=>{
   if(card.dataset.tiltBound) return;card.dataset.tiltBound="1";
   card.addEventListener("pointermove",e=>{
-   const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+   if(e.pointerType==="touch") return;const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
    card.style.transform="perspective(850px) rotateX("+(-y*7)+"deg) rotateY("+(x*8)+"deg) translateZ(2px)";
   });
   card.addEventListener("pointerleave",()=>card.style.transform="perspective(850px) rotateX(0) rotateY(0)");
+  card.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.transform="perspective(850px) rotateX("+(-y*5)+"deg) rotateY("+(x*6)+"deg) translateZ(6px)";});
+  card.addEventListener("pointerup",()=>card.style.transform="perspective(850px) rotateX(0) rotateY(0)");
+  card.addEventListener("pointercancel",()=>card.style.transform="perspective(850px) rotateX(0) rotateY(0)");
  });
 }
 function status(id,message){const el=ctx.root.querySelector("#"+id);if(el)el.textContent=message;}
