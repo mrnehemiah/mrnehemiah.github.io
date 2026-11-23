@@ -33,33 +33,120 @@ return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent('<svg xmlns="http:
 }
 function applyNative(key,name){if(!window.AndroidZuneIcon||!window.AndroidZuneIcon.setLauncherIcon){say("Kubadilisha launcher icon halisi kunapatikana kwenye APK ya Android iliyosasishwa.",true);return;}const ok=window.AndroidZuneIcon.setLauncherIcon(key);if(!ok){say("Android haikuweza kubadilisha launcher icon.",true);return;}localStorage.setItem("zune_native_icon",key);localStorage.setItem("zune_selected_app_icon","native:"+key);render();say("Launcher icon imebadilishwa. Inaweza kuchukua muda kuonekana kwenye Home Screen.");}
 const nativeChoices=[{key:"default",name:"Ocean Blue",bg:"#082F49",accent:"#38BDF8"},{key:"emerald",name:"ZUNE Emerald",bg:"#064E3B",accent:"#34D399"},{key:"sunset",name:"Sunset",bg:"#F97316",accent:"#FED7AA"},{key:"midnight",name:"Midnight",bg:"#090F1F",accent:"#60A5FA"},{key:"aurora",name:"Aurora",bg:"#073B3A",accent:"#5EEAD4"},{key:"royal",name:"Royal",bg:"#4C1D95",accent:"#C4B5FD"},{key:"rose",name:"Rose Gold",bg:"#831843",accent:"#FBCFE8"},{key:"graphite",name:"Titanium Silver",bg:"#27272A",accent:"#D4D4D8"},{key:"arctic",name:"Arctic",bg:"#DCEFFB",accent:"#2563EB"},{key:"amber",name:"Amber",bg:"#78350F",accent:"#FBBF24"},{key:"obsidian",name:"Obsidian Black",bg:"#09090B",accent:"#22D3EE"},{key:"crimson",name:"Cosmic Galaxy",bg:"#312E81",accent:"#C4B5FD"},{key:"sapphire",name:"Diamond Crystal",bg:"#172554",accent:"#BFDBFE"},{key:"jade",name:"Forest Green",bg:"#064E3B",accent:"#86EFAC"},{key:"solar",name:"Solar Gold",bg:"#713F12",accent:"#FACC15"},{key:"lavender",name:"Lavender Mist",bg:"#4C1D95",accent:"#DDD6FE"},{key:"coral",name:"Coral Pop",bg:"#881337",accent:"#FB7185"},{key:"glacier",name:"Pearl White",bg:"#334155",accent:"#F8FAFC"},{key:"copper",name:"Copper Forge",bg:"#431407",accent:"#FB923C"},{key:"neon",name:"Neon Cyber",bg:"#111827",accent:"#22D3EE"}];
-function render(){grid.innerHTML="";
- for(const choice of nativeChoices){const selected=localStorage.getItem("zune_native_icon")===choice.key||(choice.key==="default"&&!localStorage.getItem("zune_native_icon"));const card=document.createElement("article");card.className="icon-tile"+(selected?" selected":"");const img=document.createElement("img");img.src=nativePreview(choice);img.alt=choice.name;const name=document.createElement("strong");name.textContent=choice.name;const note=document.createElement("small");note.textContent="Android Home Screen icon"+(selected?" · Inatumika":"");const apply=document.createElement("button");apply.type="button";apply.textContent=selected?"Inatumika":"Tumia launcher icon";apply.disabled=selected;apply.onclick=()=>applyNative(choice.key,choice.name);card.append(img,name,note,apply);grid.append(card);}
- if(!icons.length){const info=document.createElement("p");info.textContent="Admin anaweza kupakia picha zaidi kwa ajili ya Gallery. Ili ziwe launcher icons halisi, lazima ziongezwe kwenye APK na kutolewa update.";grid.append(info);return;}
- for(const icon of icons){const selected=icon.id===localStorage.getItem("zune_selected_app_icon");const card=document.createElement("article");card.className="icon-tile"+(selected?" selected":"");const img=document.createElement("img");img.src=url(icon.image_path);img.alt=icon.name;const name=document.createElement("strong");name.textContent=icon.name;const note=document.createElement("small");note.textContent=admin?(icon.is_active?"Inaonekana kwa wateja · picha ya Gallery":"Imefichwa kwa wateja"):(selected?"Imechaguliwa kwenye Gallery · si launcher icon":(icon.is_default?"Default · Gallery":"ZUNE Icon · Gallery"));const apply=document.createElement("button");apply.type="button";apply.textContent=selected?"Imechaguliwa":"Chagua icon";apply.disabled=selected||!icon.is_active;apply.onclick=()=>{localStorage.setItem("zune_selected_app_icon",icon.id);localStorage.setItem("zune_selected_app_icon_url",img.src);localStorage.setItem("zune_native_icon","");document.dispatchEvent(new CustomEvent("zune:app-icon-changed",{detail:{id:icon.id,url:img.src,name:icon.name}}));render();say("Picha imechaguliwa kwenye Gallery pekee. Ili iwe launcher icon halisi, Admin lazima aijumuishe kwenye native resources za APK na kutoa build mpya.",true);};card.append(img,name,note,apply);
- if(admin){const visibility=document.createElement("button");visibility.type="button";visibility.textContent=icon.is_active?"Ficha kwa wateja":"Onyesha kwa wateja";visibility.onclick=()=>setIconVisibility(icon);card.append(visibility);const del=document.createElement("button");del.className="delete-icon";del.type="button";del.textContent="Futa icon";del.setAttribute("aria-label","Futa icon "+icon.name);del.onclick=()=>removeIcon(icon);card.append(del);}grid.append(card);}
+function render(){
+ grid.replaceChildren();
+ for(const choice of nativeChoices){
+  const selected=localStorage.getItem("zune_native_icon")===choice.key||(choice.key==="default"&&!localStorage.getItem("zune_native_icon"));
+  const card=document.createElement("article");card.className="icon-tile native-icon-tile"+(selected?" selected":"");
+  const img=document.createElement("img");img.src=nativePreview(choice);img.alt=choice.name;
+  const name=document.createElement("strong");name.textContent=choice.name;
+  const note=document.createElement("small");note.textContent="Android Home Screen · "+(selected?"Inatumika":"3D launcher style");
+  const apply=document.createElement("button");apply.type="button";apply.textContent=selected?"Inatumika":"Tumia launcher icon";apply.disabled=selected;apply.onclick=()=>applyNative(choice.key,choice.name);
+  card.append(img,name,note,apply);grid.append(card);
+ }
+ if(!icons.length){
+  const info=document.createElement("p");
+  info.textContent=admin?"Bado hakuna 3D app icons zilizochapishwa kwenye Marketplace Assets. Tumia fomu ya Admin kuongeza icon kwenye katalogi hii.":"Marketplace bado haina app icons za ziada zilizochapishwa. Unaweza kuchagua mojawapo ya 3D launcher styles hapo juu.";
+  grid.append(info);return;
+ }
+ for(const icon of icons){
+  const selected=icon.id===localStorage.getItem("zune_selected_app_icon");
+  const card=document.createElement("article");card.className="icon-tile marketplace-icon-tile"+(selected?" selected":"");
+  const img=document.createElement("img");img.src=icon.preview_url||"";img.alt=icon.title||"ZUNE Marketplace icon";img.loading="lazy";
+  img.onerror=()=>{img.style.display="none";};
+  const name=document.createElement("strong");name.textContent=icon.title||"ZUNE Icon";
+  const note=document.createElement("small");
+  note.textContent=admin?(icon.status==="published"?"Marketplace · Inaonekana kwa wateja":"Marketplace · "+icon.status):"Marketplace 3D icon"+(selected?" · Imechaguliwa":"");
+  const apply=document.createElement("button");apply.type="button";apply.textContent=selected?"Imechaguliwa":"Chagua icon";apply.disabled=selected||icon.status!=="published";
+  apply.onclick=()=>{
+   localStorage.setItem("zune_selected_app_icon",icon.id);localStorage.setItem("zune_selected_app_icon_url",img.src);localStorage.setItem("zune_native_icon","");
+   document.dispatchEvent(new CustomEvent("zune:app-icon-changed",{detail:{id:icon.id,url:img.src,name:icon.title||"ZUNE Icon"}}));
+   render();say("Icon ya Marketplace imechaguliwa. Kwa launcher icon ya Android, tumia chaguo la native lililojumuishwa kwenye APK.");
+  };
+  card.append(img,name,note,apply);
+  if(admin){
+   const visibility=document.createElement("button");visibility.type="button";
+   visibility.textContent=icon.status==="published"?"Ficha kwa wateja":"Chapisha kwa wateja";
+   visibility.onclick=()=>setAssetVisibility(icon);
+   const del=document.createElement("button");del.className="delete-icon";del.type="button";del.textContent="Futa icon";
+   del.setAttribute("aria-label","Futa icon "+(icon.title||"ZUNE"));del.onclick=()=>removeIcon(icon);
+   card.append(visibility,del);
+  }
+  grid.append(card);
+ }
 }
-async function load(){let query=supabase.from("zune_app_icons").select("id,name,image_path,is_active,is_default,sort_order,created_at").order("sort_order").order("created_at");if(!admin)query=query.eq("is_active",true);const {data,error}=await query;if(error){grid.innerHTML="<p>Imeshindikana kupakia icons. "+error.message+"</p>";return;}icons=data||[];render();}
-async function setIconVisibility(icon){const next=!icon.is_active;const {error}=await supabase.from("zune_app_icons").update({is_active:next}).eq("id",icon.id);if(error){say("Imeshindikana kubadilisha hali ya icon: "+error.message,true);return;}await load();say(next?"Icon sasa inaonekana kwa wateja.":"Icon imefichwa kwa wateja.");}
+async function load(){
+ let query=supabase.from("zune_theme_assets")
+  .select("id,title,description,preview_url,asset_kind,scope,status,config,is_featured,published_at,created_at")
+  .eq("asset_kind","app_icon")
+  .order("is_featured",{ascending:false})
+  .order("published_at",{ascending:false})
+  .order("created_at",{ascending:false});
+ if(!admin)query=query.eq("status","published").in("scope",["official","community"]);
+ const {data,error}=await query;
+ if(error){grid.innerHTML="<p>Imeshindikana kupakia Marketplace icons. "+error.message+"</p>";return;}
+ icons=data||[];render();
+}
+async function setAssetVisibility(icon){
+ if(!admin){say("Admin pekee anaweza kubadilisha mwonekano wa icon.",true);return;}
+ const next=icon.status==="published"?"hidden":"published";
+ const {data:allowed,error:authError}=await supabase.rpc("is_admin");
+ if(authError||allowed!==true){say("Ruhusa ya Admin haijathibitishwa.",true);return;}
+ const {error}=await supabase.from("zune_theme_assets").update({status:next,published_at:next==="published"?(icon.published_at||new Date().toISOString()):icon.published_at}).eq("id",icon.id).eq("asset_kind","app_icon");
+ if(error){say("Imeshindikana kubadilisha hali ya icon: "+error.message,true);return;}
+ await load();say(next==="published"?"Icon sasa imechapishwa kwenye Marketplace.":"Icon imefichwa kwa wateja.");
+}
 async function removeIcon(icon){
  if(!admin){say("Admin pekee anaweza kufuta icon.",true);return;}
- if(!confirm("Una uhakika unataka kufuta icon ya "+icon.name+"? Kitendo hiki hakiwezi kutenduliwa."))return;
+ if(!confirm("Una uhakika unataka kufuta Marketplace icon ya "+(icon.title||"ZUNE")+"? Kitendo hiki hakiwezi kutenduliwa."))return;
  const {data:allowed,error:authError}=await supabase.rpc("is_admin");
  if(authError||allowed!==true){say("Ruhusa ya Admin haijathibitishwa. Icon haijafutwa.",true);return;}
- const {error}=await supabase.from("zune_app_icons").delete().eq("id",icon.id);
+ const {error}=await supabase.from("zune_theme_assets").delete().eq("id",icon.id).eq("asset_kind","app_icon");
  if(error){say("Imeshindikana kufuta icon: "+error.message,true);return;}
- const storageResult=await supabase.storage.from("zune-app-icons").remove([icon.image_path]);
+ const storagePath=icon.config?.storage_path;
+ const storageResult=storagePath?await supabase.storage.from(icon.config?.storage_bucket||"zune-app-icons").remove([storagePath]):{error:null};
  if(localStorage.getItem("zune_selected_app_icon")===icon.id){localStorage.removeItem("zune_selected_app_icon");localStorage.removeItem("zune_selected_app_icon_url");}
  await load();
- if(storageResult.error)say("Rekodi ya icon imefutwa, lakini picha haikuondolewa Storage: "+storageResult.error.message,true);
- else say("Icon na picha yake vimefutwa kikamilifu.");
+ if(storageResult.error)say("Rekodi ya Marketplace icon imefutwa, lakini picha haikuondolewa Storage: "+storageResult.error.message,true);
+ else say("Marketplace icon na picha yake vimefutwa kikamilifu.");
 }
-async function init(){if(window.AndroidZuneIcon&&typeof window.AndroidZuneIcon.getSelectedLauncherIcon==="function"){try{const nativeKey=window.AndroidZuneIcon.getSelectedLauncherIcon();if(nativeKey){localStorage.setItem("zune_native_icon",nativeKey);}}catch(error){console.warn("Unable to read native launcher icon",error);}}const {data:{user}}=await supabase.auth.getUser();if(!user){location.replace("./login.html?redirect=icon-gallery.html");return;}const {data:allowed,error}=await supabase.rpc("is_admin");admin=!error&&allowed===true;
+async function init(){
+ if(window.AndroidZuneIcon&&typeof window.AndroidZuneIcon.getSelectedLauncherIcon==="function"){
+  try{const nativeKey=window.AndroidZuneIcon.getSelectedLauncherIcon();if(nativeKey)localStorage.setItem("zune_native_icon",nativeKey);}
+  catch(error){console.warn("Unable to read native launcher icon",error);}
+ }
+ const {data:{user}}=await supabase.auth.getUser();
+ if(!user){location.replace("./login.html?redirect=icon-gallery.html");return;}
+ const {data:allowed,error}=await supabase.rpc("is_admin");admin=!error&&allowed===true;
  const adminPanel=$("#admin-tools");
- if(admin){adminPanel.hidden=false;adminPanel.removeAttribute("aria-hidden");}
- else{adminPanel?.remove();adminPanel?.setAttribute("aria-hidden","true");}
- await load();}
-$("#icon-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,file=form.image.files[0],name=form.name.value.trim();if(!file||!name)return;if(!["image/png","image/jpeg","image/webp"].includes(file.type)||file.size>2097152){$("#upload-status").textContent="Chagua PNG, JPG au WebP isiyozidi 2MB.";return;}const {data:{user}}=await supabase.auth.getUser();
+ if(admin&&adminPanel){adminPanel.hidden=false;adminPanel.removeAttribute("aria-hidden");}
+ else if(adminPanel){adminPanel.remove();adminPanel.setAttribute("aria-hidden","true");}
+ await load();
+}
+const iconForm=$("#icon-form");
+iconForm?.addEventListener("submit",async e=>{
+ e.preventDefault();
+ const form=e.currentTarget,file=form.image.files[0],name=form.name.value.trim();
+ if(!file||!name)return;
+ if(!["image/png","image/jpeg","image/webp"].includes(file.type)||file.size>2097152){$("#upload-status").textContent="Chagua PNG, JPG au WebP isiyozidi 2MB.";return;}
+ const {data:{user}}=await supabase.auth.getUser();
  const {data:canUpload,error:roleError}=await supabase.rpc("is_admin");
- if(!user||roleError||canUpload!==true){$("#admin-tools")?.remove();say("Ruhusa ya kupakia icon imekataliwa. Admin pekee ndiye anayeruhusiwa.",true);return;}const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";const path="gallery/"+crypto.randomUUID()+"."+ext;$("#upload-status").textContent="Inapakia...";const up=await supabase.storage.from("zune-app-icons").upload(path,file,{contentType:file.type,upsert:false,cacheControl:"3600"});if(up.error){$("#upload-status").textContent=up.error.message;return;}const ins=await supabase.from("zune_app_icons").insert({name,image_path:path,is_active:form.active.checked,created_by:user.id});if(ins.error){await supabase.storage.from("zune-app-icons").remove([path]);$("#upload-status").textContent=ins.error.message;return;}form.reset();$("#upload-status").textContent="Icon imeongezwa kwenye Gallery.";await load();});
+ if(!user||roleError||canUpload!==true){$("#admin-tools")?.remove();say("Ruhusa ya kupakia icon imekataliwa. Admin pekee ndiye anayeruhusiwa.",true);return;}
+ const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+ const path="marketplace/app-icons/"+crypto.randomUUID()+"."+ext;
+ $("#upload-status").textContent="Inapakia Marketplace asset...";
+ const up=await supabase.storage.from("zune-app-icons").upload(path,file,{contentType:file.type,upsert:false,cacheControl:"3600"});
+ if(up.error){$("#upload-status").textContent=up.error.message;return;}
+ const previewUrl=supabase.storage.from("zune-app-icons").getPublicUrl(path).data.publicUrl;
+ const isPublished=form.active.checked;
+ const ins=await supabase.from("zune_theme_assets").insert({
+  owner_id:null,asset_kind:"app_icon",scope:"official",status:isPublished?"published":"hidden",
+  title:name,description:"ZUNE Marketplace 3D app icon",preview_url:previewUrl,
+  config:{storage_bucket:"zune-app-icons",storage_path:path,presentation:"3d"},
+  layout:{presentation:"3d-icon"},component_code:{},version:1,is_featured:false,
+  published_at:isPublished?new Date().toISOString():null
+ });
+ if(ins.error){await supabase.storage.from("zune-app-icons").remove([path]);$("#upload-status").textContent=ins.error.message;return;}
+ form.reset();$("#upload-status").textContent="Icon imeongezwa kwenye Marketplace Assets.";await load();
+});
 init().catch(e=>say(e.message,true));
