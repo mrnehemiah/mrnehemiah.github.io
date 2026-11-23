@@ -80,7 +80,7 @@ function styles(){
 
 function productCard(p,actions=""){
  const image=p.image_url || (Array.isArray(p.image_urls)?p.image_urls[0]:"") || "";
- return `<article class="z-feature-product" data-tilt-card><img loading="lazy" src="${esc(image)}" alt="${esc(p.title)}" onerror="this.style.display='none'"><strong>${esc(p.title)}</strong><small>${money(p.price)}</small><div class="z-feature-row">${actions}</div></article>`;
+ return `<article class="z-feature-product" data-tilt-card><img loading="lazy" src="${esc(image)}" alt="${esc(p.title)}" onerror="this.style.display='none'"><strong>${esc(p.title)}</strong><small>${money(p.price)}</small><div class="z-feature-row"><button class="z-feature-secondary" data-feature-open-product="${esc(p.id)}">${tr("Angalia","View",ctx.language)}</button>${actions}</div></article>`;
 }
 function productOptions(){
  return '<option value="">'+tr("Chagua bidhaa","Choose a product",ctx.language)+'</option>'+catalog.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title)+' — '+money(p.price)+'</option>').join("");
@@ -193,6 +193,7 @@ function status(id,message){const el=ctx.root.querySelector("#"+id);if(el)el.tex
 
 async function bind(){
  const root=ctx.root,lang=ctx.language,user=ctx.user;
+ root.addEventListener("click",event=>{const button=event.target.closest("[data-feature-open-product]");if(!button)return;const product=catalog.find(p=>String(p.id)===button.dataset.featureOpenProduct);if(product)ctx.onOpenProduct?.(product);});
  root.querySelector("[data-features-home]")?.addEventListener("click",()=>ctx.onHome?.());
  root.querySelectorAll("[data-jump]").forEach(b=>b.addEventListener("click",()=>root.querySelector("#z-feature-"+b.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"})));
  root.querySelector("#z-feature-compare-form")?.addEventListener("submit",async e=>{
@@ -268,11 +269,11 @@ async function refresh(){
  if(ledger)ledger.innerHTML=ctx.ledger.length?'<div class="z-feature-list">'+ctx.ledger.map(x=>'<div class="z-feature-list-item"><div><strong>'+esc(x.description)+'</strong><small>'+new Date(x.created_at).toLocaleDateString()+'</small></div><span class="z-feature-pill">+'+Number(x.points)+'</span></div>').join("")+'</div>':empty(tr("Bado hakuna pointi zilizopatikana.","No reward points earned yet.",ctx.language));
 }
 
-export async function mountMarketplaceFeatures({root,user,language="sw",onHome}){
+export async function mountMarketplaceFeatures({root,user,language="sw",onHome,onOpenProduct}){
  styles();
  if(!root)return;
  if(!user?.id){root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Ingia kwenye akaunti yako ili kutumia vipengele hivi.","Sign in to use these features.",language))+'</div></div>';return;}
- ctx={root,user,language,onHome,wishlist:[],ledger:[],referralCode:"",reviews:[]};
+ ctx={root,user,language,onHome,onOpenProduct,wishlist:[],ledger:[],referralCode:"",reviews:[]};
  root.innerHTML='<div class="z-feature-page"><div class="z-feature-wrap">'+empty(tr("Inapakia zana zako za ununuzi...","Loading your shopping tools...",language))+'</div></div>';
  await loadData();root.innerHTML=render();await bind();
  const ledger=root.querySelector("#z-feature-ledger");
