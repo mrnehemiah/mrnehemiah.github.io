@@ -306,3 +306,14 @@ USING(bucket_id='zune-dispute-evidence' AND (storage.foldername(name))[2]=auth.u
  WHERE d.id::text=(storage.foldername(name))[1]
  AND (d.buyer_id=auth.uid() OR d.seller_id=auth.uid()) AND d.status NOT IN ('resolved','rejected')
 ));
+
+-- Keep server-side configuration and trigger helpers out of the public Data API.
+ALTER TABLE public.zune_reward_settings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON FUNCTION public.zune_features_touch_updated_at() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.zune_limit_comparison_items() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.zune_notify_price_drop() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.zune_create_referral_code() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.zune_apply_referral_code(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.zune_award_marketplace_rewards() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.zune_create_referral_code() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.zune_apply_referral_code(text) TO authenticated;
