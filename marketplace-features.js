@@ -2,7 +2,7 @@ import {supabase} from "./supabase.js";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const tz=n=>new Intl.NumberFormat("sw-TZ",{style:"currency",currency:"TZS",maximumFractionDigits:0}).format(Number(n)||0);
 export async function mountMarketplaceFeatures({root,user,language="sw",onHome=()=>{},onOpenProduct=()=>{}}={}){
- if(!root)return;const uid=user?.id,sw=language==="sw",t=(a,b)=>sw?a:b;
+ if(!root)return; if(!document.querySelector("#zune-marketplace-features-css")){const link=document.createElement("link");link.id="zune-marketplace-features-css";link.rel="stylesheet";link.href="./marketplace-features.css?v=20261123-3d-suite";document.head.appendChild(link);} const uid=user?.id,sw=language==="sw",t=(a,b)=>sw?a:b;
  if(!uid){root.innerHTML='<section class="zm3"><h1>Ingia kwenye akaunti yako</h1><button data-home>Rudi sokoni</button></section>';root.querySelector("[data-home]").onclick=onHome;return;}
  const tabs=[["overview","Muhtasari","✦"],["wishlist","Vipendwa","♡"],["compare","Linganisha","⇄"],["alerts","Tahadhari za bei","◉"],["reviews","Maoni","★"],["rewards","ZUNE Rewards","✧"],["referrals","Mialiko","◎"],["support","Msaada","?"]];
  const s={tab:"overview",wish:[],compare:[],alerts:[],ledger:[],tickets:[],products:[]};
