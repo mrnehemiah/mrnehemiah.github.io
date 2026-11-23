@@ -211,7 +211,7 @@ async function bind(){
  });
  root.querySelectorAll("[data-delete-alert]").forEach(b=>b.addEventListener("click",async()=>{await supabase.from("price_drop_alerts").delete().eq("id",b.dataset.deleteAlert).eq("user_id",user.id);await refresh();}));
  root.querySelector("#z-feature-create-code")?.addEventListener("click",async()=>{
-  const {data,error}=await supabase.rpc("zune_create_referral_code");if(error){status("z-feature-referral-code",error.message);return;}
+  const {data,error}=await supabase.rpc("zune_create_referral_code");if(error){status("z-feature-referral-status",error.message);return;}
   const input=root.querySelector("#z-feature-referral-code");if(input)input.value=data||"";
  });
  root.querySelector("#z-feature-apply")?.addEventListener("click",async()=>{
