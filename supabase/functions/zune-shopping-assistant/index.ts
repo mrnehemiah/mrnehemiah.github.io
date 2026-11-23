@@ -25,7 +25,7 @@ Deno.serve(async (req: Request) => {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
-  const { data: auth, error: authError } = await supabase.auth.getUser();
+  const jwt = authHeader.replace(/^Bearer\\s+/i, "");\n  const { data: auth, error: authError } = await supabase.auth.getUser(jwt);
   if (authError || !auth.user) return json({ error: "Invalid session" }, 401);
 
   let body: { prompt?: string; language?: string };
