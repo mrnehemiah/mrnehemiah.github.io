@@ -17,4 +17,47 @@ create index if not exists zune_theme_assets_published_app_icons_idx
     and scope in ('official','community')
     and status = 'published';
 
+-- Keep app_icon asset management Admin-only while preserving existing theme/component workflows.
+drop policy if exists "Owners and admins delete theme assets" on public.zune_theme_assets;
+create policy "Owners and admins delete theme assets" on public.zune_theme_assets
+for delete to authenticated
+using (
+  ((owner_id = (select auth.uid()) and scope = any (array['personal','community']::text[]) and asset_kind <> 'app_icon')
+   or (select public.zune_is_admin()))
+);
+
+drop policy if exists "Owners and admins update theme assets" on public.zune_theme_assets;
+create policy "Owners and admins update theme assets" on public.zune_theme_assets
+for update to authenticated
+using (
+  ((owner_id = (select auth.uid()) and scope = any (array['personal','community']::text[]) and asset_kind <> 'app_icon')
+   or (select public.zune_is_admin()))
+)
+with check (
+  (select public.zune_is_admin())
+  or (
+    owner_id = (select auth.uid())
+    and scope = any (array['personal','community']::text[])
+    and asset_kind <> 'app_icon'
+    and ((status <> 'published') or (select private.zune_is_trusted_theme_creator()))
+  )
+);
+
+drop policy if exists "Users and admins create permitted theme assets" on public.zune_theme_assets;
+create policy "Users and admins create permitted theme assets" on public.zune_theme_assets
+for insert to authenticated
+with check (
+  (
+    owner_id = (select auth.uid())
+    and scope = any (array['personal','community']::text[])
+    and asset_kind <> 'app_icon'
+    and (
+      (scope = 'personal' and status = 'draft')
+      or (scope = 'community' and status = 'pending')
+      or (scope = 'community' and status = 'published' and (select private.zune_is_trusted_theme_creator()))
+    )
+  )
+  or (select public.zune_is_admin())
+);
+
 commit;
