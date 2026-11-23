@@ -319,6 +319,8 @@ function zIcon(name) {
 
     live: '<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/><path d="M3 7h2M19 7h2M3 17h2M19 17h2"/>',
 
+    reels: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 9 18 0M8 4l4 5M15 4l4 5M10 13l5 3-5 3z"/>',
+
     cart: '<path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>',
 
     notification: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
@@ -2385,6 +2387,10 @@ function renderHomePage() {
               <span class="z-cart-badge" data-cart-count hidden>0</span>
             </button>
 
+            <button type="button" class="z-icon-button" data-open-reels aria-label="ZUNE Reels" title="ZUNE Reels">
+              ${zIcon("reels")}
+            </button>
+
           </div>
 
         </div>
@@ -2656,6 +2662,9 @@ function bindHomeEvents() {
     ?.addEventListener("click", () => {
       renderMarketplacePage("cart");
     });
+
+  document.querySelector("[data-open-reels]")
+    ?.addEventListener("click", () => renderMarketplacePage("reels"));
 
   updateProductArea();
   updateLoadStatus();
@@ -4034,6 +4043,10 @@ async function renderMarketplacePage(page) {
       content = renderLivePage();
       break;
 
+    case "reels":
+      content = '<div id="z-reels-root"></div>';
+      break;
+
     case "cart":
       if (!cartModule) {
         app.innerHTML = '<section class="z-cart-loading" role="status" aria-live="polite"><div class="zune-wave"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia kikapu...</p></section>';
@@ -4115,6 +4128,21 @@ async function renderMarketplacePage(page) {
 
     case "me":
       bindAccountEvents();
+      break;
+
+    case "reels":
+      try {
+        const reelsModule = await import("./reels.js?v=20261123-reels-v1");
+        await reelsModule.mountZuneReels({
+          root: app.querySelector("#z-reels-root"),
+          user: homeState.user,
+          onHome: () => renderMarketplacePage("home")
+        });
+      } catch (error) {
+        console.error("ZUNE Reels could not be loaded:", error);
+        const reelsRoot = app.querySelector("#z-reels-root");
+        if (reelsRoot) reelsRoot.innerHTML = '<section class="z-empty-state"><h2>Reels hazijafunguka</h2><p>Tafadhali jaribu tena.</p></section>';
+      }
       break;
 
     case "features":
@@ -4209,7 +4237,7 @@ export async function renderMarketplaceHome({
 
   // Fungua tab iliyoombwa na kiungo cha Account, kama ipo.
   const requestedTab = new URLSearchParams(window.location.search).get("tab");
-  const allowedTabs = new Set(["home", "live", "explore", "categories", "cart", "saved", "me", "features"]);
+  const allowedTabs = new Set(["home", "live", "reels", "explore", "categories", "cart", "saved", "me", "features"]);
   const initialTab = allowedTabs.has(requestedTab) ? requestedTab : "home";
 
   // Onyesha ukurasa ulioombwa mara moja.
