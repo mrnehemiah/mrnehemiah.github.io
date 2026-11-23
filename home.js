@@ -67,6 +67,7 @@ const homeState = {
   liveLikedIds: new Set(),
   liveGiftCounts: {},
   liveMiniPlayer: false,
+  liveAutoNextTimer: null,
 
   user: null,
   app: null,
@@ -3339,6 +3340,7 @@ async function loadMarketplaceLiveFeed(force = false) {
     if (!data?.ok || !Array.isArray(data.broadcasts)) throw new Error(data?.error || "Live feed response was invalid");
     const previousSelection = String(homeState.liveSelectedId || "");
     homeState.liveBroadcasts = data.broadcasts;
+    data.broadcasts.forEach(item => { homeState.liveGiftCounts[String(item.id)] = Number(item.gift_count || 0); });
     homeState.liveLoaded = true;
     if (previousSelection) {
       const current = homeState.liveBroadcasts.find(item => String(item.id) === previousSelection);
@@ -3362,6 +3364,26 @@ async function loadMarketplaceLiveFeed(force = false) {
 
 function bindLivePage() {
   if (!homeState.liveLoaded && !homeState.liveLoading) loadMarketplaceLiveFeed();
+  if (!homeState.liveAutoNextTimer) {
+    homeState.liveAutoNextTimer = window.setInterval(async () => {
+      if (homeState.activeTab !== "live") {
+        window.clearInterval(homeState.liveAutoNextTimer);
+        homeState.liveAutoNextTimer = null;
+        return;
+      }
+      const previousId = String(homeState.liveSelectedId || "");
+      const previous = homeState.liveBroadcasts.find(item => String(item.id) === previousId);
+      if (!previous || previous.section !== "live") return;
+      homeState.liveLoaded = false;
+      await loadMarketplaceLiveFeed(true);
+      const current = homeState.liveBroadcasts.find(item => String(item.id) === previousId);
+      if (current?.section === "live") return;
+      const next = homeState.liveBroadcasts.find(item => item.section === "live" && String(item.id) !== previousId);
+      homeState.liveSelectedId = next ? String(next.id) : "";
+      renderMarketplacePage("live");
+      if (next) document.getElementById("z-live-player")?.scrollIntoView({behavior:"smooth",block:"start"});
+    }, 30000);
+  }
   document.getElementById("z-live-refresh")?.addEventListener("click", () => {
     homeState.liveLoaded = false;
     loadMarketplaceLiveFeed(true);
@@ -3386,12 +3408,35 @@ function bindLivePage() {
     renderMarketplacePage("live");
   });
   document.querySelectorAll("[data-live-gift]").forEach(button => button.addEventListener("click", () => {
-    const id = String(homeState.liveSelectedId);
-    homeState.liveGiftCounts[id] = Number(homeState.liveGiftCounts[id] || 0) + 1;
-    const count = document.getElementById("z-live-gift-count");
-    if (count) count.textContent = `${homeState.liveGiftCounts[id]} ${language() === "sw" ? "zawadi za bure zimetumwa kwenye kipindi hiki" : "free gifts sent in this session"}`;
+    const broadcastId = String(homeState.liveSelectedId || "");
+    const giftType = ({ "👏":"applause", "⭐":"star", "❤️":"heart" })[button.dataset.liveGift];
+    if (!broadcastId || !giftType || button.disabled) return;
     button.disabled = true;
-    setTimeout(() => { if (button.isConnected) button.disabled = false; }, 450);
+    const originalLabel = button.textContent;
+    button.textContent = language() === "sw" ? "Inatuma…" : "Sending…";
+    (async () => {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!authData?.user) throw new Error(language() === "sw" ? "Ingia kwenye akaunti yako ili kutuma zawadi." : "Sign in to send a gift.");
+        const { data, error } = await supabase.rpc("zune_send_live_gift", {
+          p_broadcast_id: broadcastId,
+          p_gift_type: giftType
+        });
+        if (error) throw error;
+        if (!data?.ok) throw new Error(data?.message || (language() === "sw" ? "Zawadi haikutumwa." : "Gift was not sent."));
+        homeState.liveGiftCounts[broadcastId] = Number(data.gift_count || (Number(homeState.liveGiftCounts[broadcastId] || 0) + 1));
+        const count = document.getElementById("z-live-gift-count");
+        if (count) count.textContent = `${homeState.liveGiftCounts[broadcastId]} ${language() === "sw" ? "zawadi zimetumwa kwenye kipindi hiki" : "gifts sent in this Live"}`;
+        button.textContent = language() === "sw" ? "Imetumwa ✓" : "Sent ✓";
+      } catch (error) {
+        console.warn("ZUNE Live gift:", error);
+        button.textContent = originalLabel;
+        window.alert(error?.message || (language() === "sw" ? "Imeshindikana kutuma zawadi. Jaribu tena." : "Could not send the gift. Try again."));
+      } finally {
+        window.setTimeout(() => { if (button.isConnected) { button.disabled = false; button.textContent = originalLabel; } }, 900);
+      }
+    })();
   }));
   const liveVideo = document.querySelector("#z-live-player .z-live-video-wrap");
   if (liveVideo) {
@@ -3885,6 +3930,10 @@ function ensureZuneProductFlagMotion(){
 }
 
 async function renderMarketplacePage(page) {
+  if (homeState.activeTab === "live" && page !== "live" && homeState.liveAutoNextTimer) {
+    window.clearInterval(homeState.liveAutoNextTimer);
+    homeState.liveAutoNextTimer = null;
+  }
   if (homeState.activeTab === "live" && page !== "live" && homeState.liveSelectedId) preserveLiveMiniPlayer();
   if (page === "live" && homeState.liveMiniPlayer) closeLiveMiniPlayer(false);
   ensureZuneProductFlagMotion();
