@@ -44,48 +44,68 @@ export async function openZuneAssistant({
  const speechStatus=overlay.querySelector("[data-assistant-voice-status]");
  const speechToggle=overlay.querySelector("[data-assistant-speech-toggle]");
  const micButton=overlay.querySelector("[data-assistant-mic]");
- const speechSupported=typeof window!=="undefined"&&"speechSynthesis" in window&&"SpeechSynthesisUtterance" in window;
+ const speechSupported=typeof window!=="undefined"&&!!window.speechSynthesis&&typeof window.SpeechSynthesisUtterance==="function";
  let speechEnabled=!!speechSupported;
+ let voiceList=[];
+ let speechQueueToken=0;
  let recognition=null,recognitionActive=false,recognitionText="";
  const setVoiceStatus=message=>{if(speechStatus)speechStatus.textContent=message||"";};
- const stopSpeaking=()=>{if(speechSupported)window.speechSynthesis.cancel();};
+ const loadVoices=()=>{if(!speechSupported)return[];voiceList=window.speechSynthesis.getVoices()||[];return voiceList;};
+ if(speechSupported){loadVoices();window.speechSynthesis.addEventListener?.("voiceschanged",loadVoices);}
+ const stopSpeaking=()=>{speechQueueToken++;if(speechSupported){window.speechSynthesis.cancel();window.speechSynthesis.resume();}};
  const pickVoice=lang=>{
-  if(!speechSupported)return null;
-  const voices=window.speechSynthesis.getVoices()||[];
-  const matching=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(lang.slice(0,2)));
+  const voices=loadVoices(),prefix=lang.slice(0,2).toLowerCase();
+  const matching=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(prefix));
   const female=/female|woman|zira|samantha|victoria|karen|susan|ava|aria|jenny|natasha|google.*uk english female|microsoft.*zira/i;
-  if(matching.length)return matching.find(v=>female.test(v.name))||matching[0];
-  return lang.toLowerCase().startsWith("sw")?null:(voices.find(v=>female.test(v.name))||null);
+  return matching.find(v=>female.test(v.name))||matching[0]||null;
  };
  const speakReply=text=>{
   if(!speechEnabled||!speechSupported||!text)return;
-  const clean=String(text).replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
-  if(clean.length<12)return;
+  const clean=String(text).replace(/<[^>]*>/g," ").replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+  if(clean.length<2)return;
   stopSpeaking();
-  const utterance=new SpeechSynthesisUtterance(clean);
-  const lang=sw?"sw-TZ":"en-US";
-  const voice=pickVoice(lang);
-  utterance.lang=voice?.lang||lang;
-  if(voice)utterance.voice=voice;
-  utterance.rate=.94;utterance.pitch=1.08;utterance.volume=1;
-  utterance.onerror=()=>setVoiceStatus(sw?"Sauti haipatikani kwenye kifaa hiki.":"Voice playback is unavailable on this device.");
-  window.speechSynthesis.speak(utterance);
+  const token=speechQueueToken,lang=sw?"sw-TZ":"en-US";
+  const chunks=clean.match(/[^.!?…]+[.!?…]*/g)||[clean];
+  let index=0;
+  const speakNext=()=>{
+   if(token!==speechQueueToken||!speechEnabled||index>=chunks.length){if(token===speechQueueToken)setVoiceStatus("");return;}
+   const part=chunks[index++].trim();if(!part){speakNext();return;}
+   const utterance=new window.SpeechSynthesisUtterance(part);
+   const voice=pickVoice(lang);
+   utterance.lang=voice?.lang||lang;
+   if(voice)utterance.voice=voice;
+   utterance.rate=.92;utterance.pitch=1.04;utterance.volume=1;
+   utterance.onstart=()=>setVoiceStatus(sw?"ZUNE inazungumza...":"ZUNE is speaking...");
+   utterance.onend=speakNext;
+   utterance.onerror=event=>{
+    console.warn("ZUNE speech playback:",event.error);
+    setVoiceStatus(sw?"Sauti haikuweza kuchezwa. Hakikisha Text-to-Speech imewashwa kwenye simu.":"Voice playback failed. Check your device Text-to-Speech settings.");
+   };
+   try{window.speechSynthesis.resume();window.speechSynthesis.speak(utterance);}
+   catch(error){console.error("ZUNE speech playback:",error);setVoiceStatus(sw?"Sauti haipatikani kwenye kifaa hiki.":"Voice is unavailable on this device.");}
+  };
+  speakNext();
  };
  const updateSpeechToggle=()=>{
   if(!speechToggle)return;
-  speechToggle.textContent=speechEnabled?"🔊":"🔇";
+  speechToggle.textContent=speechEnabled?"🔊 Sauti ON":"🔇 Sauti OFF";
   speechToggle.setAttribute("aria-pressed",String(speechEnabled));
   speechToggle.setAttribute("aria-label",speechEnabled?(sw?"Zima majibu ya sauti":"Turn voice replies off"):(sw?"Washa majibu ya sauti":"Turn voice replies on"));
   speechToggle.title=speechToggle.getAttribute("aria-label");
  };
  updateSpeechToggle();
- if(!speechSupported){speechEnabled=false;updateSpeechToggle();setVoiceStatus(sw?"Kifaa hiki hakitumii usomaji wa majibu kwa sauti.":"This device does not support spoken replies.");}
+ if(!speechSupported){speechEnabled=false;updateSpeechToggle();setVoiceStatus(sw?"Usomaji wa sauti hautumiki kwenye browser hii.":"Speech output is not supported by this browser.");}
  speechToggle?.addEventListener("click",()=>{
   speechEnabled=!speechEnabled;
-  if(!speechEnabled)stopSpeaking();
+  if(!speechEnabled){stopSpeaking();setVoiceStatus(sw?"Majibu ya sauti yamezimwa.":"Voice replies are off.");}
+  else{
+   try{window.speechSynthesis.cancel();window.speechSynthesis.resume();}catch(_){}
+   setVoiceStatus(sw?"Inajaribu sauti...":"Testing voice...");
+   speakReply(sw?"Sauti ya ZUNE imewashwa.":"ZUNE voice is now on.");
+  }
   updateSpeechToggle();
-  setVoiceStatus(speechEnabled?(sw?"Majibu ya sauti yamewashwa.":"Voice replies are on."):(sw?"Majibu ya sauti yamezimwa.":"Voice replies are off."));
  });
+ const unlockSpeech=()=>{if(speechEnabled&&speechSupported){try{window.speechSynthesis.resume();}catch(_){}}};
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(SpeechRecognition){
   recognition=new SpeechRecognition();
@@ -453,7 +473,7 @@ export async function openZuneAssistant({
    box.querySelectorAll("[data-assistant-brand]").forEach(b=>b.onclick=()=>{close();homeState.search=b.dataset.assistantBrand;homeState.selectedCategory="";homeState.page=0;homeState.products=[];homeState.hasMore=true;renderMarketplacePage("explore");loadProducts(true);});
   }catch(e){console.error("ZUNE Universal Search assistant:",e);say((sw?"Utafutaji wa ZUNE Market haupatikani kwa sasa. Tafadhali jaribu tena au wasiliana na Support.":"ZUNE Market search is temporarily unavailable. Please try again or contact Support.")+"<br>"+supportLinks());}
  };
- overlay.querySelector("#z-assistant-form").onsubmit=e=>{e.preventDefault();ask(field.value);};
- overlay.querySelectorAll(".z-assistant-chip").forEach(b=>b.onclick=()=>ask(b.textContent));field.focus();
+ overlay.querySelector("#z-assistant-form").onsubmit=e=>{e.preventDefault();unlockSpeech();ask(field.value);};
+ overlay.querySelectorAll(".z-assistant-chip").forEach(b=>b.onclick=()=>{unlockSpeech();ask(b.textContent);});field.focus();
 
 }
