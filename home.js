@@ -44,6 +44,7 @@ const homeState = {
   selectedSearchImage: null,
 
   selectedCategory: "",
+  selectedBrand: "",
   search: "",
 
   page: 0,
@@ -313,6 +314,7 @@ function zIcon(name) {
     explore: '<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5M14 8l-2 5-5 2 2-5z"/>',
 
     live: '<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/><path d="M3 7h2M19 7h2M3 17h2M19 17h2"/>',
+    reels: '<path d="M4 4h16v16H4z"/><path d="m4 9 16-5M4 15l16-5M9 4l3 5M15 4l3 5"/><path d="m10 12 5 3-5 3z"/>',
 
     cart: '<path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>',
 
@@ -1305,6 +1307,7 @@ async function loadProducts(reset = false) {
     if (homeState.selectedCategory) {
       query = query.eq("category", homeState.selectedCategory);
     }
+    if (homeState.selectedBrand) query = query.eq("brand", homeState.selectedBrand);
 
     if (homeState.selectedVendor) query = query.eq("vendor_id", homeState.selectedVendor);
     if (homeState.searchFilters.minPrice && Number(homeState.searchFilters.minPrice)>0) query=query.gte("price",Number(homeState.searchFilters.minPrice));
@@ -2473,19 +2476,6 @@ function renderHomePage() {
 
 
 
-        <section>
-
-          <div class="z-section-heading">
-            <h2>${tx("categories")}</h2>
-            <button type="button" class="z-all-categories" data-open-categories>${tx("allCategories")} →</button>
-          </div>
-
-          <div id="z-category-area">
-            ${renderCategories()}
-          </div>
-
-        </section>
-
         <section id="z-featured-stores-section">
           <div class="z-section-heading"><h2>${language()==="sw"?"Maduka Maarufu":"Featured Stores"}</h2></div>
           <div class="z-featured-stores" id="z-featured-stores">${renderFeaturedStores()}</div>
@@ -2537,6 +2527,7 @@ function bindCategoryEvents() {
   area.querySelectorAll("[data-category]").forEach(button => {
     button.addEventListener("click", async () => {
       homeState.selectedCategory = button.dataset.category || "";
+      homeState.selectedBrand = "";
 
       homeState.page = 0;
       homeState.products = [];
@@ -2928,7 +2919,92 @@ function ensureMarketplaceNavigationStyles() {
       .z-marketplace .z-bottom-nav { top: auto; bottom: 0; }
       .z-marketplace .z-home-header { top: 0; }
     }
-    .z-marketplace .z-nav-item[data-nav="live"] { font-weight: 850; }
+    .z-marketplace .z-bottom-nav {
+      background: color-mix(in srgb, var(--surface, #fff) 94%, transparent);
+      border-color: color-mix(in srgb, var(--border, #e4ebe7) 88%, transparent);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .z-marketplace .z-nav-item {
+      min-height: 58px;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .1px;
+      transition: color .18s ease, transform .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .z-marketplace .z-nav-item:active { transform: scale(.94); }
+    .z-marketplace .z-nav-icon {
+      width: 42px;
+      height: 32px;
+      border-radius: 12px;
+      color: currentColor;
+      transition: background .2s ease, color .2s ease, transform .2s ease;
+    }
+    .z-marketplace .z-nav-icon svg { width: 22px; height: 22px; }
+    .z-marketplace .z-nav-item.active { color: var(--primary, #087a55); }
+    .z-marketplace .z-nav-item.active .z-nav-icon {
+      background: color-mix(in srgb, var(--primary, #087a55) 13%, transparent);
+      color: var(--primary, #087a55);
+      transform: translateY(-1px);
+    }
+    .z-marketplace .z-nav-item.active .z-nav-icon svg { stroke-width: 2.2; }
+    .z-marketplace .z-nav-item:focus-visible {
+      outline: 2px solid var(--primary, #087a55);
+      outline-offset: -3px;
+      border-radius: 12px;
+    }
+    .z-explore-discovery { max-width: 1100px; margin: 0 auto; }
+    .z-explore-intro { padding: 8px 0 16px; }
+    .z-explore-intro > span, .z-reels-eyebrow {
+      color: var(--primary, #087a55); font-size: 10px; font-weight: 900; letter-spacing: 1.7px;
+    }
+    .z-explore-intro p { color: var(--text-muted); font-size: 13px; line-height: 1.55; margin-top: 5px; }
+    .z-explore-block { margin: 22px 0; }
+    .z-explore-block-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    .z-explore-block-head h2 { font-size:16px; font-weight:900; }
+    .z-explore-block-head small { color:var(--text-muted); font-size:11px; }
+    .z-explore-category-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
+    .z-explore-category-card { min-height:105px; aspect-ratio: .92 / 1; }
+    .z-explore-brand-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .z-explore-brand-chip {
+      border:1px solid var(--border); border-radius:999px; padding:9px 13px;
+      background:var(--surface); color:var(--text); font-size:12px; font-weight:750;
+      cursor:pointer; transition:border-color .18s ease, background .18s ease;
+    }
+    .z-explore-brand-chip:active { background:color-mix(in srgb,var(--primary) 10%,var(--surface)); border-color:var(--primary); }
+    .z-explore-store-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .z-explore-store-card {
+      display:flex; align-items:center; gap:10px; min-width:0; padding:11px;
+      border:1px solid var(--border); border-radius:15px; background:var(--surface);
+      color:var(--text); text-align:left; cursor:pointer;
+    }
+    .z-explore-store-logo {
+      flex:0 0 44px; width:44px; height:44px; border-radius:13px; display:grid;
+      place-items:center; overflow:hidden; background:var(--background); color:var(--primary);
+      font-size:15px; font-weight:900;
+    }
+    .z-explore-store-logo img { width:100%; height:100%; object-fit:cover; }
+    .z-explore-store-meta { min-width:0; display:flex; flex-direction:column; gap:4px; }
+    .z-explore-store-meta strong { font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .z-explore-store-meta small { color:var(--text-muted); font-size:10px; }
+    .z-explore-results[hidden] { display:none !important; }
+    .z-reels-page { min-height:calc(100vh - 95px); padding:22px 17px 120px; display:grid; place-items:center; }
+    .z-reels-empty { width:min(100%,480px); padding:30px 22px; border:1px solid var(--border); border-radius:24px; background:var(--surface); text-align:center; box-shadow:0 14px 35px rgba(0,0,0,.05); }
+    .z-reels-mark { width:76px; height:76px; margin:0 auto 18px; display:grid; place-items:center; border-radius:24px; background:color-mix(in srgb,var(--primary) 11%,var(--surface)); color:var(--primary); }
+    .z-reels-mark svg { width:36px; height:36px; }
+    .z-reels-empty h1 { font-size:23px; margin:0 0 9px; }
+    .z-reels-empty p { color:var(--text-muted); font-size:13px; line-height:1.65; margin:0 auto 18px; }
+    .z-reels-explore { border:0; border-radius:12px; padding:12px 18px; background:var(--primary); color:#fff; font-weight:850; }
+    @media(max-width:420px) {
+      .z-explore-category-grid { gap:7px; }
+      .z-explore-store-grid { grid-template-columns:1fr; }
+      .z-marketplace .z-nav-item { font-size:9px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .z-marketplace .z-nav-item, .z-marketplace .z-nav-icon { transition:none; }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -2936,62 +3012,22 @@ function ensureMarketplaceNavigationStyles() {
 function renderBottomNavigation() {
   ensureMarketplaceNavigationStyles();
   const items = [
-    {
-      id: "home",
-      label: tx("home"),
-      icon: "home"
-    },
-    {
-      id: "explore",
-      label: tx("explore"),
-      icon: "explore"
-    },
-    {
-      id: "cart",
-      label: tx("cart"),
-      icon: "cart"
-    },
-    {
-      id: "saved",
-      label: tx("saved"),
-      icon: "saved"
-    },
-    {
-      id: "me",
-      label: tx("me"),
-      icon: "account"
-    }
+    { id: "home", label: tx("home"), icon: "home" },
+    { id: "explore", label: tx("explore"), icon: "explore" },
+    { id: "reels", label: language()==="sw" ? "Reels" : "Reels", icon: "reels" },
+    { id: "saved", label: tx("saved"), icon: "saved" },
+    { id: "me", label: tx("me"), icon: "account" }
   ];
-
   return `
     <nav class="z-bottom-nav" aria-label="Main navigation">
-
       ${items.map(item => `
-        <button
-          type="button"
-          class="z-nav-item ${
-            homeState.activeTab === item.id ? "active" : ""
-          }"
-          data-nav="${item.id}"
-        >
-
-          <span class="z-nav-icon">
-
-            ${zIcon(item.icon)}
-
-            ${
-              item.id === "cart"
-                ? `<span class="z-cart-badge" data-cart-count hidden>0</span>`
-                : ""
-            }
-
-          </span>
-
+        <button type="button"
+          class="z-nav-item ${homeState.activeTab === item.id ? "active" : ""}"
+          data-nav="${item.id}" aria-current="${homeState.activeTab === item.id ? "page" : "false"}">
+          <span class="z-nav-icon">${zIcon(item.icon)}</span>
           <span>${item.label}</span>
-
         </button>
       `).join("")}
-
     </nav>
   `;
 }
@@ -3096,6 +3132,35 @@ function categoryImage(categoryName, index = 0) {
   return "https://images.unsplash.com/" + photoId + "?auto=format&fit=crop&w=520&q=82";
 }
 
+function renderReelsPage() {
+  const sw = language() === "sw";
+  return `
+    <section class="z-home">
+      <header class="z-home-header">
+        <div class="z-home-top">
+          <div class="z-home-brand"><div class="zune-logo">ⓏⓊⓃⒺ</div></div>
+          <div class="z-home-actions">
+            <button type="button" class="z-icon-button" data-open-cart aria-label="${tx("cart")}">${zIcon("cart")}<span class="z-cart-badge" data-cart-count hidden>0</span></button>
+          </div>
+        </div>
+      </header>
+      <main class="z-reels-page">
+        <section class="z-reels-empty">
+          <div class="z-reels-mark">${zIcon("reels")}</div>
+          <span class="z-reels-eyebrow">ZUNE REELS</span>
+          <h1>${sw ? "Reels zinakuja ZUNE" : "Reels are coming to ZUNE"}</h1>
+          <p>${sw ? "Hapa ndipo utaangalia video fupi za bidhaa, maonesho ya maduka na maudhui kutoka kwa wauzaji. Reels ni tofauti na Live Shopping." : "This is where you will watch short product videos, store showcases and seller content. Reels are separate from Live Shopping."}</p>
+          <button type="button" class="z-reels-explore" data-reels-explore>${sw ? "Gundua bidhaa sasa" : "Explore products"}</button>
+        </section>
+      </main>
+    </section>
+  `;
+}
+
+function bindReelsEvents() {
+  document.querySelector("[data-reels-explore]")?.addEventListener("click", () => renderMarketplacePage("explore"));
+}
+
 function renderCategoriesPage() {
   const categories = homeState.categories || [];
   return `
@@ -3158,54 +3223,78 @@ function bindCategoriesPage() {
 }
 
 function renderExplorePage() {
-  const categories = (homeState.categories || []).slice(0, 8);
+  const categories = (homeState.categories || []);
+  const brands = [...new Set((homeState.products || []).map(product => product.brand || product.brand_name).filter(Boolean).map(String))].slice(0, 12);
+  const stores = (homeState.featuredStores || []).slice(0, 8);
+  const showResults = Boolean(homeState.search.trim() || homeState.selectedCategory || homeState.selectedBrand);
   return `
     <section class="z-home z-explore-redesign">
       <header class="z-home-header">
         <div class="z-home-top">
-          <div class="zune-logo">ⓏⓊⓃⒺ</div>
+          <div class="z-home-brand"><div class="zune-logo">ⓏⓊⓃⒺ</div></div>
+          <div class="z-home-actions">
+            <button type="button" class="z-icon-button" data-open-cart aria-label="${tx("cart")}">
+              ${zIcon("cart")}<span class="z-cart-badge" data-cart-count hidden>0</span>
+            </button>
+          </div>
         </div>
-        <label class="z-search-box">
+        <label class="z-search-box z-explore-search-box">
           ${zIcon("search")}
-          <input id="z-explore-search" type="search" placeholder="${tx("search")}" value="${safe(homeState.search)}">
+          <input id="z-explore-search" type="search" placeholder="${language()==="sw"?"Tafuta bidhaa au jina la duka...":"Search products or stores..."}" value="${safe(homeState.search)}">
         </label>
       </header>
-      <main class="z-home-content">
+      <main class="z-home-content z-explore-discovery">
         <div class="z-explore-intro">
-          <span>${language()==="sw"?"GUNDUA ZUNE":"DISCOVER ZUNE"}</span>
-          <h1 class="z-page-title">${tx("exploreTitle")}</h1>
-          <p>${language()==="sw"?"Bidhaa na maduka unayoweza kuyapenda.":"Products and stores worth discovering."}</p>
+          <span>${language()==="sw"?"ZUNE DISCOVERY CENTER":"ZUNE DISCOVERY CENTER"}</span>
+          <h1 class="z-page-title">${language()==="sw"?"Gundua Marketplace":"Explore Marketplace"}</h1>
+          <p>${language()==="sw"?"Tafuta unachohitaji au chunguza makundi, brands na maduka yote sehemu moja.":"Search for what you need or browse categories, brands and stores in one place."}</p>
         </div>
 
-        <section class="z-explore-categories-section">
-          <div class="z-section-heading z-explore-section-heading">
+        <section class="z-explore-block z-explore-categories-section">
+          <div class="z-explore-block-head">
             <h2>${tx("categories")}</h2>
-            <button type="button" class="z-explore-see-all" id="z-explore-see-all">${language()==="sw"?"Angalia Zote":"View all"} <span>→</span></button>
+            <button type="button" class="z-explore-see-all" id="z-explore-see-all">${language()==="sw"?"Makundi yote":"All categories"} →</button>
           </div>
           <div id="z-explore-category-area" class="z-explore-category-grid">
-            ${categories.map((category,index) => `
+            ${categories.slice(0, 12).map((category,index) => `
               <button type="button" class="z-explore-category-card ${String(homeState.selectedCategory)===String(category.name)?"active":""}" data-category="${safe(category.name)}">
                 <img src="${categoryImage(category.name,index)}" alt="${safe(category.name)}" loading="lazy" decoding="async">
-                <span class="z-explore-category-shade"></span>
-                <strong>${safe(category.name)}</strong>
+                <span class="z-explore-category-shade"></span><strong>${safe(category.name)}</strong>
               </button>
             `).join("")}
           </div>
+          ${categories.length ? "" : `<div class="z-empty-state">${language()==="sw"?"Makundi yataonekana hapa baada ya kupakiwa.":"Categories will appear here when loaded."}</div>`}
         </section>
 
-        <section id="z-explore-sponsored-section" class="z-explore-sponsored-section">
-          <div class="z-section-heading"><h2>${language()==="sw"?"Matangazo Yanayokufaa":"Sponsored for You"}</h2></div>
-          <div id="z-explore-sponsored-products" class="z-sponsored-products"></div>
+        <section class="z-explore-block">
+          <div class="z-explore-block-head"><h2>${language()==="sw"?"Chunguza Brands":"Discover Brands"}</h2><small>${language()==="sw"?"Kutoka bidhaa zilizopo":"From available products"}</small></div>
+          <div class="z-explore-brand-grid" id="z-explore-brand-area">
+            ${brands.map(brand => `<button type="button" class="z-explore-brand-chip" data-brand="${safe(brand)}">${safe(brand)}</button>`).join("")}
+          </div>
+          ${brands.length ? "" : `<div class="z-empty-state">${language()==="sw"?"Brands zitaonekana kadri bidhaa zenye taarifa za brand zinavyopakiwa.":"Brands will appear as products with brand information load."}</div>`}
         </section>
 
-        <div class="z-explore-products-heading">
-          <h2>${language()==="sw"?"Bidhaa za kugundua":"Discover products"}</h2>
-        </div>
-        <div id="z-product-area">
-          ${homeState.products.length ? `<div class="z-product-grid">${homeState.products.map(productCard).join("")}</div>` : ""}
-        </div>
-        <div class="z-load-status" id="z-load-status"></div>
-        <div id="z-scroll-trigger"></div>
+        <section class="z-explore-block">
+          <div class="z-explore-block-head"><h2>${language()==="sw"?"Gundua Maduka":"Discover Stores"}</h2><small>${language()==="sw"?"Maduka ya Marketplace":"Marketplace stores"}</small></div>
+          <div class="z-explore-store-grid" id="z-explore-store-area">
+            ${stores.map(store => {
+              const name = store.store_name || (language()==="sw"?"Duka la ZUNE":"ZUNE Store");
+              const logo = store.logo_url || store.store_logo_url || store.logo || "";
+              const initials = String(name).trim().split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase() || "Z";
+              return `<button type="button" class="z-explore-store-card" data-explore-store="${safe(store.owner_id)}">
+                <span class="z-explore-store-logo">${logo ? `<img src="${safe(logo)}" alt="" loading="lazy" onerror="this.remove()">` : safe(initials)}</span>
+                <span class="z-explore-store-meta"><strong>${safe(name)}</strong><small>${safe([store.district,store.region].filter(Boolean).join(", ") || (language()==="sw"?"Fungua duka":"Open store"))}</small></span>
+              </button>`;
+            }).join("")}
+          </div>
+          ${stores.length ? "" : `<div class="z-empty-state">${language()==="sw"?"Maduka yataonekana baada ya taarifa za wauzaji kupakiwa.":"Stores will appear as seller information loads."}</div>`}
+        </section>
+
+        <section class="z-explore-block z-explore-results" id="z-explore-results" ${showResults ? "" : "hidden"}>
+          <div class="z-explore-block-head"><h2>${language()==="sw"?"Matokeo ya utafutaji":"Search results"}</h2><button type="button" class="z-explore-see-all" id="z-explore-clear">${language()==="sw"?"Futa":"Clear"}</button></div>
+          <div id="z-product-area">${homeState.products.length ? `<div class="z-product-grid">${homeState.products.map(productCard).join("")}</div>` : ""}</div>
+          <div class="z-load-status" id="z-load-status"></div><div id="z-scroll-trigger"></div>
+        </section>
       </main>
     </section>
   `;
@@ -3217,35 +3306,71 @@ function renderExplorePage() {
 
 function bindExploreEvents() {
   const categoryArea = document.getElementById("z-explore-category-area");
+  const results = document.getElementById("z-explore-results");
+  const revealResults = () => { if (results) results.hidden = false; };
   categoryArea?.querySelectorAll("[data-category]").forEach(button => {
     button.addEventListener("click", async () => {
       homeState.selectedCategory = button.dataset.category || "";
+      homeState.selectedBrand = "";
       homeState.selectedVendor = "";
       homeState.search = "";
       homeState.products = [];
       homeState.page = 0;
       homeState.hasMore = true;
+      revealResults();
+      const input = document.getElementById("z-explore-search");
+      if (input) input.value = "";
       await loadProducts(true);
-      categoryArea.querySelectorAll("[data-category]").forEach(item => {
-        item.classList.toggle("active", item.dataset.category === homeState.selectedCategory);
-      });
+      categoryArea.querySelectorAll("[data-category]").forEach(item => item.classList.toggle("active", item.dataset.category === homeState.selectedCategory));
     });
   });
-  document.getElementById("z-explore-see-all")?.addEventListener("click", () => {
-    renderMarketplacePage("categories");
+  document.getElementById("z-explore-see-all")?.addEventListener("click", () => renderMarketplacePage("categories"));
+  document.querySelectorAll("[data-brand]").forEach(button => {
+    button.addEventListener("click", async () => {
+      homeState.selectedBrand = button.dataset.brand || "";
+      homeState.selectedCategory = "";
+      homeState.selectedVendor = "";
+      homeState.search = "";
+      homeState.products = [];
+      homeState.page = 0;
+      homeState.hasMore = true;
+      revealResults();
+      const input = document.getElementById("z-explore-search");
+      if (input) input.value = "";
+      await loadProducts(true);
+    });
+  });
+  document.querySelectorAll("[data-explore-store]").forEach(button => {
+    button.addEventListener("click", () => openStoreDetails(button.dataset.exploreStore));
+  });
+  document.getElementById("z-explore-clear")?.addEventListener("click", async () => {
+    homeState.selectedCategory = "";
+    homeState.selectedBrand = "";
+    homeState.selectedVendor = "";
+    homeState.search = "";
+    homeState.products = [];
+    homeState.page = 0;
+    homeState.hasMore = true;
+    const input = document.getElementById("z-explore-search");
+    if (input) input.value = "";
+    if (results) results.hidden = true;
+    await loadProducts(true);
   });
   const input = document.getElementById("z-explore-search");
   if (input) {
     let searchTimeout;
     input.addEventListener("input", () => {
       clearTimeout(searchTimeout);
+      homeState.search = input.value.trim();
+      homeState.selectedCategory = "";
+      homeState.selectedBrand = "";
+      if (homeState.search) revealResults();
+      else if (results) results.hidden = true;
       searchTimeout = setTimeout(async () => {
-        homeState.search = input.value.trim();
-        homeState.selectedCategory = "";
         homeState.products = [];
         homeState.page = 0;
         homeState.hasMore = true;
-        await loadProducts(true);
+        if (homeState.search) await loadProducts(true);
       }, 450);
     });
   }
@@ -4265,6 +4390,10 @@ async function renderMarketplacePage(page) {
       content = renderLivePage();
       break;
 
+    case "reels":
+      content = renderReelsPage();
+      break;
+
     case "cart":
       if (!cartModule) {
         app.innerHTML = '<section class="z-cart-loading" role="status" aria-live="polite"><div class="zune-wave"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia kikapu...</p></section>';
@@ -4334,6 +4463,10 @@ async function renderMarketplacePage(page) {
 
     case "live":
       bindLivePage();
+      break;
+
+    case "reels":
+      bindReelsEvents();
       break;
 
     case "cart":
@@ -4440,7 +4573,7 @@ export async function renderMarketplaceHome({
 
   // Fungua tab iliyoombwa na kiungo cha Account, kama ipo.
   const requestedTab = new URLSearchParams(window.location.search).get("tab");
-  const allowedTabs = new Set(["home", "live", "explore", "categories", "cart", "saved", "me", "features"]);
+  const allowedTabs = new Set(["home", "live", "reels", "explore", "categories", "cart", "saved", "me", "features"]);
   const initialTab = allowedTabs.has(requestedTab) ? requestedTab : "home";
 
   // Onyesha ukurasa ulioombwa mara moja.
