@@ -46,7 +46,7 @@ export async function openZuneAssistant({
  const say=(html,user=false)=>{
   const d=document.createElement("div");
   d.className="z-assistant-message"+(user?" user":"");
-  if(user){d.textContent=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return Promise.resolve(d);}
+  if(user){d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return Promise.resolve(d);}
   if(activeTyping)activeTyping.cancelled=true;
   const stream={cancelled:false};activeTyping=stream;
   const content=document.createElement("div");
@@ -66,12 +66,12 @@ export async function openZuneAssistant({
   (async()=>{
    await pause(260);
    for(const part of textNodes){
-    const tokens=part.text.match(/\\s+|[^\\s]+/g)||[];
+    const tokens=part.text.match(/\s+|[^\s]+/g)||[];
     for(const token of tokens){
      if(stream.cancelled||!overlay.isConnected)break;
      part.node.nodeValue+=token;
      box.scrollTop=box.scrollHeight;
-     if(!/^\\s+$/.test(token)){
+     if(!/^\s+$/.test(token)){
       const punctuation=/[.!?…,:;]$/.test(token);
       await pause(punctuation?105:24);
      }
