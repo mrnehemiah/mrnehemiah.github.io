@@ -4124,7 +4124,7 @@ async function renderMarketplacePage(page) {
       if (!cartModule) {
         app.innerHTML = '<section class="z-cart-loading" role="status" aria-live="polite"><div class="zune-wave"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia kikapu...</p></section>';
         try {
-          cartModule = await import("./cart.js?v=product-variants-cart-2");
+          cartModule = await import("./cart.js?v=product-variants-cart-3");
         } catch (error) {
           console.error("ZUNE cart module could not be loaded:", error);
           app.innerHTML = '<section class="z-cart-loading" role="alert"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><button type="button" id="z-cart-retry">Jaribu tena</button></section>';
