@@ -128,7 +128,7 @@ function cardHTML(reel) {
   const verified = official || (role === 'vendor' && creator.is_verified === true);
   const creatorCandidates = [creator.full_name, reel.creator_display_name, creator.display_name, creator.username, creator.business_name]
     .map(value => String(value || '').trim())
-    .filter(value => value && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value));
+    .filter(value => value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
   const creatorName = official ? 'ZUNE Official' : (creatorCandidates[0] || 'Muuzaaji wa ZUNE');
   const products = Array.isArray(reel.products) && reel.products.length ? reel.products : (reel.product ? [reel.product] : []);
   const sound = reel.sound || null;
