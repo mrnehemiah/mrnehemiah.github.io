@@ -88,7 +88,7 @@ function normalizeItem(item) {
   if (!item || item.productId == null) return null;
   const raw = Number(item.quantity);
   const quantity = Math.min(MAX_QTY, Math.max(0, Math.floor(Number.isFinite(raw) ? raw : 1)));
-  return { productId: item.productId, quantity };
+  return { productId: item.productId, variantId: item.variantId || null, quantity };
 }
 
 export function readCart(userId) {
@@ -107,17 +107,11 @@ export function readCart(userId) {
 
 async function persistCartToCloud(cart, userId) {
   if (!userId) return;
-  const current = await supabase.from("cart_items").select("product_id").eq("user_id", userId);
-  if (current.error) throw current.error;
-  const keep = new Set(cart.map(item => String(item.productId)));
-  const removeIds = (current.data || []).map(row => String(row.product_id)).filter(id => !keep.has(id));
-  if (removeIds.length) {
-    const removed = await supabase.from("cart_items").delete().eq("user_id", userId).in("product_id", removeIds);
-    if (removed.error) throw removed.error;
-  }
+  const removed = await supabase.from("cart_items").delete().eq("user_id", userId);
+  if (removed.error) throw removed.error;
   if (cart.length) {
-    const rows = cart.map(item => ({ user_id: userId, product_id: item.productId, quantity: item.quantity }));
-    const saved = await supabase.from("cart_items").upsert(rows, { onConflict: "user_id,product_id" });
+    const rows = cart.map(item => ({ user_id: userId, product_id: item.productId, variant_id: item.variantId || null, quantity: item.quantity }));
+    const saved = await supabase.from("cart_items").insert(rows);
     if (saved.error) throw saved.error;
   }
 }
@@ -168,16 +162,26 @@ export async function loadCartProducts(cart = []) {
 
   if (!products.length && errors.length) throw errors[0];
   if (errors.length) console.warn("ZUNE cart: baadhi ya bidhaa hazikupakiwa", errors);
+  if (products.length) {
+    const {data:variants,error:variantError}=await supabase.from("product_variants").select("id,product_id,label,sku,attributes,price,stock_quantity,is_active").in("product_id",products.map(p=>p.id)).eq("is_active",true);
+    if (variantError) console.warn("ZUNE cart variants:",variantError.message);
+    const byProduct=new Map();
+    (variants||[]).forEach(v=>{if(!byProduct.has(String(v.product_id)))byProduct.set(String(v.product_id),[]);byProduct.get(String(v.product_id)).push(v);});
+    products.forEach(p=>p.__zuneVariants=byProduct.get(String(p.id))||[]);
+  }
   return products;
 }
+
+function cartItemKey(item){return String(item?.productId||"")+"::"+String(item?.variantId||"");}
 
 function computeTotals(cart, products) {
   const byId = new Map((products || []).map(p => [String(p.id), p]));
   const rows = (cart || []).map(item => {
     const product = byId.get(String(item.productId)) || null;
     const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1));
-    return { productId: item.productId, quantity, product,
-      lineTotal: product ? Number(product.price || 0) * quantity : 0 };
+    const variant = product && item.variantId ? (product.__zuneVariants||[]).find(v=>String(v.id)===String(item.variantId))||null : null;
+    const unitPrice = variant ? Number(variant.price||0) : Number(product?.price||0);
+    return { productId:item.productId, variantId:item.variantId||null, cartKey:cartItemKey(item), quantity, product, variant, unitPrice, lineTotal:product?unitPrice*quantity:0 };
   });
   const subtotal = rows.reduce((sum, r) => sum + r.lineTotal, 0);
   const count = rows.reduce((sum, r) => sum + r.quantity, 0);
@@ -222,29 +226,29 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
               const product = row.product;
               const quantity = row.quantity;
               if (!product) return `
-                <article class="z-cart-item z-cart-item-unavailable" data-cart-row="${escapeHTML(row.productId)}">
+                <article class="z-cart-item z-cart-item-unavailable" data-cart-row="${escapeHTML(row.cartKey)}">
                   <div class="z-cart-item-placeholder" aria-hidden="true">📦</div>
                   <div class="z-cart-item-info"><h3>${t("unavailable")}</h3><p>${escapeHTML(row.productId)}</p></div>
-                  <button type="button" class="z-cart-remove" data-cart-remove="${escapeHTML(row.productId)}">${t("remove")}</button>
+                  <button type="button" class="z-cart-remove" data-cart-remove="${escapeHTML(row.cartKey)}">${t("remove")}</button>
                 </article>`;
               const image = product.image_url || "";
               return `
-                <article class="z-cart-item" data-cart-row="${escapeHTML(row.productId)}">
+                <article class="z-cart-item" data-cart-row="${escapeHTML(row.cartKey)}">
                   ${image
                     ? `<img class="z-cart-product-image" src="${escapeHTML(image)}" alt="${escapeHTML(product.title || "Product")}" loading="lazy">`
                     : `<div class="z-cart-item-placeholder" aria-hidden="true">📦</div>`}
                   <div class="z-cart-item-info">
                     <h3>${escapeHTML(product.title || (language === "en" ? "Product" : "Bidhaa"))}</h3>
-                    <strong class="z-cart-unit-price">${money(product.price, language)}</strong>
+                    <strong class="z-cart-unit-price">${money(row.unitPrice, language)}</strong>${row.variant ? `<small class="z-cart-variant-label">${escapeHTML(row.variant.label)}</small>` : ""}
                     <div class="z-quantity-controls" role="group" aria-label="${t("quantity")}">
-                      <button type="button" data-cart-minus="${escapeHTML(row.productId)}" aria-label="${t("decreaseQty")}" ${quantity <= 1 ? "disabled" : ""}>−</button>
+                      <button type="button" data-cart-minus="${escapeHTML(row.cartKey)}" aria-label="${t("decreaseQty")}" ${quantity <= 1 ? "disabled" : ""}>−</button>
                       <span aria-live="polite">${quantity}</span>
-                      <button type="button" data-cart-plus="${escapeHTML(row.productId)}" aria-label="${t("increaseQty")}" ${quantity >= MAX_QTY ? "disabled" : ""}>+</button>
+                      <button type="button" data-cart-plus="${escapeHTML(row.cartKey)}" aria-label="${t("increaseQty")}" ${quantity >= MAX_QTY ? "disabled" : ""}>+</button>
                     </div>
                   </div>
                   <div class="z-cart-item-end">
                     <strong class="z-cart-line-total">${money(row.lineTotal, language)}</strong>
-                    <button type="button" class="z-cart-remove" data-cart-remove="${escapeHTML(row.productId)}">${t("remove")}</button>
+                    <button type="button" class="z-cart-remove" data-cart-remove="${escapeHTML(row.cartKey)}">${t("remove")}</button>
                   </div>
                 </article>`;
             }).join("")}
@@ -323,15 +327,15 @@ export async function mountStandaloneCart(root) {
   let cart = readCart(userId);
   const cloudReadyKey = "zune_collections_cloud_ready:" + userId;
   try {
-    const cloud = await supabase.from("cart_items").select("product_id,quantity").eq("user_id", userId);
+    const cloud = await supabase.from("cart_items").select("product_id,variant_id,quantity").eq("user_id", userId);
     if (cloud.error) throw cloud.error;
     if (localStorage.getItem(cloudReadyKey) === "1") {
-      cart = (cloud.data || []).map(row => ({ productId: row.product_id, quantity: row.quantity }));
+      cart = (cloud.data || []).map(row => ({ productId: row.product_id, variantId:row.variant_id||null, quantity: row.quantity }));
     } else {
-      const merged = new Map((cloud.data || []).map(row => [String(row.product_id), { productId: row.product_id, quantity: Number(row.quantity) || 1 }]));
+      const merged = new Map((cloud.data || []).map(row => [String(row.product_id)+"::"+String(row.variant_id||""), { productId: row.product_id, variantId:row.variant_id||null, quantity: Number(row.quantity) || 1 }]));
       cart.forEach(item => {
-        const id = String(item.productId), existing = merged.get(id);
-        merged.set(id, { productId: item.productId, quantity: Math.max(Number(item.quantity) || 1, existing?.quantity || 1) });
+        const id = cartItemKey(item), existing = merged.get(id);
+        merged.set(id, { productId: item.productId, variantId:item.variantId||null, quantity: Math.max(Number(item.quantity) || 1, existing?.quantity || 1) });
       });
       cart = [...merged.values()];
       await persistCartToCloud(cart, userId);
@@ -357,8 +361,8 @@ export async function mountStandaloneCart(root) {
     });
   };
 
-  const patchQuantity = (productId, quantity, product) => {
-    const row = root.querySelector(`[data-cart-row="${CSS.escape(String(productId))}"]`);
+  const patchQuantity = (key, quantity, product) => {
+    const row = root.querySelector(`[data-cart-row="${CSS.escape(String(key))}"]`);
     if (!row) return false;
 
     const span = row.querySelector(".z-quantity-controls span");
@@ -370,7 +374,9 @@ export async function mountStandaloneCart(root) {
     if (plus)  plus.disabled  = quantity >= MAX_QTY;
 
     const lineTotal = row.querySelector(".z-cart-line-total");
-    if (lineTotal) lineTotal.textContent = money(Number(product.price || 0) * quantity, language);
+    const item=cart.find(x=>cartItemKey(x)===String(key));
+    const variant=item?.variantId?(product.__zuneVariants||[]).find(v=>String(v.id)===String(item.variantId)):null;
+    if (lineTotal) lineTotal.textContent = money(Number(variant?.price ?? product.price ?? 0) * quantity, language);
     return true;
   };
 
@@ -433,7 +439,7 @@ export async function mountStandaloneCart(root) {
   /* --- Bind events --- */
   bindCartEvents(root, {
     onQuantityChange: (id, delta) => {
-      const item = cart.find(r => String(r.productId) === String(id));
+      const item = cart.find(r => cartItemKey(r) === String(id));
       if (!item) return;
 
       const next = Math.min(MAX_QTY, Math.max(1, Number(item.quantity || 1) + delta));
@@ -455,7 +461,7 @@ export async function mountStandaloneCart(root) {
     },
 
     onRemove: id => {
-      cart = writeCart(cart.filter(r => String(r.productId) !== String(id)), userId);
+      cart = writeCart(cart.filter(r => cartItemKey(r) !== String(id)), userId);
 
       if (!cart.length) {
         productsById.clear();
