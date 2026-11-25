@@ -48,3 +48,9 @@
 .z-assistant-ticket-form button{justify-self:start}.z-assistant-ticket-form small{color:#63746a;font-size:10px}
 .z-assistant-ticket-form button:disabled{opacity:.6}
 @media(max-width:340px){.z-assistant-action-grid,.z-assistant-report-grid{grid-template-columns:1fr}}
+
+/* Clear, always-visible device voice switch. */
+.z-assistant-speech-toggle{min-width:94px!important;padding:0 10px!important;gap:6px;font-size:12px!important;font-weight:800!important;white-space:nowrap}
+.z-assistant-speech-toggle[aria-pressed="false"]{background:#ffffff!important;color:#14583a!important;border-color:#ffffff!important;opacity:1!important}
+.z-assistant-speech-toggle:focus-visible{outline:3px solid #f5d76e;outline-offset:2px}
+.z-assistant-voice-status{line-height:1.4}
