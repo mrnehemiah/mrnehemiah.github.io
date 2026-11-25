@@ -5,6 +5,7 @@
 
 import { supabase } from "./supabase.js";
 import { openZuneAssistant } from "./smart-assistant.js?v=20261125-refactor-1";
+import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v=20261125-reels-system-1";
 
 // --------------------------------------------
 // 1. SETTINGS AND STATE
@@ -3031,33 +3032,23 @@ function categoryImage(categoryName, index = 0) {
 }
 
 function renderReelsPage() {
-  const sw = language() === "sw";
-  return `
-    <section class="z-home">
-      <header class="z-home-header">
-        <div class="z-home-top">
-          <div class="z-home-brand"><div class="zune-logo">ⓏⓊⓃⒺ</div></div>
-          <div class="z-home-actions">
-            <button type="button" class="z-icon-button" data-open-cart aria-label="${tx("cart")}">${zIcon("cart")}<span class="z-cart-badge" data-cart-count hidden>0</span></button>
-          </div>
-        </div>
-      </header>
-      <main class="z-reels-page">
-        <section class="z-reels-empty">
-          <div class="z-reels-mark">${zIcon("reels")}</div>
-          <span class="z-reels-eyebrow">ZUNE REELS</span>
-          <h1>${sw ? "Reels zinakuja ZUNE" : "Reels are coming to ZUNE"}</h1>
-          <p>${sw ? "Hapa ndipo utaangalia video fupi za bidhaa, maonesho ya maduka na maudhui kutoka kwa wauzaji. Reels ni tofauti na Live Shopping." : "This is where you will watch short product videos, store showcases and seller content. Reels are separate from Live Shopping."}</p>
-          <button type="button" class="z-reels-explore" data-reels-explore>${sw ? "Gundua bidhaa sasa" : "Explore products"}</button>
-        </section>
-      </main>
-    </section>
-  `;
+  return renderZuneReelsPage();
 }
 
 function bindReelsEvents() {
-  document.querySelector("[data-open-cart]")?.addEventListener("click", () => renderMarketplacePage("cart"));
-  document.querySelector("[data-reels-explore]")?.addEventListener("click", () => renderMarketplacePage("explore"));
+  bindZuneReelsPage({
+    root: homeState.app,
+    db: supabase,
+    user: homeState.user,
+    language: language(),
+    onCart: () => renderMarketplacePage("cart"),
+    onExplore: () => renderMarketplacePage("explore"),
+    onOpenProduct: product => openProductDetails(product)
+  }).catch(error => {
+    console.error("ZUNE Reels could not initialize:", error);
+    const host = homeState.app?.querySelector("#z-reels-feed");
+    if (host) host.innerHTML = '<section class="z-reels-empty"><h2>Reels hazijafunguka</h2><p>Tafadhali jaribu tena.</p><button type="button" data-reels-retry>Jaribu tena</button></section>';
+  });
 }
 
 function renderCategoriesPage() {
