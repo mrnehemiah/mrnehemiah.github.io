@@ -1,4 +1,5 @@
 import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-5";
+import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
 
 /**
  * Opens the Marketplace assistant from the existing Search Bar.
@@ -91,7 +92,7 @@ export async function openZuneAssistant({
  let lastKnowledgeTopic=null;
  const ask=async raw=>{
   const q=String(raw||"").trim();if(!q)return;say(safe(q),true);field.value="";remember(q);
-  const n=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,""),has=(...a)=>a.some(x=>n.includes(x));
+  const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
   if(knowledge){lastKnowledgeTopic=knowledge.topic;const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
   if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
@@ -102,8 +103,8 @@ export async function openZuneAssistant({
   if(has("akaunti","account","login","ingia","jisajili","signup","password","nenosiri")){say(sw?"Tumia sehemu ya Akaunti kwenye menyu ya Marketplace kuingia, kujisajili na kusimamia taarifa zako. Usishiriki nenosiri au OTP.":"Use Account in Marketplace navigation to sign in, register and manage your details. Never share your password or OTP.");return;}
   if(has("help","msaada","support","wasilian","contact","huduma","whatsapp")){say((sw?"Kwa msaada wa ZUNE Market, wasiliana nasi kupitia WhatsApp au jiunge na Channel kwa matangazo. Usitume PIN, OTP au nenosiri.":"For ZUNE Market help, contact us on WhatsApp or join the Channel for announcements. Never share your PIN, OTP or password.")+"<br>"+supportLinks());return;}
   const wantsDeals=has("punguzo","discount","sale","oferta","deals");
-  const stop=new Set(["nataka","tafuta","naomba","onyesha","nipatie","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in"]);
-  let query=n.split(/[^a-z0-9]+/).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
+  const stop=new Set(["nataka","tafuta","kutafuta","nunua","kununua","agiza","kuagiza","naomba","onyesha","nionyeshe","nipatie","tafadhali","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in"]);
+  let query=getSwahiliSearchTokens(q).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
   if(!query&&wantsDeals)query="__deals__";
   if(query.length<2){say(sw?"Uliza kuhusu bidhaa, maduka, categories, chapa, ofa, oda, malipo au delivery.":"Ask about products, stores, categories, brands, deals, orders, payments or delivery.");return;}
   say(sw?"Natafuta kwenye Marketplace...":"Searching Marketplace...");

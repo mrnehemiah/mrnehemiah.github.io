@@ -1,6 +1,7 @@
 // ZUNE Knowledge Engine — deterministic, offline-first Marketplace knowledge.
 // This is a curated knowledge base, not an AI model. Answers describe documented
 // ZUNE workflows; live account/order/payment status must be read from authenticated data.
+import { expandSwahiliTokens, normalizeSwahiliQuery } from "./swahili-language.js?v=20261125-sw1";
 const KNOWLEDGE = [
 {topic:"marketplace",terms:["zune market","zune marketplace","marketplace ni nini","zune ni nini","about zune","kuhusu zune","zune market ni nini"],sw:"ZUNE Market (ZUNE Marketplace) ni soko la kidijitali linalowaunganisha wateja na maduka pamoja na wauzaji katika sehemu moja. Mteja anaweza kutafuta na kugundua bidhaa, kuchunguza maduka na chapa, kulinganisha chaguo, kuchagua variant sahihi, kuhifadhi bidhaa, kuweka bidhaa kikapuni na kuendelea na checkout. Pia anaweza kufuatilia oda zake, kupokea taarifa na kutumia zana za ununuzi kama Wishlist, Product Comparison, Reviews na Price Alerts pale zinapoonekana kwenye akaunti yake. Wauzaji hutumia maeneo yao ya duka kusimamia bidhaa, picha, bei, variants, stock, oda na uratibu wa delivery kulingana na ruhusa zao. ZUNE Market ina sehemu tofauti za wateja, maduka na usimamizi; si kila huduma huonekana kwa kila aina ya akaunti. Taarifa za bei, stock, upatikanaji na hatua za oda zinapaswa kuthibitishwa kwenye ukurasa husika au akaunti yako kabla ya kufanya uamuzi.",en:"ZUNE Market (ZUNE Marketplace) is a digital marketplace that brings customers, stores and sellers together in one place. Customers can search and discover products, explore stores and brands, compare options, choose the right variant, save items, add products to the cart and continue to checkout. They can also follow their own orders, receive notifications and use shopping tools such as Wishlist, Product Comparison, Reviews and Price Alerts when available in their account. Sellers use their store area to manage products, images, prices, variants, stock, orders and delivery coordination according to their permissions. ZUNE Market has distinct customer, store and administration areas; not every service is available to every account type. Prices, stock, availability and order progress should be confirmed on the relevant page or in your account before making a decision."},
 {topic:"seller",terms:["seller ni nani","seller nani","seller","muuzaji ni nani","muuzaji","wauzaji","kuuza zune","sell on zune"],sw:"Seller ni mtu au biashara inayotumia ZUNE Marketplace kuuza bidhaa kwa wateja. Seller anaweza kuwa na duka moja linalohusishwa na akaunti yake. Kulingana na ruhusa za mfumo, anaweza kuwasilisha bidhaa, kusimamia picha na maelezo, kuweka bei na variants, kusasisha stock, kupokea oda, kuandaa bidhaa na kushughulikia delivery. Seller si Admin: Admin husimamia mfumo na maamuzi ya kiutawala, wakati Seller husimamia shughuli za duka lake. Seller anaweza kuhitaji kuwasilisha maombi na kusubiri idhini kabla ya kuanza kuuza.",en:"A Seller is a person or business that uses ZUNE Marketplace to sell products to customers. A seller is associated with one store. Depending on permissions, the seller can submit products, manage images and descriptions, set prices and variants, update stock, receive orders, prepare items and coordinate delivery. A Seller is not an Admin: the Admin manages the platform and administrative decisions, while the Seller manages their own store. Seller registration may require an application and approval before selling."},
@@ -50,12 +51,13 @@ en:"You can also ask: how does it work, who uses it, what are its steps, what is
 };
 
 function normalizeKnowledgeText(value) {
- return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"").replace(/[^a-z0-9]+/g," ").trim();
+ return normalizeSwahiliQuery(value);
 }
 
 export function answerZuneKnowledge(question, lang="sw", previousTopic=null) {
  const q=normalizeKnowledgeText(question);
  if(!q) return null;
+ const queryTokens=new Set(expandSwahiliTokens(question));
  const follow=/(inafanyikaje|inafanyaje|vipi sasa|endelea|fafanua zaidi|zaidi|hatua zake|how does it work|how|explain more|tell me more|what next)/.test(q);
  if(follow && previousTopic) {
   const item=KNOWLEDGE.find(x=>x.topic===previousTopic);
@@ -69,7 +71,12 @@ export function answerZuneKnowledge(question, lang="sw", previousTopic=null) {
    if(!t) continue;
    if(q===t) score+=8;
    else if(t.includes(" ") && q.includes(t)) score+=6;
-   else if(!t.includes(" ") && q.split(" ").includes(t)) score+=3;
+   else if(!t.includes(" ") && queryTokens.has(t)) score+=3;
+   else {
+    const termTokens=expandSwahiliTokens(term);
+    const overlap=termTokens.filter(token=>queryTokens.has(token)).length;
+    if(overlap) score+=Math.min(3,overlap*1.15);
+   }
   }
   if(score>bestScore){best=item;bestScore=score;}
  }
