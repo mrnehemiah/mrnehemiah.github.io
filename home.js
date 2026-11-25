@@ -2898,7 +2898,7 @@ function ensureMarketplaceNavigationStyles() {
     .z-explore-store-meta strong { font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .z-explore-store-meta small { color:var(--text-muted); font-size:10px; }
     .z-explore-results[hidden] { display:none !important; }
-    .z-reels-page { min-height:calc(100vh - 95px); padding:22px 17px 120px; display:grid; place-items:center; }
+    .z-reels-legacy-page { min-height:calc(100vh - 95px); padding:22px 17px 120px; display:grid; place-items:center; }
     .z-reels-empty { width:min(100%,480px); padding:30px 22px; border:1px solid var(--border); border-radius:24px; background:var(--surface); text-align:center; box-shadow:0 14px 35px rgba(0,0,0,.05); }
     .z-reels-mark { width:76px; height:76px; margin:0 auto 18px; display:grid; place-items:center; border-radius:24px; background:color-mix(in srgb,var(--primary) 11%,var(--surface)); color:var(--primary); }
     .z-reels-mark svg { width:36px; height:36px; }
