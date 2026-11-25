@@ -320,7 +320,7 @@ export async function openZuneAssistant({
   try{
    const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim(),pattern="%"+term+"%";
    let productQuery=supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null);
-   if(term)productQuery=productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
+   if(term)productQuery=productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",category.ilike."+pattern);
    if(maxBudget)productQuery=productQuery.lte("price",maxBudget);
    if(minBudget)productQuery=productQuery.gte("price",minBudget);
    if(inStockOnly)productQuery=productQuery.gt("stock_quantity",0);
@@ -329,7 +329,7 @@ export async function openZuneAssistant({
     productQuery.limit(wantsDeals?60:20),
     (!term||wantsDeals||wantsComparison)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
     (!term||wantsDeals||wantsComparison)?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10),
-    wantsComparison?Promise.all(comparisonTerms.map(name=>{const safeTerm=name.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim();const like="%"+safeTerm+"%";return supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).or("title.ilike."+like+",brand.ilike."+like+",description.ilike."+like).limit(5);})):Promise.resolve([])
+    wantsComparison?Promise.all(comparisonTerms.map(name=>{const safeTerm=name.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim();const like="%"+safeTerm+"%";return supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).or("title.ilike."+like+",description.ilike."+like+",category.ilike."+like).limit(5);})):Promise.resolve([])
    ]);
    const comparisonProducts=wantsComparison?Array.from(new Map(comparisonRes.flatMap(r=>r.error?[]:(r.data||[])).map(p=>[String(p.id),p])).values()):[];
    const products=pRes.error?[]:(pRes.data||[]),stores=sRes.error?[]:(sRes.data||[]),categories=cRes.error?[]:(cRes.data||[]);
