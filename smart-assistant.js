@@ -192,7 +192,7 @@ export async function openZuneAssistant({
    memoryRoot.querySelector("[data-assistant-memory-decline]")?.setAttribute("hidden","true");
   }else if(!granted){
    if(memoryTitle)memoryTitle.textContent=sw?"Ruhusu kumbukumbu?":"Allow memory?";
-   if(memoryCopy)memoryCopy.textContent=sw?"ZUNE inaweza kukumbuka mada za mazungumzo ili kuelewa maswali ya ufuatiliaji. Kumbukumbu huhifadhiwa kwenye kifaa hiki tu, chini ya akaunti yako. Unaweza kuziona au kuzifuta wakati wowote. Taarifa nyeti hazihifadhiwi.":"ZUNE can remember conversation topics to understand follow-up questions. Memory stays on this device, scoped to your account. You can review or erase it anytime. Sensitive information is not saved.";
+   if(memoryCopy)memoryCopy.textContent=sw?"ZUNE inaweza kukumbuka mada za mazungumzo ili kuelewa maswali ya ufuatiliaji. Kumbukumbu huhifadhiwa kwenye kifaa hiki tu, chini ya akaunti yako. Unaweza kuziona au kuzifuta wakati wowote. Usiweke PIN, OTP, nywila au taarifa za malipo hapa.":"ZUNE can remember conversation topics to understand follow-up questions. Memory stays on this device, scoped to your account. You can review or erase it anytime. Do not enter PINs, OTPs, passwords or payment details here.";
    const allow=memoryRoot.querySelector("[data-assistant-memory-allow]");
    if(allow)allow.textContent=sw?"Ruhusu kumbukumbu":"Allow memory";
    const decline=memoryRoot.querySelector("[data-assistant-memory-decline]");
@@ -284,7 +284,7 @@ export async function openZuneAssistant({
   const chatReply=smallTalkReply(q);
   if(chatReply){say(chatReply);return;}
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
-  if(knowledge){lastKnowledgeTopic=knowledge.topic;const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
+  if(knowledge){lastKnowledgeTopic=knowledge.topic;if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
   if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
   if(has("oda","order","nunua","buy","agiz","cart","kikapu")){say(sw?"Fungua bidhaa, chagua variant na idadi, kisha bonyeza Weka Kikapuni. Fungua Kikapu kuendelea na checkout.":"Open a product, choose a variant and quantity, then tap Add to Cart. Open your Cart to continue checkout.");return;}
   if(has("delivery","usafiri","dereva","driver","kusafir","fikisha")){say(sw?"Delivery hutegemea duka, bidhaa na eneo lako. Thibitisha upatikanaji, gharama na muda wa kufikishiwa na duka kabla ya kulipa.":"Delivery depends on the store, product and your location. Confirm availability, cost and timing with the store before payment.");return;}
