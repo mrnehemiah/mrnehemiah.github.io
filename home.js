@@ -2706,11 +2706,6 @@ function renderBottomNavigation() {
       icon: "home"
     },
     {
-      id: "live",
-      label: "Live",
-      icon: "live"
-    },
-    {
       id: "explore",
       label: tx("explore"),
       icon: "explore"
