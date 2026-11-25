@@ -2752,7 +2752,7 @@ function openZuneAssistant(){
   const q=String(raw||"").trim();if(!q)return;say(safe(q),true);field.value="";remember(q);
   const n=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,""),has=(...a)=>a.some(x=>n.includes(x));
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
-  if(knowledge){lastKnowledgeTopic=knowledge.topic;say(safe(knowledge.answer).replace(/\n/g,"<br>"));return;}
+  if(knowledge){lastKnowledgeTopic=knowledge.topic;say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>"));return;}
   if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
   if(has("oda","order","nunua","buy","agiz","cart","kikapu")){say(sw?"Fungua bidhaa, chagua variant na idadi, kisha bonyeza Weka Kikapuni. Fungua Kikapu kuendelea na checkout.":"Open a product, choose a variant and quantity, then tap Add to Cart. Open your Cart to continue checkout.");return;}
   if(has("delivery","usafiri","dereva","driver","kusafir","fikisha")){say(sw?"Delivery hutegemea duka, bidhaa na eneo lako. Thibitisha upatikanaji, gharama na muda wa kufikishiwa na duka kabla ya kulipa.":"Delivery depends on the store, product and your location. Confirm availability, cost and timing with the store before payment.");return;}
