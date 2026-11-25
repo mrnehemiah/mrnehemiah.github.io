@@ -179,7 +179,7 @@ export async function openZuneAssistant({
  let contextMemory=memoryConsent==="granted"?readMemory():[];
  let lastContextQuery=contextMemory[0]?.query||"";
  let lastKnowledgeTopic=contextMemory[0]?.topic||null;
- const sensitiveMemoryQuery=q=>/(\\b(pin|otp|password|nenosiri|nywila|passcode|verification code|card number|cvv|security code)\\b|\\b(?:+?255|0)\\d{9}\\b|[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}|medical|diagnos|dawa zangu|ugonjwa|hospitali|bank account)/i.test(q);
+ const sensitiveMemoryQuery=q=>/(\b(pin|otp|password|nenosiri|nywila|passcode|verification code|card number|cvv|security code)\b|\b(?:\+?255|0)\d{9}\b|[\w.+-]+@[\w.-]+\.[a-z]{2,}|medical|diagnos|dawa zangu|ugonjwa|hospitali|bank account)/i.test(q);
  const renderMemoryState=()=>{
   if(!memoryRoot)return;
   const granted=memoryConsent==="granted"&&!!memoryUserId;
@@ -277,9 +277,9 @@ export async function openZuneAssistant({
   const previousContextQuery=lastContextQuery;
   say(safe(q),true);field.value="";remember(q);
   const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
-  const followUp=/^(bei yake|bei gani|na nyingine|na hii|hiyo|hiyo je|vipi kuhusu|na kuhusu|what about|its price|how much is it|and this|that one|another one|more like this)\\b?/i.test(n);
+  const followUp=/^(?:bei yake|bei gani|na nyingine|na hii|hiyo|hiyo je|vipi kuhusu|na kuhusu|what about|its price|how much is it|and this|that one|another one|more like this)(?:\s|$)/i.test(n);
   const activeSearchText=followUp&&previousContextQuery?previousContextQuery+" "+q:q;
-  saveContextMemory(q);
+  saveContextMemory(followUp&&previousContextQuery?previousContextQuery:q);
   const chatReply=smallTalkReply(q);
   if(chatReply){say(chatReply);return;}
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
