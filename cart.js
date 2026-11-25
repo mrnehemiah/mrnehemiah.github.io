@@ -370,12 +370,12 @@ export async function mountStandaloneCart(root) {
 
     const minus = row.querySelector("[data-cart-minus]");
     const plus  = row.querySelector("[data-cart-plus]");
+    const item=cart.find(x=>cartItemKey(x)===String(key));
+    const variant=item?.variantId?(product.__zuneVariants||[]).find(v=>String(v.id)===String(item.variantId)):null;
     if (minus) minus.disabled = quantity <= 1;
     if (plus)  plus.disabled  = quantity >= Math.min(MAX_QTY, Number(variant?.stock_quantity ?? MAX_QTY));
 
     const lineTotal = row.querySelector(".z-cart-line-total");
-    const item=cart.find(x=>cartItemKey(x)===String(key));
-    const variant=item?.variantId?(product.__zuneVariants||[]).find(v=>String(v.id)===String(item.variantId)):null;
     if (lineTotal) lineTotal.textContent = money(Number(variant?.price ?? product.price ?? 0) * quantity, language);
     return true;
   };
