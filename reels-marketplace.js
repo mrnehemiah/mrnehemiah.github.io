@@ -76,7 +76,7 @@ function cardHTML(reel) {
     '<div class="z-reel-actions">' +
     '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">' + icon('heart') + '</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span>' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
     '</div><div class="z-reel-copy"><div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ Original audio · Video sound</div>' + productHtml + '</div></article>';
@@ -269,7 +269,7 @@ async function shareReel(reelId) {
     else { window.prompt('Nakili kiungo hiki:',url); channel = 'copy'; shared = true; }
     if (shared && state.context.user?.id) {
       const {error} = await state.context.db.rpc('zune_reel_record_share',{p_reel_id:reelId,p_channel:channel});
-      if (!error) { const reel=state.reels.find(x=>x.id===reelId); if(reel)reel.shares_count=Number(reel.shares_count||0)+1; }
+      if (!error) { const reel=state.reels.find(x=>x.id===reelId); if(reel){reel.shares_count=Number(reel.shares_count||0)+1;const label=state.root.querySelector('[data-share-count="'+CSS.escape(reelId)+'"]');if(label)label.textContent=reel.shares_count.toLocaleString();} }
     }
   } catch (error) { if (error.name !== 'AbortError') toast('Imeshindikana kushare Reel.'); }
 }
@@ -336,7 +336,7 @@ function bindEvents() {
       const reel = state.reels.find(x => x.id === audio.dataset.reelAudio);
       const video = root.querySelector('[data-reel-video="' + CSS.escape(audio.dataset.reelAudio) + '"]');
       if (reel?.sound?.url) {
-        if (state.audioPlayer && state.audioPlayer._zuneReelId === reel.id && !state.audioPlayer.paused) { state.audioPlayer.pause(); state.audioPlayer = null; audio.querySelector('.glyph').textContent = '♫'; audio.querySelector('span:last-child').textContent = 'Music'; return; }
+        if (state.audioPlayer && state.audioPlayer._zuneReelId === reel.id && !state.audioPlayer.paused) { state.audioPlayer.pause(); state.audioPlayer = null; if(video)video.muted=false; audio.querySelector('.glyph').textContent = '♫'; audio.querySelector('span:last-child').textContent = 'Music'; return; }
         if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
         state.audioPlayer = new Audio(reel.sound.url); state.audioPlayer._zuneReelId = reel.id; if (video) video.muted = true;
         state.audioPlayer.play().then(() => { audio.querySelector('.glyph').textContent = '🔊'; audio.querySelector('span:last-child').textContent = 'Mute music'; }).catch(() => toast('Gusa tena ili kuruhusu music kucheza.'));
