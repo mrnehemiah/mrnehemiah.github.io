@@ -4,6 +4,7 @@
 // ============================================
 
 import { supabase } from "./supabase.js";
+import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-1";
 
 // --------------------------------------------
 // 1. SETTINGS AND STATE
@@ -2708,9 +2709,12 @@ function openZuneAssistant(){
  const box=overlay.querySelector("#z-assistant-messages"),field=overlay.querySelector("#z-assistant-input");
  const say=(html,user=false)=>{const d=document.createElement("div");d.className="z-assistant-message"+(user?" user":"");d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;};
  const remember=q=>{const key="zune_search_history:"+(homeState.user?.id||"guest");try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
+ let lastKnowledgeTopic=null;
  const ask=async raw=>{
   const q=String(raw||"").trim();if(!q)return;say(safe(q),true);field.value="";remember(q);
   const n=q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,""),has=(...a)=>a.some(x=>n.includes(x));
+  const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
+  if(knowledge){lastKnowledgeTopic=knowledge.topic;say(safe(knowledge.answer).replace(/\n/g,"<br>"));return;}
   if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
   if(has("oda","order","nunua","buy","agiz","cart","kikapu")){say(sw?"Fungua bidhaa, chagua variant na idadi, kisha bonyeza Weka Kikapuni. Fungua Kikapu kuendelea na checkout.":"Open a product, choose a variant and quantity, then tap Add to Cart. Open your Cart to continue checkout.");return;}
   if(has("delivery","usafiri","dereva","driver","kusafir","fikisha")){say(sw?"Delivery hutegemea duka, bidhaa na eneo lako. Thibitisha upatikanaji, gharama na muda wa kufikishiwa na duka kabla ya kulipa.":"Delivery depends on the store, product and your location. Confirm availability, cost and timing with the store before payment.");return;}
