@@ -1638,7 +1638,8 @@ function productCard(product) {
           ${accountVerified ? '<span class="z-verified-account-mark" title="Verified Account" aria-label="Verified Account"><svg viewBox="-30 -30 60 60" role="img"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : ""}
         </div>
         ${location ? `<div class="z-product-location">⌖ ${safe(location)}</div>` : ""}
-        ${stockMarkup}
+        ${stockMarkup || (stock !== null ? '<div class="z-product-stock z-product-stock-available">'+(language()==="sw"?'Inapatikana':'In stock')+'</div>' : '')}
+        <div class="z-product-card-footer"><span>${language()==="sw"?"Angalia bidhaa":"Quick view"}</span><span aria-hidden="true">↗</span></div>
       </div>
     </article>
   `;
@@ -1789,6 +1790,11 @@ function openProductDetails(product) {
         <h2>${safe(product.title || tx("emptyName"))}</h2>
         <p class="z-detail-price" id="z-detail-price">${money(product.price)}</p>
         <div id="z-detail-variants" class="z-detail-variants" aria-live="polite"></div>
+        <div class="z-detail-quantity" id="z-detail-quantity-wrap" hidden>
+          <label for="z-detail-quantity">${language()==="sw"?"Idadi":"Quantity"}</label>
+          <div class="z-detail-quantity-control"><button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button><input id="z-detail-quantity" type="number" min="1" max="99" value="1" inputmode="numeric"><button type="button" data-qty-step="1" aria-label="Increase quantity">+</button></div>
+          <small id="z-detail-line-total">${money(product.price)}</small>
+        </div>
         <div class="z-detail-rating" id="z-detail-rating" aria-live="polite">${Number(product.average_rating||product.rating_average||product.rating||0)>0 ? "★ "+Number(product.average_rating||product.rating_average||product.rating).toFixed(1)+" · "+Number(product.review_count||product.reviews_count||0)+" "+(language()==="sw"?"tathmini":"reviews") : (language()==="sw"?"Bado hakuna tathmini":"No ratings yet")}</div>
         ${product.description ? `<p class="z-detail-description">${safe(product.description)}</p>` : ""}
         ${product.category ? `<p class="z-detail-category">${safe(product.category)}</p>` : ""}
@@ -1816,7 +1822,24 @@ function openProductDetails(product) {
   overlay.querySelector("[data-open-store]")?.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();openStoreDetails(event.currentTarget.dataset.openStore,product);});
   let availableVariants=[];
   let selectedVariant=null;
+  let selectedStock=stock;
+  const quantityWrap=overlay.querySelector("#z-detail-quantity-wrap");
+  const quantityInput=overlay.querySelector("#z-detail-quantity");
+  const lineTotal=overlay.querySelector("#z-detail-line-total");
   const addButton=overlay.querySelector(".z-detail-add");
+  const refreshQuantityTotal=()=>{
+    const qty=Math.max(1,Math.min(99,Math.floor(Number(quantityInput?.value)||1)));
+    if(quantityInput)quantityInput.value=String(qty);
+    const unitPrice=Number(selectedVariant?.price ?? product.price ?? 0);
+    if(lineTotal)lineTotal.textContent=money(unitPrice*qty);
+    if(addButton)addButton.disabled=(product.__zuneHasVariants&&!selectedVariant)||((selectedVariant||product.stock_quantity!=null)&&(!Number.isFinite(Number(selectedStock))||qty>Number(selectedStock)));
+  };
+  overlay.querySelectorAll("[data-qty-step]").forEach(button=>button.addEventListener("click",()=>{
+    if(!quantityInput)return;
+    quantityInput.value=String(Math.max(1,Math.min(99,(Number(quantityInput.value)||1)+Number(button.dataset.qtyStep||0))));
+    refreshQuantityTotal();
+  }));
+  quantityInput?.addEventListener("input",refreshQuantityTotal);
   if(addButton)addButton.disabled=true;
   supabase.from("product_variants").select("id,label,sku,attributes,price,stock_quantity").eq("product_id",product.id).eq("is_active",true).order("sort_order",{ascending:true}).then(({data,error})=>{
     if(error){console.warn("ZUNE product variants:",error);const host=overlay.querySelector("#z-detail-variants");if(host)host.textContent=language()==="sw"?"Imeshindikana kupakia chaguo za bidhaa. Jaribu tena.":"Unable to load product options. Please try again.";if(addButton)addButton.disabled=true;return;}
@@ -1828,17 +1851,28 @@ function openProductDetails(product) {
       const select=host.querySelector("select");
       select.addEventListener("change",()=>{
         selectedVariant=availableVariants.find(v=>String(v.id)===select.value)||null;
+        selectedStock=selectedVariant?Number(selectedVariant.stock_quantity):stock;
         const price=overlay.querySelector("#z-detail-price"),stockNode=overlay.querySelector("#z-detail-stock");
         if(price)price.textContent=money(selectedVariant?selectedVariant.price:product.price);
-        if(stockNode)stockNode.textContent=selectedVariant?(language()==="sw"?"Stock iliyopo: ":"Available stock: ")+selectedVariant.stock_quantity:"";
-        if(addButton)addButton.disabled=!selectedVariant||Number(selectedVariant.stock_quantity)<=0;
+        if(stockNode)stockNode.textContent=selectedVariant?(Number(selectedVariant.stock_quantity)>0?(language()==="sw"?"Stock iliyopo: ":"Available stock: ")+selectedVariant.stock_quantity:(language()==="sw"?"Imeisha stock":"Out of stock")):"";
+        const attrs=selectedVariant?.attributes&&typeof selectedVariant.attributes==="object"?selectedVariant.attributes:{};
+        const variantImage=attrs.image_url||attrs.imageUrl||attrs.image||attrs.photo_url||attrs.photoUrl||attrs.photo||"";
+        const imageNode=overlay.querySelector(".z-detail-image-wrap .z-product-image");
+        if(variantImage&&imageNode)imageNode.src=String(variantImage);
+        if(quantityInput)quantityInput.value="1";
+        if(quantityWrap)quantityWrap.hidden=!selectedVariant;
+        refreshQuantityTotal();
       });
       if(addButton)addButton.disabled=true;
-    }else if(addButton)addButton.disabled=Number(product.stock_quantity||0)<=0;
+    }else{
+      selectedStock=stock;
+      if(quantityWrap)quantityWrap.hidden=false;
+      refreshQuantityTotal();
+    }
   });
   addButton?.addEventListener("click",()=>{
     if(product.__zuneHasVariants&&!selectedVariant){alert(language()==="sw"?"Chagua aina ya bidhaa kwanza.":"Please select a product option first.");return;}
-    addToCart(String(product.id),product,selectedVariant);
+    addToCart(String(product.id),product,selectedVariant,quantityInput?.value||1);
     close();
   });
   overlay.querySelector("[data-detail-compare]")?.addEventListener("click", async event => {
@@ -1988,16 +2022,20 @@ async function toggleSaved(productId) {
 // 12. ADD TO CART
 // --------------------------------------------
 
-function addToCart(productId, productOverride = null, selectedVariant = null) {
+function addToCart(productId, productOverride = null, selectedVariant = null, requestedQuantity = 1) {
   const id = String(productId);
+  const quantity = Math.max(1, Math.min(99, Math.floor(Number(requestedQuantity) || 1)));
   const product = productOverride && String(productOverride.id)===id ? productOverride : homeState.products.find(item => String(item.id) === id);
   if (!product) { alert(language()==="sw"?"Bidhaa haijapatikana. Jaribu tena.":"Product not found. Please try again."); return; }
   const variantId = selectedVariant?.id || null;
-  if (selectedVariant && (Number(selectedVariant.stock_quantity)||0) < 1) { alert(language()==="sw"?"Chaguo hili limeisha stock.":"This option is out of stock."); return; }
+  const availableStock = selectedVariant ? Number(selectedVariant.stock_quantity) : Number(product.stock_quantity);
+  if ((selectedVariant || product.stock_quantity != null) && (!Number.isFinite(availableStock) || availableStock < quantity)) { alert(language()==="sw"?"Idadi uliyochagua imezidi stock iliyopo.":"The requested quantity exceeds available stock."); return; }
   if (!selectedVariant && product.__zuneHasVariants) { alert(language()==="sw"?"Chagua aina ya bidhaa kwanza.":"Please select a product option first."); return; }
   const existing = homeState.cart.find(item => String(item.productId)===id && String(item.variantId||"")===String(variantId||""));
-  if (existing) existing.quantity=Math.min(99,Math.max(1,Number(existing.quantity||1)+1));
-  else homeState.cart.push({productId:id,variantId,quantity:1});
+  const nextQuantity = Math.min(99, Math.max(1, Number(existing?.quantity||0) + quantity));
+  if ((selectedVariant || product.stock_quantity != null) && nextQuantity > availableStock) { alert(language()==="sw"?"Idadi ya jumla kwenye kikapu imezidi stock iliyopo.":"Your cart quantity would exceed available stock."); return; }
+  if (existing) existing.quantity=nextQuantity;
+  else homeState.cart.push({productId:id,variantId,quantity});
   saveCart();
   alert(tx("added"));
 }
