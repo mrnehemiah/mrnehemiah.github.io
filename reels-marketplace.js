@@ -133,7 +133,7 @@ function cardHTML(reel) {
     return '<div class="z-reel-product"><img src="' + esc(product.image_url || '') + '" alt="" loading="lazy"><span><strong>' + esc(product.title) + '</strong><small>TSh ' + Number(product.price || 0).toLocaleString('en-TZ') + (inStock ? ' · Inapatikana' : ' · Imeisha') + '</small><div class="z-reel-product-actions"><button type="button" class="secondary" data-reel-product="' + esc(reel.id) + '" data-product-id="' + esc(product.id) + '">Tazama</button><button type="button" data-reel-cart="' + esc(product.id) + '"' + (inStock ? '' : ' disabled') + '>Ongeza Cart</button></div></span></div>';
   }).join('');
   return '<article class="z-reel-card" data-reel-card="' + esc(reel.id) + '">' +
-    '<video class="z-reel-video" data-reel-video="' + esc(reel.id) + '" src="' + esc(video) + '" poster="' + esc(thumb) + '" playsinline loop muted preload="metadata"></video><div class="z-reel-watermark" aria-hidden="true"><b>ZUNE</b><span>' + esc(creatorName) + '</span></div><div class="z-reel-shade"></div>' +
+    '<video class="z-reel-video" data-reel-video="' + esc(reel.id) + '" src="' + esc(video) + '" poster="' + esc(thumb) + '" playsinline autoplay loop muted preload="metadata"></video><div class="z-reel-watermark" aria-hidden="true"><b>ZUNE</b><span>' + esc(creatorName) + '</span></div><div class="z-reel-shade"></div>' +
     '<div class="z-reel-top"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong><small>' + (official ? 'Akaunti rasmi ya ZUNE' : 'ZUNE Seller') + '</small></div>' +
     (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' +
     '<div class="z-reel-actions">' +
@@ -171,11 +171,24 @@ function renderFeed() {
   host.innerHTML = rows.map(cardHTML).join('');
   observeVideos();
 }
+function startReelVideo(video) {
+  if (!video || video.error) return;
+  video.muted = true;
+  video.playsInline = true;
+  const attempt = video.play();
+  if (attempt && typeof attempt.catch === 'function') {
+    attempt.catch(error => {
+      // Mobile browsers may block autoplay; the card tap handler retries
+      // playback inside a direct user gesture.
+      video.dataset.autoplayBlocked = error?.name || 'playback-blocked';
+    });
+  }
+}
 function observeVideos() {
   if (state.observer) state.observer.disconnect();
   const videos = Array.from(state.root.querySelectorAll('[data-reel-video]'));
   if (!('IntersectionObserver' in window)) {
-    videos[0]?.play().catch(() => {});
+    if (videos[0]) startReelVideo(videos[0]);
     if (videos[0]) recordView(videos[0].dataset.reelVideo);
     return;
   }
@@ -185,7 +198,7 @@ function observeVideos() {
       if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
         videos.forEach(other => { if (other !== video) other.pause(); });
         if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
-        video.play().catch(() => {});
+        startReelVideo(video);
         recordView(video.dataset.reelVideo);
       } else video.pause();
     });
