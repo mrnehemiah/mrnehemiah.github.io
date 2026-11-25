@@ -183,8 +183,8 @@ export async function openZuneAssistant({
  const renderMemoryState=()=>{
   if(!memoryRoot)return;
   const granted=memoryConsent==="granted"&&!!memoryUserId;
-  if(memoryPrompt)memoryPrompt.hidden=granted;
-  if(memoryStatus)memoryStatus.hidden=!granted;
+  if(memoryPrompt)memoryPrompt.hidden=granted||memoryConsent==="denied";
+  if(memoryStatus)memoryStatus.hidden=!granted&&memoryConsent!=="denied";
   if(!memoryUserId){
    if(memoryTitle)memoryTitle.textContent=sw?"Kumbukumbu za muda mrefu":"Long-term memory";
    if(memoryCopy)memoryCopy.textContent=sw?"Ingia kwenye akaunti yako ili uweze kuwasha kumbukumbu. Bila ruhusa, mazungumzo yatabaki kwenye kipindi hiki tu.":"Sign in to enable memory. Without consent, conversation context stays in this session only.";
@@ -198,11 +198,11 @@ export async function openZuneAssistant({
    const decline=memoryRoot.querySelector("[data-assistant-memory-decline]");
    if(decline)decline.textContent=sw?"Sio sasa":"Not now";
   }else if(memoryLabel){
-   memoryLabel.textContent=sw?"Kumbukumbu imewashwa · "+contextMemory.length+" mada":"Memory on · "+contextMemory.length+" topics";
-   memoryRoot.querySelector("[data-assistant-memory-view]")&&(memoryRoot.querySelector("[data-assistant-memory-view]").textContent=sw?"Angalia kumbukumbu":"Review memory");
-   memoryRoot.querySelector("[data-assistant-memory-disable]")&&(memoryRoot.querySelector("[data-assistant-memory-disable]").textContent=sw?"Zima na futa":"Turn off & erase");
-  }
- };
+   memoryLabel.textContent=granted?(sw?"Kumbukumbu imewashwa · "+contextMemory.length+" mada":"Memory on · "+contextMemory.length+" topics"):(sw?"Kumbukumbu zimezimwa · kipindi hiki tu":"Memory off · session only");
+   const viewButton=memoryRoot.querySelector("[data-assistant-memory-view]");
+   const disableButton=memoryRoot.querySelector("[data-assistant-memory-disable]");
+   if(viewButton){viewButton.textContent=granted?(sw?"Angalia kumbukumbu":"Review memory"):(sw?"Washa kumbukumbu":"Enable memory");viewButton.hidden=!granted&&memoryConsent!=="denied";}
+   if(disableButton){disableButton.textContent=sw?"Zima na futa":"Turn off & erase";disableButton.hidden=!granted;}
  const saveContextMemory=q=>{
   const clean=String(q||"").trim().slice(0,180);
   if(!clean||sensitiveMemoryQuery(clean))return;
@@ -226,6 +226,7 @@ export async function openZuneAssistant({
   setVoiceStatus(sw?"Sawa. Mazungumzo yatakumbukwa kwenye kipindi hiki tu.":"Okay. Context will stay in this session only.");
  });
  memoryRoot?.querySelector("[data-assistant-memory-view]")?.addEventListener("click",()=>{
+  if(memoryConsent!=="granted"){memoryConsent="granted";try{localStorage.setItem(memoryConsentKey,"granted");}catch(_){}renderMemoryState();setVoiceStatus(sw?"Kumbukumbu zimewashwa.":"Memory is on.");return;}
   const items=contextMemory.map((item,index)=>(index+1)+". "+safe(item.query)).join("<br>");
   say(items?(sw?"Mada zilizohifadhiwa:<br>":"Saved topics:<br>")+items:(sw?"Bado hakuna mada zilizohifadhiwa.":"No topics have been saved yet."));
  });
