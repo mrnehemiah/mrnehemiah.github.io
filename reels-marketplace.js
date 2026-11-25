@@ -486,7 +486,16 @@ function bindEvents() {
     root.querySelectorAll('[data-reels-tab]').forEach(x => x.classList.toggle('active',x === button));
     renderFeed();
   }));
-  root.addEventListener('click',async e => {
+  
+async function recordReelProductClick(button,productId){
+ const card=button.closest('[data-reel-card]'),reelId=card?.dataset.reelCard;
+ const reel=state.reels.find(x=>x.id===reelId),viewerId=state.context.user?.id,creatorId=reel?.creator_id||reel?.creator?.id;
+ if(!reelId||!viewerId||!creatorId||!state.context.db)return;
+ const {error}=await state.context.db.from('zune_reel_product_clicks').insert({reel_id:reelId,product_id:productId,creator_id:creatorId,viewer_id:viewerId});
+ if(error)console.warn('Reel product attribution was not recorded:',error.message);
+}
+
+root.addEventListener('click',async e => {
     const explore = e.target.closest('[data-reels-explore]');
     const retry = e.target.closest('[data-reels-retry]');
     if (explore) return state.context.onExplore();
@@ -507,7 +516,7 @@ function bindEvents() {
       if (!requireUser()) return;
       if (typeof state.context.onAddToCart !== 'function') { toast('Cart haipatikani kwa sasa.'); return; }
       cart.disabled = true;
-      try { state.context.onAddToCart(row); toast('Bidhaa imeongezwa kwenye Cart.'); }
+      try { await recordReelProductClick(cart,row.id); state.context.onAddToCart(row); toast('Bidhaa imeongezwa kwenye Cart.'); }
       catch (err) { toast(err.message || 'Imeshindikana kuongeza bidhaa kwenye Cart.'); }
       finally { cart.disabled = false; }
       return;
@@ -531,7 +540,7 @@ function bindEvents() {
     }
     if (product) {
       const row = state.products.get(product.dataset.productId);
-      if (row) state.context.onOpenProduct(row);
+      if (row) { await recordReelProductClick(product,row.id); state.context.onOpenProduct(row); }
     }
   });
 }
