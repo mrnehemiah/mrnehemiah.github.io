@@ -317,13 +317,12 @@ export async function openZuneAssistant({
   say(sw?"Natafuta bidhaa zinazolingana kwenye ZUNE Market...":"Finding matching products in ZUNE Market...");
   try{
    const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\\s+/g," ").trim(),pattern="%"+term+"%";
-   let productQuery=supabase.from("products").select("*").eq("moderation_status","approved").is("removed_at",null).is("seller_archived_at",null);
+   let productQuery=supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null);
    if(term)productQuery=productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
    if(maxBudget)productQuery=productQuery.lte("price",maxBudget);
    if(minBudget)productQuery=productQuery.gte("price",minBudget);
    if(inStockOnly)productQuery=productQuery.gt("stock_quantity",0);
    productQuery=sortMode==="recent"?productQuery.order("created_at",{ascending:false}):productQuery.order("price",{ascending:sortMode==="price_low"});
-   productQuery=productQuery.limit(wantsDeals?80:30);
    const [pRes,sRes,cRes]=await Promise.all([
     productQuery.limit(wantsDeals?60:20),
     (!term||wantsDeals)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
@@ -340,7 +339,7 @@ export async function openZuneAssistant({
    if(deals.length)sections.push('<section style="margin-top:13px"><strong>'+(sw?"Bidhaa zenye punguzo":"Discounted products")+'</strong>'+deals.map(p=>'<div style="margin-top:6px"><button type="button" data-assistant-product="'+safe(p.id)+'">'+safe(p.title)+'</button></div>').join("")+'</section>');
    if(!sections.length){say((sw?"Sijapata bidhaa inayolingana na vigezo hivi kwenye ZUNE Market. Jaribu kuongeza bajeti, kuondoa kichujio cha stock au kutumia jina jingine.":"No products matched these filters in ZUNE Market. Try increasing the budget, removing the stock filter or using another product name.")+"<br>"+supportLinks());return;}
    const criteria=[maxBudget?(sw?"Bajeti hadi "+money(maxBudget):"Budget up to "+money(maxBudget)):null,minBudget?(sw?"Kuanzia "+money(minBudget):"From "+money(minBudget)):null,inStockOnly?(sw?"Zilizo stock":"In stock only"):null,sortMode==="price_low"?(sw?"Bei ndogo kwanza":"Lowest price first"):sortMode==="price_high"?(sw?"Bei kubwa kwanza":"Highest price first"):null].filter(Boolean);
-   say((sw?"Nimepata bidhaa "+products.length+" zinazolingana:":"Found "+products.length+" matching products:")+(criteria.length?"<br><small>"+criteria.map(safe).join(" · ")+"</small>":"")+"<br>"+sections.join(""));
+   say((sw?"Matokeo ya Marketplace:":"Marketplace matches:")+(products.length?"<br>"+(sw?"Bidhaa: ":"Products: ")+products.length:"")+(stores.length?" · "+(sw?"Maduka: ":"Stores: ")+stores.length:"")+(criteria.length?"<br><small>"+criteria.map(safe).join(" · ")+"</small>":"")+"<br>"+sections.join(""));
    box.querySelectorAll("[data-assistant-product]").forEach(b=>b.onclick=()=>{const p=products.find(x=>String(x.id)===b.dataset.assistantProduct);if(p){close();openProductDetails(p);}});
    box.querySelectorAll("[data-assistant-store]").forEach(b=>b.onclick=()=>{close();openStoreDetails(b.dataset.assistantStore);});
    box.querySelectorAll("[data-assistant-category]").forEach(b=>b.onclick=()=>{close();homeState.search="";homeState.selectedCategory=b.dataset.assistantCategory;homeState.page=0;homeState.products=[];homeState.hasMore=true;renderMarketplacePage("explore");loadProducts(true);});
