@@ -2199,16 +2199,25 @@ const ZUNE_HOME_SLIDES = [
  {k:"GIFT IDEAS",sw:"Zawadi yenye maana kwa kila tukio",en:"Make every moment special",sd:"Gundua mawazo ya zawadi kwa watu unaowajali.",ed:"Find thoughtful gift ideas for people you care about.",sc:"Gundua zawadi",ec:"Explore gift ideas",a:"explore",img:"https://images.unsplash.com/photo-1512909006721-3d6018887383?auto=format&fit=crop&w=1600&q=85"},
  {k:"DISCOVER ZUNE",sw:"Kuna mengi zaidi ya kugundua!",en:"There is more to discover!",sd:"Tembelea ZUNE na ugundue bidhaa, maduka na fursa mbalimbali.",ed:"Explore products, stores and opportunities across ZUNE.",sc:"Anza sasa",ec:"Start exploring",a:"explore",img:"https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1600&q=85"}
 ];
+// Ignore malformed/empty entries so a missing slide cannot break Marketplace startup.
+const ZUNE_VALID_HOME_SLIDES = ZUNE_HOME_SLIDES.filter(slide =>
+ slide && typeof slide.img === "string" && slide.img.trim() &&
+ typeof slide.sw === "string" && typeof slide.en === "string"
+);
 function renderHomeCarousel(){
- const slide=ZUNE_HOME_SLIDES[homeState.carouselIndex%ZUNE_HOME_SLIDES.length],sw=language()==="sw";
+ const slides=ZUNE_VALID_HOME_SLIDES;
+ if(!slides.length)return '<section class="z-home-carousel" id="z-home-carousel" aria-label="ZUNE promotions"></section>';
+ const index=((Number(homeState.carouselIndex)||0)%slides.length+slides.length)%slides.length;
+ homeState.carouselIndex=index;
+ const slide=slides[index],sw=language()==="sw";
  return `<section class="z-home-carousel" id="z-home-carousel" aria-label="ZUNE promotions">
- <img class="z-slide-image" src="${safe(slide.img)}" alt="${safe(sw?slide.sw:slide.en)}" loading="${homeState.carouselIndex===0?"eager":"lazy"}" fetchpriority="${homeState.carouselIndex===0?"high":"auto"}">
+ <img class="z-slide-image" src="${safe(slide.img)}" alt="${safe(sw?slide.sw:slide.en)}" loading="${index===0?"eager":"lazy"}" fetchpriority="${index===0?"high":"auto"}">
  <div class="z-slide-copy"><span class="z-slide-kicker">${slide.k}</span><h2>${sw?slide.sw:slide.en}</h2><p>${sw?slide.sd:slide.ed}</p><button type="button" class="z-slide-cta" data-slide-action="${slide.a}">${sw?slide.sc:slide.ec} →</button></div>
- <div class="z-slide-controls"><div class="z-slide-dots">${ZUNE_HOME_SLIDES.map((x,i)=>`<button type="button" class="z-slide-dot ${i===homeState.carouselIndex?"active":""}" data-slide-index="${i}" aria-label="Slide ${i+1}"></button>`).join("")}</div>
+ <div class="z-slide-controls"><div class="z-slide-dots">${slides.map((x,i)=>`<button type="button" class="z-slide-dot ${i===index?"active":""}" data-slide-index="${i}" aria-label="Slide ${i+1}"></button>`).join("")}</div>
  <div class="z-slide-arrows"><button type="button" class="z-slide-arrow" data-slide-prev aria-label="Previous slide">‹</button><button type="button" class="z-slide-arrow" data-slide-next aria-label="Next slide">›</button></div></div></section>`;
 }
 function moveHomeSlide(step){
- homeState.carouselIndex=(homeState.carouselIndex+step+ZUNE_HOME_SLIDES.length)%ZUNE_HOME_SLIDES.length;
+ const count=ZUNE_VALID_HOME_SLIDES.length;if(!count)return;homeState.carouselIndex=((Number(homeState.carouselIndex)||0)+step+count)%count;
  const old=document.getElementById("z-home-carousel");if(!old)return;
  const holder=document.createElement("div");holder.innerHTML=renderHomeCarousel();old.replaceWith(holder.firstElementChild);bindCarouselEvents();
 }
