@@ -67,6 +67,7 @@ function installStyles() {
     .z-reel-copy{position:absolute;left:14px;right:64px;bottom:14px;z-index:3;color:#fff;text-shadow:0 2px 8px #000}
     .z-reel-caption{margin:7px 0;color:#fff;font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
     .z-reel-tags{color:#ddd6fe;font-size:10px;font-weight:700}
+    .z-reel-challenge{display:inline-block;margin:0 0 6px;padding:5px 8px;border:1px solid #A78BFA88;border-radius:999px;background:#A78BFA25;color:#fff;font-size:10px;font-weight:800}
     .z-reel-audio{display:flex;align-items:center;gap:6px;margin-top:7px;color:#e5e7eb;font-size:10px}
     .z-reel-product-list{display:flex;gap:8px;overflow-x:auto;padding:7px 0 2px;scrollbar-width:none}
     .z-reel-product{flex:0 0 min(260px,82%);display:flex;align-items:center;gap:9px;min-width:0;padding:8px;border:1px solid #A78BFA55;border-radius:15px;background:#111827ed;color:#fff;text-align:left;backdrop-filter:blur(14px)}
@@ -125,6 +126,7 @@ function cardHTML(reel) {
   const following = state.following.has(reel.creator_id);
   const saved = state.saved.has(reel.id);
   const tags = Array.isArray(reel.hashtags) ? reel.hashtags.map(x => '#' + String(x).replace(/^#/, '')).join(' ') : '';
+  const challengeHtml = (reel.challenges || []).map(challenge => '<span class="z-reel-challenge">✦ '+esc(challenge.title)+' · #'+esc(challenge.hashtag)+'</span>').join('');
   const productHtml = products.slice(0,10).map(product => {
     const inStock = product.stock_quantity == null || Number(product.stock_quantity) > 0;
     return '<div class="z-reel-product"><img src="' + esc(product.image_url || '') + '" alt="" loading="lazy"><span><strong>' + esc(product.title) + '</strong><small>TSh ' + Number(product.price || 0).toLocaleString('en-TZ') + (inStock ? ' · Inapatikana' : ' · Imeisha') + '</small><div class="z-reel-product-actions"><button type="button" class="secondary" data-reel-product="' + esc(reel.id) + '" data-product-id="' + esc(product.id) + '">Tazama</button><button type="button" data-reel-cart="' + esc(product.id) + '"' + (inStock ? '' : ' disabled') + '>Ongeza Cart</button></div></span></div>';
@@ -140,7 +142,7 @@ function cardHTML(reel) {
     '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">▣</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">♫</span><span>Sound</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">⚑</span><span>Report</span></button>' +
-    '</div><div class="z-reel-copy"><div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
+    '</div><div class="z-reel-copy">' + challengeHtml + '<div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
 }
 function visibleReels() {
   let list = state.reels.slice();
@@ -224,9 +226,10 @@ async function loadFeed() {
       creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').in('creator_id',creators) : Promise.resolve({data:[]}),
       ids.length ? ctx.db.from('zune_reel_products').select('reel_id,product_id,created_at').in('reel_id',ids).order('created_at',{ascending:true}) : Promise.resolve({data:[]}),
       ctx.user?.id && ids.length ? ctx.db.from('zune_reel_likes').select('reel_id').eq('user_id',ctx.user.id).in('reel_id',ids) : Promise.resolve({data:[]}),
-      ctx.user?.id && creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').eq('follower_id',ctx.user.id).in('creator_id',creators) : Promise.resolve({data:[]})
+      ctx.user?.id && creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').eq('follower_id',ctx.user.id).in('creator_id',creators) : Promise.resolve({data:[]}),
+      ids.length ? ctx.db.from('zune_reel_challenge_entries').select('reel_id,challenge:zune_reel_challenges!inner(title,hashtag)').eq('status','approved').in('reel_id',ids) : Promise.resolve({data:[]})
     ]);
-    const [likesRes,commentsRes,followsRes,reelProductsRes,userLikesRes,userFollowsRes] = optionalResults;
+    const [likesRes,commentsRes,followsRes,reelProductsRes,userLikesRes,userFollowsRes,challengeRes] = optionalResults;
     const tagRows = reelProductsRes?.data || [];
     const productIds = [...new Set([...tagRows.map(x => x.product_id),...reels.map(x => x.product_id).filter(Boolean)])];
     const productsRes = productIds.length
@@ -240,6 +243,7 @@ async function loadFeed() {
     const likeCounts = countBy(likesRes?.data,'reel_id');
     const commentCounts = countBy(commentsRes?.data,'reel_id');
     const followCounts = countBy(followsRes?.data,'creator_id');
+    const challengesByReel = (challengeRes?.data || []).reduce((map,row) => { (map[row.reel_id] ||= []).push(row.challenge); return map; },{});
     state.products = new Map((productsRes?.data || []).map(p => [p.id,p]));
     state.liked = new Set((userLikesRes?.data || []).map(x => x.reel_id));
     state.following = new Set((userFollowsRes?.data || []).map(x => x.creator_id));
@@ -273,7 +277,8 @@ async function loadFeed() {
       sound: soundMap.get(r.sound_id) || null,
       likes_count: likeCounts[r.id] || 0,
       comments_count: commentCounts[r.id] || 0,
-      followers_count: followCounts[r.creator_id] || 0
+      followers_count: followCounts[r.creator_id] || 0,
+      challenges: challengesByReel[r.id] || []
       });
     });
     renderFeed();
