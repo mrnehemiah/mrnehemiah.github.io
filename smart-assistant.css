@@ -14,3 +14,15 @@
 .z-assistant-support-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .z-assistant-support-links a{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid var(--z-assistant-border,rgba(127,127,127,.28));border-radius:12px;text-decoration:none;font-weight:600;font-size:.9em;color:inherit;background:rgba(127,127,127,.08)}
 .z-assistant-support-links a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+
+/* Voice conversation controls */
+.z-assistant-head-actions{display:flex;align-items:center;gap:8px}
+.z-assistant-speech-toggle,.z-assistant-mic{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;border:1px solid #ffffff55;border-radius:11px;background:#ffffff18;color:inherit;font-size:18px;cursor:pointer}
+.z-assistant-speech-toggle[aria-pressed="false"]{opacity:.65}
+.z-assistant-mic{flex:0 0 42px;border:1px solid #dce7df;background:#f5faf7;color:#087b50}
+.z-assistant-mic.is-listening{background:#fee8e8;border-color:#e99;color:#b42318;animation:zAssistantMicPulse 1s ease-in-out infinite}
+.z-assistant-voice-status{min-height:0;padding:0 12px;color:#617267;font-size:11px}
+.z-assistant-voice-status:not(:empty){padding-top:5px}
+.z-assistant-form{align-items:center}
+@keyframes zAssistantMicPulse{50%{transform:scale(1.06);box-shadow:0 0 0 5px #e5484d20}}
+@media(prefers-reduced-motion:reduce){.z-assistant-mic.is-listening{animation:none}}
