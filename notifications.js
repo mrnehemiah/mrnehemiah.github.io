@@ -479,7 +479,7 @@ function actionLabel(notification, action, index) {
   };
   return labels[String(notification.type || "").toLowerCase()] || (index ? (sw ? "Endelea" : "Continue") : (sw ? "Fungua maelezo" : "Open details"));
 }
-function renderNotificationPreview(notification) {
+async function renderNotificationPreview(notification) {
   if (!preview) return;
   const title = currentLanguage === "en" ? notification.title_en : notification.title_sw;
   const body = currentLanguage === "en" ? notification.body_en : notification.body_sw;
@@ -492,7 +492,15 @@ function renderNotificationPreview(notification) {
   previewType.textContent = String(notification.type || "general").replace(/[_-]+/g, " ").toUpperCase();
   previewUnread.hidden = !!notification.is_read;
   previewDetails.replaceChildren();
-  addPreviewDetail("Order ID", data.public_order_id || data.order_number || data.order_id || data.reference);
+  let displayOrderId=data.public_order_id||data.order_number||null;
+  if(!displayOrderId&&(data.order_id||data.checkout_id)){
+    let orderLookup=supabase.from("orders").select("public_order_id,order_number").limit(1);
+    orderLookup=data.order_id?orderLookup.eq("id",data.order_id):orderLookup.eq("checkout_id",data.checkout_id);
+    const {data:matchedOrder,error:orderLookupError}=await orderLookup.maybeSingle();
+    if(orderLookupError)console.warn("Notification Order ID lookup:",orderLookupError.message);
+    displayOrderId=matchedOrder?.public_order_id||matchedOrder?.order_number||null;
+  }
+  addPreviewDetail("Order ID",displayOrderId||(!data.order_id&&!data.checkout_id?data.reference:null));
   addPreviewDetail(currentLanguage === "sw" ? "Bidhaa" : "Product", data.product_name || data.product_title);
   addPreviewDetail(currentLanguage === "sw" ? "Idadi" : "Quantity", data.quantity);
   addPreviewDetail(currentLanguage === "sw" ? "Jumla" : "Total", data.total_amount ? (data.currency || "TSh") + " " + data.total_amount : null);
@@ -536,7 +544,7 @@ function setupNotificationPreview() {
 async function openNotification(notification) {
   const marked = await markAsRead(notification);
   if (!marked) return;
-  renderNotificationPreview(notification);
+  await renderNotificationPreview(notification);
 }
 
 /* =========================================
