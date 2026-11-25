@@ -17,8 +17,6 @@ export async function openZuneAssistant({
  loadProducts
 }) {
  const sw=language()==="sw";document.getElementById("zune-assistant-overlay")?.remove();
- const overlay=document.createElement("div");overlay.id="zune-assistant-overlay";overlay.className="z-assistant-overlay";
-
  const overlay=document.createElement("div");
  overlay.id="zune-assistant-overlay";
  overlay.className="z-assistant-overlay";
