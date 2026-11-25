@@ -261,8 +261,6 @@ async function openComments(reelId) {
 function bindEvents() {
   const root = state.root;
   root.querySelector('[data-open-cart]')?.addEventListener('click',state.context.onCart);
-  root.querySelector('[data-reels-explore]')?.addEventListener('click',state.context.onExplore);
-  root.querySelector('[data-reels-retry]')?.addEventListener('click',loadFeed);
   root.querySelector('#z-reels-search')?.addEventListener('input',e => { state.search = e.target.value; renderFeed(); });
   root.querySelectorAll('[data-reels-tab]').forEach(button => button.addEventListener('click',() => {
     state.tab = button.dataset.reelsTab;
@@ -270,6 +268,10 @@ function bindEvents() {
     renderFeed();
   }));
   root.addEventListener('click',async e => {
+    const explore = e.target.closest('[data-reels-explore]');
+    const retry = e.target.closest('[data-reels-retry]');
+    if (explore) return state.context.onExplore();
+    if (retry) return loadFeed();
     const like = e.target.closest('[data-reel-like]');
     const follow = e.target.closest('[data-reel-follow]');
     const comments = e.target.closest('[data-reel-comments]');
