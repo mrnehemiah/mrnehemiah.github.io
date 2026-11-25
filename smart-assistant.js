@@ -1,4 +1,4 @@
-import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-5";
+import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-6";
 import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
 
 /**
@@ -33,7 +33,7 @@ export async function openZuneAssistant({
   console.error("ZUNE Smart Assistant template:",error);
   return;
  }
- const chips=sw?["Natafuta simu","Maduka Dar es Salaam","Bidhaa zenye punguzo","Jinsi ya kufuatilia oda?","Njia za malipo"]:["Find phones","Stores in Dar es Salaam","Discounted products","Track my order","Payment methods"];
+ const chips=sw?["Natafuta simu","Maduka Dar es Salaam","Bidhaa zenye punguzo","Oda zangu","Mapendekezo","Tafuta kwa picha","Reels","Fungua Support Ticket"]:["Find phones","Stores in Dar es Salaam","Discounted products","My orders","Recommendations","Search by image","Reels","Open Support Ticket"];
  const welcome=overlay.querySelector("[data-assistant-welcome]");
  if(welcome) welcome.textContent=sw?"Karibu ZUNE Market! Mimi ni ZUNE Smart Assistant. Uliza kuhusu bidhaa, maduka, chapa, Reels, ofa, oda, malipo, delivery au jinsi ya kutumia huduma za Marketplace.":"Welcome to ZUNE Market! I’m ZUNE Smart Assistant. Ask about products, stores, brands, Reels, deals, orders, payments, delivery or how to use Marketplace services.";
  const chipContainer=overlay.querySelector("[data-assistant-chips]");
@@ -164,6 +164,67 @@ export async function openZuneAssistant({
   return Promise.resolve(d);
  };
  const supportLinks=()=>`<div class="z-assistant-support-links"><a href="https://wa.me/255691067855?text=Habari%20ZUNE%20Market%20Support" target="_blank" rel="noopener noreferrer">Chat na Support kupitia WhatsApp</a><a href="https://whatsapp.com/channel/0029Vb98cx12v1J0skZQ5K36" target="_blank" rel="noopener noreferrer">ZUNE Market WhatsApp Channel</a></div>`;
+
+ let assistantStats={queries:0,productsShown:0,ordersLookups:0,ticketsCreated:0};
+ const openAssistantPage=page=>{close();renderMarketplacePage(page);};
+ const bindActionCards=root=>root?.querySelectorAll("[data-assistant-action]")?.forEach(button=>button.addEventListener("click",()=>{
+  const action=button.dataset.assistantAction;
+  if(action==="orders"){openAssistantPage("me");return;}
+  const page={explore:"explore",cart:"cart",saved:"saved",account:"me",features:"features",reels:"reels",live:"live"}[action];
+  if(page)openAssistantPage(page);
+ }));
+ const showActionCards=()=>{
+  const labels=sw?[["explore","Tafuta bidhaa"],["cart","Kikapu"],["saved","Wishlist"],["orders","Oda zangu"],["features","Shopping Tools"],["reels","ZUNE Reels"],["account","Akaunti"],["live","Live"]]:[["explore","Explore products"],["cart","Cart"],["saved","Wishlist"],["orders","My orders"],["features","Shopping Tools"],["reels","ZUNE Reels"],["account","Account"],["live","Live"]];
+  const node=say((sw?"Chagua hatua unayotaka:":"Choose an action:")+'<div class="z-assistant-action-grid">'+labels.map(([key,label])=>'<button type="button" data-assistant-action="'+key+'">'+safe(label)+' <span>›</span></button>').join("")+'</div>');
+  Promise.resolve(node).then(bindActionCards);
+ };
+ const openImageSearch=()=>{
+  close();
+  if(homeState.activeTab!=="home"&&homeState.activeTab!=="explore")renderMarketplacePage("home").then(()=>setTimeout(()=>document.getElementById("z-search-image")?.click(),250));
+  else document.getElementById("z-search-image")?.click();
+ };
+ const showSupportTicketForm=()=>{
+  if(!homeState.user?.id){say(sw?"Ingia kwenye akaunti kwanza ili kufungua Support Ticket.":"Sign in first to create a Support Ticket.");return;}
+  const form=document.createElement("form");form.className="z-assistant-ticket-form";
+  const heading=document.createElement("strong");heading.textContent=sw?"Fungua ombi la msaada":"Create a support ticket";
+  const category=document.createElement("select");category.required=true;
+  [["Order","Oda"],["Account","Akaunti"],["Payment","Malipo"],["Delivery","Delivery"],["Product","Bidhaa"],["Technical","Tatizo la mfumo"],["Other","Nyingine"]].forEach(([en,swLabel])=>{const o=document.createElement("option");o.value=en;o.textContent=sw?swLabel:en;category.appendChild(o);});
+  const message=document.createElement("textarea");message.required=true;message.maxLength=1500;message.rows=4;message.placeholder=sw?"Eleza tatizo lako kwa ufupi (usiweke PIN, OTP au nenosiri).":"Describe the issue briefly (never include PIN, OTP or password).";
+  const submit=document.createElement("button");submit.type="submit";submit.textContent=sw?"Tuma ombi":"Submit ticket";
+  const note=document.createElement("small");note.textContent=sw?"Usijumuishe taarifa za siri.":"Do not include passwords, PINs or OTPs.";
+  form.append(heading,category,message,submit,note);box.appendChild(form);box.scrollTop=box.scrollHeight;
+  form.addEventListener("submit",async event=>{
+   event.preventDefault();if(!message.value.trim())return;submit.disabled=true;submit.textContent=sw?"Inatuma...":"Submitting...";
+   const payload={user_id:homeState.user.id,customer_name:String(homeState.accountProfile?.full_name||homeState.user.user_metadata?.full_name||"").slice(0,120),category:category.value,message:message.value.trim().slice(0,1500),status:"open"};
+   const result=await supabase.from("support_tickets").insert(payload).select("id").single();
+   if(result.error){submit.disabled=false;submit.textContent=sw?"Jaribu tena":"Try again";say(sw?"Ombi halikutumwa. Jaribu tena au tumia WhatsApp Support.":"Ticket submission failed. Try again or contact WhatsApp Support.");return;}
+   assistantStats.ticketsCreated++;form.remove();say((sw?"Ombi limepokelewa. Namba ya tiketi: ":"Ticket created. Ticket ID: ")+safe(String(result.data?.id||"").slice(0,8))+"…");
+  });
+ };
+ const showAssistantReport=()=>say((sw?"Ripoti ya kipindi hiki":"This-session assistant report")+':<div class="z-assistant-report-grid"><div><b>'+assistantStats.queries+'</b><small>'+(sw?"Maswali":"Questions")+'</small></div><div><b>'+assistantStats.productsShown+'</b><small>'+(sw?"Bidhaa":"Products shown")+'</small></div><div><b>'+assistantStats.ordersLookups+'</b><small>'+(sw?"Ukaguzi wa oda":"Order lookups")+'</small></div><div><b>'+assistantStats.ticketsCreated+'</b><small>'+(sw?"Tiketi":"Tickets created")+'</small></div></div><small>'+(sw?"Takwimu ni za session hii tu; hazitumwi kama analytics.":"Session-only counters; not sent as analytics.")+'</small>');
+ const showMarketplaceIntelligence=async()=>{
+  say(sw?"Ninakagua taarifa za Marketplace...":"Checking Marketplace data...");
+  const [p,s,c,r]=await Promise.all([
+   supabase.from("products").select("id",{count:"exact",head:true}).is("removed_at",null).is("seller_archived_at",null),
+   supabase.from("stores").select("id",{count:"exact",head:true}).eq("is_active",true),
+   supabase.from("product_categories").select("id",{count:"exact",head:true}).eq("is_active",true),
+   supabase.from("zune_reels").select("id",{count:"exact",head:true}).eq("status","published")
+  ]);
+  const fmt=x=>x.error?"—":String(x.count??0);
+  say((sw?"Muhtasari wa Marketplace:":"Marketplace overview:")+'<div class="z-assistant-report-grid"><div><b>'+fmt(p)+'</b><small>Products</small></div><div><b>'+fmt(s)+'</b><small>Stores</small></div><div><b>'+fmt(c)+'</b><small>Categories</small></div><div><b>'+fmt(r)+'</b><small>Published Reels</small></div></div><small>'+(sw?"— inaonyesha sehemu ambayo data haikupatikana. Brand haihesabiwi kwa sababu products haina safu ya brand.":"— means data was unavailable. Brand is not counted because products has no brand column.")+'</small>');
+ };
+ const showRecommendations=async()=>{
+  const tokens=getSwahiliSearchTokens(lastContextQuery||homeState.search||"").filter(x=>x.length>2);
+  const result=await supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).order("created_at",{ascending:false}).limit(40);
+  if(result.error){say(sw?"Mapendekezo hayapatikani kwa sasa.":"Recommendations are unavailable right now.");return;}
+  const rows=(result.data||[]).map(p=>{const text=normalizeSwahiliQuery([p.title,p.description,p.category].filter(Boolean).join(" "));const score=tokens.reduce((sum,t)=>sum+(text.includes(t)?1:0),0)+(Number(p.stock_quantity)>0?.25:0);return{p,score};}).sort((a,b)=>b.score-a.score);
+  const selected=rows.slice(0,6).map(x=>x.p);
+  if(!selected.length){say(sw?"Hakuna bidhaa za kupendekeza kwa sasa.":"No products are currently available to recommend.");return;}
+  assistantStats.productsShown+=selected.length;
+  const node=say((sw?"Mapendekezo kutoka bidhaa zilizopo":"Recommendations from listed Marketplace products")+'<div class="z-assistant-recommendations">'+selected.map(p=>'<div><b>'+safe(p.title||"Product")+'</b><small>'+safe(money(Number(p.price||0)))+' · '+(Number(p.stock_quantity)>0?(sw?"Inapatikana":"In stock"):(sw?"Stock haijathibitishwa":"Stock not confirmed"))+'</small><button type="button" data-assistant-product="'+safe(p.id)+'">'+(sw?"Angalia bidhaa":"View product")+'</button></div>').join("")+'</div><small>'+(sw?"Yamepangwa kwa ulinganifu wa mada na stock inayoonekana.":"Ranked by topic overlap and visible stock.")+'</small>');
+  Promise.resolve(node).then(root=>root.querySelectorAll("[data-assistant-product]").forEach(button=>button.addEventListener("click",()=>{const p=selected.find(x=>String(x.id)===button.dataset.assistantProduct);if(p){close();openProductDetails(p);}})));
+ };
+
   const remember=q=>{if(!memoryUserId||memoryConsent!=="granted"||sensitiveMemoryQuery(q))return;const key="zune_search_history:"+memoryUserId;try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
  const memoryRoot=overlay.querySelector("[data-assistant-memory]");
  const memoryPrompt=overlay.querySelector("[data-assistant-memory-prompt]");
@@ -284,11 +345,28 @@ export async function openZuneAssistant({
   const activeSearchText=followUp&&previousContextQuery?previousContextQuery:q;
   const chatReply=smallTalkReply(q);
   if(chatReply){say(chatReply);return;}
+  assistantStats.queries++;
   remember(q);
+  if(/(?:support ticket|ticket ya msaada|fungua tiketi|fungua ticket|create ticket)/i.test(n)){showSupportTicketForm();return;}
+  if(/(?:ripoti ya assistant|assistant report|usage report|ripoti ya matumizi)/i.test(n)){showAssistantReport();return;}
+  if(/(?:search by image|visual search|tafuta kwa picha|kutafuta kwa picha|picha ya bidhaa)/i.test(n)){openImageSearch();return;}
+  if(/(?:recommend|mapendekezo|nipendekezee|pendekeza bidhaa)/i.test(n)){showRecommendations();return;}
+  if(/(?:marketplace overview|marketplace intelligence|muhtasari wa marketplace|takwimu za marketplace|hali ya marketplace)/i.test(n)){showMarketplaceIntelligence();return;}
+  if(/(?:show actions|action cards|quick actions|vitendo vya haraka|menu ya assistant)/i.test(n)){showActionCards();return;}
+  if(/(?:open reels|zune reels|angalia reels|video fupi)/i.test(n)){openAssistantPage("reels");return;}
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
   if(knowledge){lastKnowledgeTopic=knowledge.topic;saveContextMemory(q);if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
   saveContextMemory(followUp&&previousContextQuery?previousContextQuery:q);
-  if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
+  if(has("track","fuatilia","hali ya oda","order status","oda zangu","my orders")){
+   if(!homeState.user?.id){say(sw?"Ingia kwenye akaunti yako ili kuona oda zako binafsi.":"Sign in to view your private orders.");return;}
+   assistantStats.ordersLookups++;
+   const result=await supabase.from("orders").select("id,order_number,public_order_id,status,payment_status,created_at,total_price").eq("buyer_id",homeState.user.id).order("created_at",{ascending:false}).limit(6);
+   if(result.error){say(sw?"Sijaweza kusoma oda zako kwa sasa. Fungua Akaunti kisha Oda Zangu au wasiliana na Support.":"I could not read your orders right now. Open Account → My Orders or contact Support.");return;}
+   const orders=result.data||[];
+   if(!orders.length){say(sw?"Sijaona oda kwenye akaunti hii bado.":"No orders were found for this account yet.");return;}
+   const cards=orders.map(o=>'<div class="z-assistant-order"><b>'+(sw?"Oda ":"Order ")+safe(o.order_number||o.public_order_id||String(o.id).slice(0,8))+'</b><small>'+safe(String(o.status||"unknown"))+' · '+safe(String(o.payment_status||"payment status not listed"))+' · '+safe(money(Number(o.total_price||0)))+'</small><small>'+safe(o.created_at?new Date(o.created_at).toLocaleDateString(sw?"sw-TZ":"en-US"):"")+'</small></div>').join("");
+   say((sw?"Oda zako za hivi karibuni (akaunti yako tu):":"Your recent orders (your account only):")+cards+'<button type="button" data-assistant-action="orders">'+(sw?"Fungua Oda Zangu":"Open My Orders")+'</button>');return;
+  }
   if(has("oda","order","nunua","buy","agiz","cart","kikapu")){say(sw?"Fungua bidhaa, chagua variant na idadi, kisha bonyeza Weka Kikapuni. Fungua Kikapu kuendelea na checkout.":"Open a product, choose a variant and quantity, then tap Add to Cart. Open your Cart to continue checkout.");return;}
   if(has("delivery","usafiri","dereva","driver","kusafir","fikisha")){say(sw?"Delivery hutegemea duka, bidhaa na eneo lako. Thibitisha upatikanaji, gharama na muda wa kufikishiwa na duka kabla ya kulipa.":"Delivery depends on the store, product and your location. Confirm availability, cost and timing with the store before payment.");return;}
   if(has("malipo","payment","lipa","kulipa","airtel","mpesa","tigopesa","mixx","visa","mastercard")){say(sw?"Njia halisi zinazopatikana kwa oda yako zitaonyeshwa kwenye checkout. Hakiki kiasi na mpokeaji kabla ya kuthibitisha.":"Payment methods available for your order are shown at checkout. Verify the amount and recipient before confirming.");return;}
@@ -333,7 +411,8 @@ export async function openZuneAssistant({
    ]);
    const comparisonProducts=wantsComparison?Array.from(new Map(comparisonRes.flatMap(r=>r.error?[]:(r.data||[])).map(p=>[String(p.id),p])).values()):[];
    const products=pRes.error?[]:(pRes.data||[]),stores=sRes.error?[]:(sRes.data||[]),categories=cRes.error?[]:(cRes.data||[]);
-   const brands=[...new Set(products.map(p=>p.brand||p.brand_name).filter(Boolean))].slice(0,8);
+   assistantStats.productsShown+=products.length;
+   const brands=[];
    const deals=products.filter(p=>Number(p.discount_percent||p.discount_percentage||p.discount||0)>0||Number(p.compare_at_price||p.original_price||0)>Number(p.price||0)).slice(0,6);
    if(wantsComparison){
     const chosen=comparisonProducts.slice(0,4);
