@@ -218,16 +218,21 @@ async function loadFeed() {
     }
     const ids = reels.map(x => x.id);
     const creators = [...new Set(reels.map(x => x.creator_id))];
-    const productIds = [...new Set(reels.map(x => x.product_id).filter(Boolean))];
     const optionalResults = await Promise.all([
       ids.length ? ctx.db.from('zune_reel_likes').select('reel_id').in('reel_id',ids) : Promise.resolve({data:[]}),
       ids.length ? ctx.db.from('zune_reel_comments').select('reel_id').in('reel_id',ids) : Promise.resolve({data:[]}),
       creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').in('creator_id',creators) : Promise.resolve({data:[]}),
-      productIds.length ? ctx.db.from('products').select('id,title,price,image_url,stock_quantity,vendor_id').in('id',productIds) : Promise.resolve({data:[]}),
+      ids.length ? ctx.db.from('zune_reel_products').select('reel_id,product_id,created_at').in('reel_id',ids).order('created_at',{ascending:true}) : Promise.resolve({data:[]}),
       ctx.user?.id && ids.length ? ctx.db.from('zune_reel_likes').select('reel_id').eq('user_id',ctx.user.id).in('reel_id',ids) : Promise.resolve({data:[]}),
       ctx.user?.id && creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').eq('follower_id',ctx.user.id).in('creator_id',creators) : Promise.resolve({data:[]})
     ]);
-    const [likesRes,commentsRes,followsRes,productsRes,userLikesRes,userFollowsRes] = optionalResults;
+    const [likesRes,commentsRes,followsRes,reelProductsRes,userLikesRes,userFollowsRes] = optionalResults;
+    const tagRows = reelProductsRes?.data || [];
+    const productIds = [...new Set([...tagRows.map(x => x.product_id),...reels.map(x => x.product_id).filter(Boolean)])];
+    const productsRes = productIds.length
+      ? await ctx.db.from('products').select('id,title,price,image_url,stock_quantity,vendor_id,moderation_status,removed_at,seller_archived_at').in('id',productIds)
+      : {data:[]};
+    const tagsByReel = tagRows.reduce((map,row) => { (map[row.reel_id] ||= []).push(row.product_id); return map; },{});
     const optionalErrors = optionalResults.filter(r => r && r.error);
     optionalErrors.forEach(r => console.warn('ZUNE Reels optional data unavailable:',r.error.message || r.error));
 
@@ -259,13 +264,18 @@ async function loadFeed() {
     }
     state.viewed = new Set();
     try { state.sessionKey = sessionStorage.getItem('zune_reel_view_session') || ''; if (!state.sessionKey) { state.sessionKey = crypto.randomUUID(); sessionStorage.setItem('zune_reel_view_session',state.sessionKey); } } catch (_) { state.sessionKey = crypto.randomUUID(); }
-    state.reels = reels.map(r => Object.assign({},r,{
-      product: state.products.get(r.product_id) || null,
+    state.reels = reels.map(r => {
+      const taggedIds = tagsByReel[r.id]?.length ? tagsByReel[r.id] : (r.product_id ? [r.product_id] : []);
+      const taggedProducts = taggedIds.slice(0,10).map(id => state.products.get(id)).filter(p => p && p.moderation_status === 'approved' && !p.removed_at && !p.seller_archived_at);
+      return Object.assign({},r,{
+      products: taggedProducts,
+      product: taggedProducts[0] || null,
       sound: soundMap.get(r.sound_id) || null,
       likes_count: likeCounts[r.id] || 0,
       comments_count: commentCounts[r.id] || 0,
       followers_count: followCounts[r.creator_id] || 0
-    }));
+      });
+    });
     renderFeed();
     if (requestedReel) state.root.querySelector('[data-reel-card="' + CSS.escape(requestedReel) + '"]')?.scrollIntoView({behavior:'smooth',block:'center'});
   } catch (error) {
@@ -381,7 +391,7 @@ async function openComments(reelId) {
   if (!reel) return;
   const db = state.context.db;
   const {data,error} = await db.from('zune_reel_comments')
-    .select('id,reel_id,user_id,body,created_at,author:profiles!zune_reel_comments_user_id_fkey(full_name,role,is_verified)')
+    .select('id,reel_id,user_id,parent_comment_id,body,created_at,author:profiles!zune_reel_comments_user_id_fkey(full_name,role,is_verified)')
     .eq('reel_id',reelId).order('created_at',{ascending:true}).limit(100);
   if (error) { toast(error.message || 'Maoni hayajapakia.'); return; }
   const comments = data || [];
@@ -395,14 +405,29 @@ async function openComments(reelId) {
   }
   const counts = likeRows.reduce((out,row) => { out[row.comment_id]=(out[row.comment_id]||0)+1; return out; },{});
   const liked = new Set(likeRows.filter(row => row.user_id === state.context.user?.id).map(row => row.comment_id));
+  const replyTarget = {id:null,name:''};
+  const renderComment = c => '<div class="z-reel-comment" data-comment-row="' + esc(c.id) + '"><div class="z-reel-comment-main"><strong>' + esc(c.author?.full_name || 'Mtumiaji') + (c.author?.is_verified ? ' ✓' : '') + '</strong>' + esc(c.body) + '<time>' + new Date(c.created_at).toLocaleString('sw-TZ') + '</time><button type="button" data-reply-comment="' + esc(c.id) + '" style="border:0;background:transparent;color:#A78BFA;padding:5px 0;font-size:10px;font-weight:800">Jibu</button></div>' + (likeFeatureAvailable ? '<button type="button" class="z-reel-comment-like ' + (liked.has(c.id) ? 'active' : '') + '" data-comment-like="' + esc(c.id) + '">' + (liked.has(c.id) ? '♥' : '♡') + ' <span>' + Number(counts[c.id] || 0) + '</span></button>' : '') + '</div>';
+  const rootComments = comments.filter(c => !c.parent_comment_id);
+  const commentMarkup = rootComments.map(c => renderComment(c) + comments.filter(reply => reply.parent_comment_id === c.id).map(reply => '<div style="margin-left:38px;border-left:2px solid #A78BFA55;padding-left:10px">' + renderComment(reply) + '</div>').join('')).join('');
   const backdrop = document.createElement('div');
   backdrop.className = 'z-reel-comments-backdrop';
   backdrop.innerHTML = '<section class="z-reel-comments" role="dialog" aria-modal="true" aria-label="Maoni"><div class="z-reel-comments-head"><strong>Maoni (' + comments.length + ')</strong><button type="button" data-close-comments aria-label="Funga">×</button></div><div class="z-reel-comments-list">' +
-    (comments.length ? comments.map(c => '<div class="z-reel-comment"><div class="z-reel-comment-main"><strong>' + esc(c.author?.full_name || 'Mtumiaji') + (c.author?.is_verified ? ' ✓' : '') + '</strong>' + esc(c.body) + '<time>' + new Date(c.created_at).toLocaleString('sw-TZ') + '</time></div>' + (likeFeatureAvailable ? '<button type="button" class="z-reel-comment-like ' + (liked.has(c.id) ? 'active' : '') + '" data-comment-like="' + esc(c.id) + '">' + (liked.has(c.id) ? '♥' : '♡') + ' <span>' + Number(counts[c.id] || 0) + '</span></button>' : '') + '</div>').join('') : '<p class="z-reels-empty">Bado hakuna maoni. Anza mazungumzo.</p>') +
+    (comments.length ? commentMarkup : '<p class="z-reels-empty">Bado hakuna maoni. Anza mazungumzo.</p>') +
     '</div><form class="z-reel-comment-form"><input name="body" maxlength="1000" placeholder="Andika maoni yako..." required><button type="submit">Tuma</button></form></section>';
   state.root.appendChild(backdrop);
   backdrop.querySelector('[data-close-comments]').onclick = () => backdrop.remove();
   backdrop.addEventListener('click',e => { if (e.target === backdrop) backdrop.remove(); });
+  backdrop.addEventListener('click',e => {
+    const reply = e.target.closest('[data-reply-comment]');
+    if (!reply) return;
+    const target = comments.find(c => c.id === reply.dataset.replyComment);
+    if (!target) return;
+    replyTarget.id = target.id;
+    replyTarget.name = target.author?.full_name || 'mtumiaji';
+    const input = backdrop.querySelector('input[name="body"]');
+    input.placeholder = 'Jibu kwa ' + replyTarget.name + '...';
+    input.focus();
+  });
   backdrop.addEventListener('click',async e => {
     const button = e.target.closest('[data-comment-like]');
     if (!button || !requireUser()) return;
@@ -429,7 +454,7 @@ async function openComments(reelId) {
     if (!body) return;
     const send = e.currentTarget.querySelector('button'); send.disabled = true;
     try {
-      const {error:insertError} = await db.from('zune_reel_comments').insert({reel_id:reelId,user_id:state.context.user.id,body});
+      const {error:insertError} = await db.from('zune_reel_comments').insert({reel_id:reelId,user_id:state.context.user.id,parent_comment_id:replyTarget.id,body});
       if (insertError) throw insertError;
       toast('Maoni yametumwa.');
       backdrop.remove();
