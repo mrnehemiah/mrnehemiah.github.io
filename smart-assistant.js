@@ -280,8 +280,8 @@ export async function openZuneAssistant({
   const previousContextQuery=lastContextQuery;
   say(safe(q),true);field.value="";
   const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
-  const followUp=/^(?:bei yake|bei gani|na nyingine|na hii|hiyo|hiyo je|vipi kuhusu|na kuhusu|what about|its price|how much is it|and this|that one|another one|more like this)(?:\s|$)/i.test(n);
-  const activeSearchText=followUp&&previousContextQuery?previousContextQuery+" "+q:q;
+  const followUp=/^(?:bei yake|bei gani|na nyingine|na hii|hiyo|hiyo je|its price|how much is it|and this|that one|another one|more like this)(?:\s|$)/i.test(n);
+  const activeSearchText=followUp&&previousContextQuery?previousContextQuery:q;
   const chatReply=smallTalkReply(q);
   if(chatReply){say(chatReply);return;}
   remember(q);
