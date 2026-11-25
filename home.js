@@ -2744,7 +2744,7 @@ function openZuneAssistant(){
    box.querySelectorAll("[data-assistant-store]").forEach(b=>b.onclick=()=>{close();openStoreDetails(b.dataset.assistantStore);});
    box.querySelectorAll("[data-assistant-category]").forEach(b=>b.onclick=()=>{close();homeState.search="";homeState.selectedCategory=b.dataset.assistantCategory;homeState.page=0;homeState.products=[];homeState.hasMore=true;renderMarketplacePage("explore");loadProducts(true);});
   }catch(e){console.error("ZUNE Universal Search assistant:",e);faq(sw?"Utafutaji umeshindwa kwa sasa. Tafadhali jaribu tena baada ya muda.":"Search is temporarily unavailable. Please try again shortly.");}
- }
+ };
  overlay.querySelector("#z-assistant-form").onsubmit=e=>{e.preventDefault();ask(field.value);};
  overlay.querySelectorAll(".z-assistant-chip").forEach(b=>b.onclick=()=>ask(b.textContent));field.focus();
 }
