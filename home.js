@@ -2575,6 +2575,81 @@ function openSearchImagePicker(){
  const picker=document.getElementById("z-search-image-file");picker?.click();
 }
 
+function imageSearchUrls(product){
+ let images=Array.isArray(product.image_urls)?product.image_urls:[];
+ if(typeof product.image_urls==="string"){try{const parsed=JSON.parse(product.image_urls);if(Array.isArray(parsed))images=parsed;}catch(_){images=product.image_urls.trim()?[product.image_urls.trim()]:[];}}
+ images=images.map(item=>typeof item==="string"?item:(item&&typeof item==="object"?(item.url||item.publicUrl||item.public_url||item.src||""):"")).filter(Boolean);
+ if(product.image_url&&!images.includes(product.image_url))images.unshift(product.image_url);
+ return [...new Set(images)];
+}
+function imageDescriptor(image){
+ const size=32,canvas=document.createElement("canvas");canvas.width=size;canvas.height=size;
+ const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(image,0,0,size,size);
+ const pixels=ctx.getImageData(0,0,size,size).data,gray=[];
+ let red=0,green=0,blue=0,count=0;
+ for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+  let r=0,g=0,b=0,n=0;
+  for(let yy=0;yy<4;yy++)for(let xx=0;xx<4;xx++){const i=(((y*4+yy)*size)+(x*4+xx))*4;r+=pixels[i];g+=pixels[i+1];b+=pixels[i+2];n++;}
+  r/=n;g/=n;b/=n;gray.push(.299*r+.587*g+.114*b);red+=r;green+=g;blue+=b;count++;
+ }
+ const mean=gray.reduce((a,b)=>a+b,0)/gray.length;
+ return {bits:gray.map(v=>v>=mean?1:0),color:[red/count,green/count,blue/count]};
+}
+function imageDistance(a,b){
+ let different=0;for(let i=0;i<a.bits.length;i++)if(a.bits[i]!==b.bits[i])different++;
+ const color=Math.sqrt((a.color[0]-b.color[0])**2+(a.color[1]-b.color[1])**2+(a.color[2]-b.color[2])**2)/441.67;
+ return different/64*.78+color*.22;
+}
+function loadImageForSearch(url){
+ return new Promise((resolve,reject)=>{
+  const image=new Image();image.crossOrigin="anonymous";image.decoding="async";
+  const timer=setTimeout(()=>{image.src="";reject(new Error("Image timeout"));},9000);
+  image.onload=()=>{clearTimeout(timer);try{resolve(imageDescriptor(image));}catch(error){reject(error);}};
+  image.onerror=()=>{clearTimeout(timer);reject(new Error("Image unavailable for visual comparison"));};
+  image.src=url;
+ });
+}
+async function runVisualProductSearch(file,overlay,previewUrl){
+ const status=overlay.querySelector(".z-search-image-note"),results=overlay.querySelector(".z-search-image-results"),run=overlay.querySelector("#z-search-image-run");
+ if(!homeState.user?.id){status.textContent=language()==="sw"?"Ingia kwenye akaunti yako ili kutafuta bidhaa kwa picha.":"Sign in to search products by image.";return;}
+ run.disabled=true;run.textContent=language()==="sw"?"Inalinganisha picha...":"Matching images...";
+ status.textContent=language()==="sw"?"Inachambua picha na kulinganisha na picha za bidhaa zilizopo...":"Analyzing your image and comparing it with marketplace product photos...";
+ results.innerHTML="";
+ try{
+  const uploaded=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{try{resolve(imageDescriptor(image));}catch(e){reject(e);}};image.onerror=()=>reject(new Error("Could not read selected image"));image.src=previewUrl;});
+  const {data,error}=await supabase.from("products").select("id,title,price,image_url,image_urls,vendor_id,stock_quantity,moderation_status").eq("moderation_status","approved").gt("stock_quantity",0).limit(80);
+  if(error)throw error;
+  const candidates=(data||[]).filter(p=>imageSearchUrls(p).length);
+  let cursor=0,matched=[],unavailable=0;
+  async function worker(){
+   while(cursor<candidates.length){
+    const product=candidates[cursor++];
+    try{
+     const descriptor=await loadImageForSearch(imageSearchUrls(product)[0]);
+     matched.push({product,score:imageDistance(uploaded,descriptor)});
+    }catch(_){unavailable++;}
+   }
+  }
+  await Promise.all(Array.from({length:Math.min(5,candidates.length)},()=>worker()));
+  matched.sort((a,b)=>a.score-b.score);
+  const top=matched.filter(item=>item.score<.43).slice(0,12);
+  if(!top.length){
+   status.textContent=language()==="sw"?"Hakuna bidhaa inayofanana vya kutosha kwenye picha zilizopo. Jaribu picha nyingine iliyo wazi.":"No close visual matches were found in the available product photos. Try a clearer image.";
+   results.innerHTML='<div class="z-image-search-empty">⌕<br>'+ (language()==="sw"?"Hakuna bidhaa zinazofanana kwa sasa.":"No similar products found yet.")+'</div>';
+  }else{
+   status.textContent=(language()==="sw"?"Bidhaa zinazofanana zaidi: ":"Closest visual matches: ")+top.length+(unavailable?" · "+unavailable+(language()==="sw"?" picha hazikuweza kuchambuliwa":" images could not be checked"):"");
+   results.innerHTML=top.map((item,index)=>'<button type="button" class="z-image-search-result" data-image-result="'+safe(item.product.id)+'"><span class="z-image-search-thumb">'+productImage(item.product)+'</span><span class="z-image-search-copy"><strong>'+safe(item.product.title||"Product")+'</strong><small>'+money(item.product.price)+'</small></span><span class="z-image-search-score">'+Math.max(1,Math.round((1-item.score)*100))+'%</span></button>').join("");
+   results.querySelectorAll("[data-image-result]").forEach(button=>button.addEventListener("click",()=>{
+    const product=top.find(item=>String(item.product.id)===button.dataset.imageResult)?.product;
+    if(product){overlay.remove();openProductDetails(product);}
+   }));
+  }
+ }catch(error){
+  console.error("ZUNE visual search:",error);
+  status.textContent=language()==="sw"?"Imeshindikana kuchambua picha. Hakikisha picha na muunganisho viko sawa, kisha jaribu tena.":"Image matching failed. Check the image and connection, then try again.";
+  results.innerHTML='<div class="z-image-search-empty">'+(language()==="sw"?"Tafadhali jaribu tena.":"Please try again.")+'</div>';
+ }finally{run.disabled=false;run.textContent=language()==="sw"?"Tafuta bidhaa zinazofanana":"Find similar products";}
+}
 function showSearchImagePreview(file){
  if(!file)return;
  if(!file.type.startsWith("image/")){alert(language()==="sw"?"Chagua faili la picha.":"Please choose an image file.");return;}
@@ -2582,21 +2657,15 @@ function showSearchImagePreview(file){
  const reader=new FileReader();
  reader.onload=()=>{
   document.getElementById("z-search-image-preview")?.remove();
-  const overlay=document.createElement("div");overlay.id="z-search-image-preview";overlay.className="z-search-image-preview";
-  overlay.innerHTML=`<section class="z-search-image-sheet" role="dialog" aria-modal="true" aria-label="Image search">
-   <div class="z-search-sheet-head"><h3>${language()==="sw"?"Tafuta kwa picha":"Search by image"}</h3><button type="button" class="z-search-sheet-close">×</button></div>
-   <img src="${String(reader.result)}" alt="Selected search image">
-   <p class="z-search-image-note">${language()==="sw"?"Picha imechaguliwa. Ulinganishaji wa picha na bidhaa unahitaji huduma ya image-search backend ambayo bado haijaunganishwa.":"Image selected. Matching this image against marketplace products requires an image-search backend that is not connected yet."}</p>
-   <button type="button" class="z-search-filter-apply" style="width:100%;min-height:44px;border:0;border-radius:12px" id="z-search-image-close">${language()==="sw"?"Sawa":"Got it"}</button>
-  </section>`;
+  const previewUrl=String(reader.result),overlay=document.createElement("div");overlay.id="z-search-image-preview";overlay.className="z-search-image-preview";
+  overlay.innerHTML='<section class="z-search-image-sheet" role="dialog" aria-modal="true" aria-label="Image search"><div class="z-search-sheet-head"><h3>'+(language()==="sw"?"Tafuta kwa picha":"Search by image")+'</h3><button type="button" class="z-search-sheet-close" aria-label="Close">×</button></div><img src="'+previewUrl+'" alt="Selected search image"><p class="z-search-image-note">'+(language()==="sw"?"Picha imechaguliwa. ZUNE italinganisha mwonekano wake na picha za bidhaa zilizopo.":"Image selected. ZUNE will compare its visual appearance with available product photos.")+'</p><div class="z-search-image-results"></div><button type="button" class="z-search-filter-apply" style="width:100%;min-height:46px;border:0;border-radius:12px" id="z-search-image-run">'+(language()==="sw"?"Tafuta bidhaa zinazofanana":"Find similar products")+'</button></section>';
   document.body.appendChild(overlay);
-  overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove();});
-  overlay.querySelector(".z-search-sheet-close").addEventListener("click",()=>overlay.remove());
-  overlay.querySelector("#z-search-image-close").addEventListener("click",()=>overlay.remove());
+  const close=()=>overlay.remove();overlay.addEventListener("click",e=>{if(e.target===overlay)close();});
+  overlay.querySelector(".z-search-sheet-close").addEventListener("click",close);
+  overlay.querySelector("#z-search-image-run").addEventListener("click",()=>runVisualProductSearch(file,overlay,previewUrl));
  };
  reader.readAsDataURL(file);
 }
-
 function startVoiceSearch(input){
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SpeechRecognition){alert(language()==="sw"?"Kivinjari hiki hakitumii voice search. Jaribu Chrome.":"Voice search is not supported by this browser. Try Chrome.");return;}
