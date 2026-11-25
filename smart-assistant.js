@@ -190,7 +190,7 @@ export async function openZuneAssistant({
    if(memoryCopy)memoryCopy.textContent=sw?"Ingia kwenye akaunti yako ili uweze kuwasha kumbukumbu. Bila ruhusa, mazungumzo yatabaki kwenye kipindi hiki tu.":"Sign in to enable memory. Without consent, conversation context stays in this session only.";
    memoryRoot.querySelector("[data-assistant-memory-allow]")?.setAttribute("hidden","true");
    memoryRoot.querySelector("[data-assistant-memory-decline]")?.setAttribute("hidden","true");
-  }else if(!granted){
+  }else if(!granted&&memoryConsent!=="denied"){
    if(memoryTitle)memoryTitle.textContent=sw?"Ruhusu kumbukumbu?":"Allow memory?";
    if(memoryCopy)memoryCopy.textContent=sw?"ZUNE inaweza kukumbuka mada za mazungumzo ili kuelewa maswali ya ufuatiliaji. Kumbukumbu huhifadhiwa kwenye kifaa hiki tu, chini ya akaunti yako. Unaweza kuziona au kuzifuta wakati wowote. Usiweke PIN, OTP, nywila au taarifa za malipo hapa.":"ZUNE can remember conversation topics to understand follow-up questions. Memory stays on this device, scoped to your account. You can review or erase it anytime. Do not enter PINs, OTPs, passwords or payment details here.";
    const allow=memoryRoot.querySelector("[data-assistant-memory-allow]");
