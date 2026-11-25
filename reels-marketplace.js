@@ -62,7 +62,7 @@ function installStyles() {
     .z-reel-follow.following{background:#A78BFA;color:#090D16}
     .z-reel-actions{position:absolute;right:10px;bottom:142px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:12px}
     .z-reel-action{min-width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:transparent;color:#fff;padding:0;text-shadow:0 2px 8px #000;font-size:10px;font-weight:800}
-    .z-reel-action .glyph{width:40px;height:40px;display:grid;place-items:center;border:1px solid #ffffff35;border-radius:50%;background:#090D16b8;font-size:19px;backdrop-filter:blur(12px)}
+    .z-reel-action .glyph{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff42;border-radius:50%;background:rgba(9,13,22,.72);backdrop-filter:blur(14px);box-shadow:0 4px 14px #0005;transition:transform .16s ease,background .16s ease}.z-reel-action .glyph svg{width:21px;height:21px;display:block}.z-reel-action:active .glyph{transform:scale(.91)}
     .z-reel-action.active .glyph{color:#fb7185;border-color:#fb718577}
     .z-reel-action.saved .glyph{color:#A78BFA;border-color:#A78BFA88}
     .z-reel-copy{position:absolute;left:14px;right:64px;bottom:14px;z-index:3;color:#fff;text-shadow:0 2px 8px #000}
@@ -111,14 +111,25 @@ function installStyles() {
   document.head.appendChild(style);
 }
 function icon(name) {
-  return ({heart:'♡',comment:'▢',share:'➤',save:'▣',sound:'♫',store:'▤',play:'▶'})[name] || '•';
+  const paths = {
+    heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',
+    comment:'<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>',
+    share:'<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/>',
+    save:'<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/>',
+    sound:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+    report:'<path d="M4 22V4"/><path d="M4 4c6-4 10 4 16 0v11c-6 4-10-4-16 0"/>'
+  };
+  return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (paths[name] || paths.heart) + '</g></svg>';
 }
 function cardHTML(reel) {
   const creator = reel.creator || {};
   const role = String(creator.role || '').toLowerCase();
   const official = role === 'admin';
   const verified = official || (role === 'vendor' && creator.is_verified === true);
-  const creatorName = official ? 'ZUNE Official' : (creator.full_name || reel.creator_display_name || 'ZUNE Seller');
+  const creatorCandidates = [creator.full_name, reel.creator_display_name, creator.display_name, creator.username, creator.business_name]
+    .map(value => String(value || '').trim())
+    .filter(value => value && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value));
+  const creatorName = official ? 'ZUNE Official' : (creatorCandidates[0] || 'Muuzaaji wa ZUNE');
   const products = Array.isArray(reel.products) && reel.products.length ? reel.products : (reel.product ? [reel.product] : []);
   const sound = reel.sound || null;
   const video = publicUrl(state.context.db, reel.video_path);
@@ -137,12 +148,12 @@ function cardHTML(reel) {
     '<div class="z-reel-top"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong><small>' + (official ? 'Akaunti rasmi ya ZUNE' : 'ZUNE Seller') + '</small></div>' +
     (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' +
     '<div class="z-reel-actions">' +
-    '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">♡</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">▢</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">➤</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">▣</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">♫</span><span>Sound</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">⚑</span><span>Report</span></button>' +
+    '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">' + icon('heart') + '</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">' + icon('report') + '</span><span>Report</span></button>' +
     '</div><div class="z-reel-copy">' + challengeHtml + '<div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
 }
 function visibleReels() {
