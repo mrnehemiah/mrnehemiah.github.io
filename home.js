@@ -4263,16 +4263,16 @@ export async function renderMarketplaceHome({
     const marker = "zune_collections_cloud_ready:" + userId;
     try {
       const [cloudCart, cloudSaved] = await Promise.all([
-        supabase.from("cart_items").select("product_id,quantity").eq("user_id", userId),
+        supabase.from("cart_items").select("product_id,variant_id,quantity").eq("user_id", userId),
         supabase.from("wishlists").select("product_id").eq("user_id", userId)
       ]);
       if (cloudCart.error) throw cloudCart.error;
       if (cloudSaved.error) throw cloudSaved.error;
       if (localStorage.getItem(marker) !== "1") {
-        const cartMap = new Map((cloudCart.data || []).map(row => [String(row.product_id), { productId: row.product_id, quantity: Number(row.quantity) || 1 }]));
+        const cartMap = new Map((cloudCart.data || []).map(row => [String(row.product_id)+"::"+String(row.variant_id||""), { productId: row.product_id, variantId:row.variant_id||null, quantity: Number(row.quantity) || 1 }]));
         homeState.cart.forEach(item => {
-          const id = String(item.productId), existing = cartMap.get(id);
-          cartMap.set(id, { productId: item.productId, quantity: Math.max(Number(item.quantity) || 1, existing?.quantity || 1) });
+          const id = String(item.productId)+"::"+String(item.variantId||""), existing = cartMap.get(id);
+          cartMap.set(id, { productId: item.productId, variantId:item.variantId||null, quantity: Math.max(Number(item.quantity) || 1, existing?.quantity || 1) });
         });
         homeState.cart = [...cartMap.values()];
         await saveCart();
@@ -4290,7 +4290,7 @@ export async function renderMarketplaceHome({
         }
         localStorage.setItem(marker, "1");
       } else {
-        homeState.cart = (cloudCart.data || []).map(row => ({ productId: row.product_id, quantity: row.quantity }));
+        homeState.cart = (cloudCart.data || []).map(row => ({ productId: row.product_id, variantId:row.variant_id||null, quantity: row.quantity }));
         homeState.saved = (cloudSaved.data || []).map(row => row.product_id);
       }
       localStorage.setItem("zune_cart:" + userId, JSON.stringify(homeState.cart));
