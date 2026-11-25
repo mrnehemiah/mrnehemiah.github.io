@@ -449,7 +449,7 @@ export async function mountStandaloneCart(root) {
       cart = writeCart(cart, userId);
 
       if (allProductsLoaded()) {
-        const product = productsById.get(String(id));
+        const product = productsById.get(String(item.productId));
         if (patchQuantity(id, next, product)) {
           patchSummary();
         } else {
