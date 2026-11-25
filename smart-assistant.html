@@ -15,6 +15,23 @@
           <button type="button" class="z-assistant-close" aria-label="Close">×</button>
         </div>
       </header>
+      <section class="z-assistant-memory" data-assistant-memory aria-label="Conversation memory">
+        <div data-assistant-memory-prompt>
+          <strong data-assistant-memory-title>Ruhusu kumbukumbu?</strong>
+          <p data-assistant-memory-copy>ZUNE inaweza kukumbuka mada za mazungumzo yako ili kuelewa maswali ya ufuatiliaji. Kumbukumbu huhifadhiwa kwenye kifaa hiki tu; unaweza kuziona au kuzifuta wakati wowote. Taarifa nyeti hazihifadhiwi.</p>
+          <div class="z-assistant-memory-actions">
+            <button type="button" data-assistant-memory-allow>Ruhusu kumbukumbu</button>
+            <button type="button" data-assistant-memory-decline>Sio sasa</button>
+          </div>
+        </div>
+        <div data-assistant-memory-status hidden>
+          <span data-assistant-memory-label>Kumbukumbu imewashwa</span>
+          <div class="z-assistant-memory-actions">
+            <button type="button" data-assistant-memory-view>Angalia kumbukumbu</button>
+            <button type="button" data-assistant-memory-disable>Zima na futa</button>
+          </div>
+        </div>
+      </section>
       <div class="z-assistant-messages" id="z-assistant-messages" aria-live="polite" aria-relevant="additions text">
         <div class="z-assistant-message" data-assistant-welcome></div>
       </div>
