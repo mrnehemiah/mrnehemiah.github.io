@@ -1819,7 +1819,7 @@ function openProductDetails(product) {
   const addButton=overlay.querySelector(".z-detail-add");
   if(addButton)addButton.disabled=true;
   supabase.from("product_variants").select("id,label,sku,attributes,price,stock_quantity").eq("product_id",product.id).eq("is_active",true).order("sort_order",{ascending:true}).then(({data,error})=>{
-    if(error){console.warn("ZUNE product variants:",error);if(addButton)addButton.disabled=Number(product.stock_quantity||0)<=0;return;}
+    if(error){console.warn("ZUNE product variants:",error);const host=overlay.querySelector("#z-detail-variants");if(host)host.textContent=language()==="sw"?"Imeshindikana kupakia chaguo za bidhaa. Jaribu tena.":"Unable to load product options. Please try again.";if(addButton)addButton.disabled=true;return;}
     availableVariants=data||[];
     product.__zuneHasVariants=availableVariants.length>0;
     const host=overlay.querySelector("#z-detail-variants");
