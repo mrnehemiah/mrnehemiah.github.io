@@ -1,4 +1,4 @@
-import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-6";
+import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-7";
 import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
 import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261125-orb-ui-2";
 
