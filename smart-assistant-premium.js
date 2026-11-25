@@ -18,7 +18,7 @@ export function initializePremiumAssistant({overlay,sw,ask,close,stopSpeaking,se
  let prefs=read(prefsKey,{theme:"adaptive",language:"auto",voice:true,memory:true});
  let lastQuestion="";
  let saveTimer=null;
- const messages=()=>Array.from(box.querySelectorAll(".z-assistant-message")).map(node=>({
+ const messages=()=>Array.from(box.querySelectorAll(".z-assistant-message:not(.z-assistant-welcome)")).map(node=>({
   role:node.classList.contains("user")?"user":"assistant",
   html:node.querySelector(".z-assistant-message-content")?.innerHTML||node.querySelector(":scope > div")?.innerHTML||node.innerHTML,
   text:(node.innerText||"").replace(/^(Copy|Share|Regenerate|Like|Dislike|Speak|Translate).*$/gm,"").trim()
