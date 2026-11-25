@@ -64,7 +64,7 @@ export function answerZuneKnowledge(question, lang="sw", previousTopic=null) {
  const q=normalizeKnowledgeText(question);
  if(!q) return null;
  const queryTokens=new Set(expandSwahiliTokens(question));
- const follow=/^(?:inafanyikaje|inafanyaje|vipi sasa|endelea|fafanua zaidi|zaidi|hatua zake|how does (?:it|that) work|explain more|tell me more|what next)(?:\\s|$)/.test(q);
+ const follow=/^(?:inafanyikaje|inafanyaje|vipi sasa|endelea|fafanua zaidi|zaidi|hatua zake|how does (?:it|that) work|explain more|tell me more|what next)(?:\s|$)/.test(q);
  if(follow && previousTopic) {
   const item=KNOWLEDGE.find(x=>x.topic===previousTopic);
   if(item) return {topic:item.topic,answer:(lang==="en"?item.en:item.sw)+"\n\n"+FOLLOW_UPS[lang==="en"?"en":"sw"]};
