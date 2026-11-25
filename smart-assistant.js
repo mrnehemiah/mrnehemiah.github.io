@@ -196,7 +196,7 @@ export async function openZuneAssistant({
   form.addEventListener("submit",async event=>{
    event.preventDefault();if(!message.value.trim())return;submit.disabled=true;submit.textContent=sw?"Inatuma...":"Submitting...";
    const payload={user_id:homeState.user.id,customer_name:String(homeState.accountProfile?.full_name||homeState.user.user_metadata?.full_name||"").slice(0,120),category:category.value,message:message.value.trim().slice(0,1500),status:"open"};
-   const result=await supabase.from("support_tickets").insert(payload).select("id").single();
+   let result;try{result=await supabase.from("support_tickets").insert(payload).select("id").single();}catch(error){result={error};}
    if(result.error){submit.disabled=false;submit.textContent=sw?"Jaribu tena":"Try again";say(sw?"Ombi halikutumwa. Jaribu tena au tumia WhatsApp Support.":"Ticket submission failed. Try again or contact WhatsApp Support.");return;}
    assistantStats.ticketsCreated++;form.remove();say((sw?"Ombi limepokelewa. Namba ya tiketi: ":"Ticket created. Ticket ID: ")+safe(String(result.data?.id||"").slice(0,8))+"…");
   });
