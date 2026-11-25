@@ -26,3 +26,11 @@
 .z-assistant-form{align-items:center}
 @keyframes zAssistantMicPulse{50%{transform:scale(1.06);box-shadow:0 0 0 5px #e5484d20}}
 @media(prefers-reduced-motion:reduce){.z-assistant-mic.is-listening{animation:none}}
+
+/* Consent-based, device-local conversation memory controls. */
+.z-assistant-memory{margin:0 10px 9px;padding:10px 12px;border:1px solid #dce9e1;border-radius:13px;background:#edf6f0;color:#244b36;font-size:11px;line-height:1.45}
+.z-assistant-memory p{margin:5px 0 9px;color:#52675a}
+.z-assistant-memory-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
+.z-assistant-memory-actions button{padding:7px 10px;border:1px solid #b8d2c1;border-radius:9px;background:#fff;color:#17623e;font-size:10px;font-weight:600}
+.z-assistant-memory-actions button:first-child{background:#087b50;border-color:#087b50;color:#fff}
+.z-assistant-memory [hidden]{display:none!important}
