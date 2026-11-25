@@ -79,13 +79,19 @@ function cardHTML(reel) {
     '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">⚑</span><span>Report</span></button>' +
     '</div><div class="z-reel-copy"><div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ Original audio · Video sound</div>' + productHtml + '</div></article>';
 }
 function visibleReels() {
   let list = state.reels.slice();
   if (state.tab === 'following') list = list.filter(r => state.following.has(r.creator_id));
   if (state.tab === 'products') list = list.filter(r => !!r.product_id);
-  if (state.tab === 'trending') list.sort((a,b) => Number(b.likes_count || 0) - Number(a.likes_count || 0));
+  const score = r => {
+    const ageHours = Math.max(1,(Date.now()-new Date(r.created_at).getTime())/3600000);
+    const engagement = Number(r.likes_count||0)*2 + Number(r.comments_count||0)*3 + Number(r.shares_count||0)*4 + Number(r.views_count||0)*0.05;
+    return engagement / Math.pow(ageHours+2,0.62);
+  };
+  if (state.tab === 'trending' || state.tab === 'for-you') list.sort((a,b) => score(b)-score(a));
   if (state.tab === 'new') list.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   const q = state.search.trim().toLowerCase();
   if (q) list = list.filter(r => [r.caption, r.creator?.full_name, r.creator_display_name, ...(r.hashtags || []), r.product?.title].join(' ').toLowerCase().includes(q));
@@ -142,7 +148,7 @@ async function loadFeed() {
     const ids = reels.map(x => x.id);
     const creators = [...new Set(reels.map(x => x.creator_id))];
     const productIds = [...new Set(reels.map(x => x.product_id).filter(Boolean))];
-    const [likesRes,commentsRes,followsRes,productsRes,userLikesRes,userFollowsRes] = await Promise.all([
+    const optionalResults = await Promise.all([
       ids.length ? ctx.db.from('zune_reel_likes').select('reel_id').in('reel_id',ids) : Promise.resolve({data:[]}),
       ids.length ? ctx.db.from('zune_reel_comments').select('reel_id').in('reel_id',ids) : Promise.resolve({data:[]}),
       creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').in('creator_id',creators) : Promise.resolve({data:[]}),
@@ -150,14 +156,17 @@ async function loadFeed() {
       ctx.user?.id && ids.length ? ctx.db.from('zune_reel_likes').select('reel_id').eq('user_id',ctx.user.id).in('reel_id',ids) : Promise.resolve({data:[]}),
       ctx.user?.id && creators.length ? ctx.db.from('zune_reel_follows').select('creator_id').eq('follower_id',ctx.user.id).in('creator_id',creators) : Promise.resolve({data:[]})
     ]);
-    [likesRes,commentsRes,followsRes,productsRes,userLikesRes,userFollowsRes].forEach(r => { if (r && r.error) throw r.error; });
+    const [likesRes,commentsRes,followsRes,productsRes,userLikesRes,userFollowsRes] = optionalResults;
+    const optionalErrors = optionalResults.filter(r => r && r.error);
+    optionalErrors.forEach(r => console.warn('ZUNE Reels optional data unavailable:',r.error.message || r.error));
+
     const countBy = (rows,key) => (rows || []).reduce((map,row) => { map[row[key]] = (map[row[key]] || 0) + 1; return map; },{});
-    const likeCounts = countBy(likesRes.data,'reel_id');
-    const commentCounts = countBy(commentsRes.data,'reel_id');
-    const followCounts = countBy(followsRes.data,'creator_id');
-    state.products = new Map((productsRes.data || []).map(p => [p.id,p]));
-    state.liked = new Set((userLikesRes.data || []).map(x => x.reel_id));
-    state.following = new Set((userFollowsRes.data || []).map(x => x.creator_id));
+    const likeCounts = countBy(likesRes?.data,'reel_id');
+    const commentCounts = countBy(commentsRes?.data,'reel_id');
+    const followCounts = countBy(followsRes?.data,'creator_id');
+    state.products = new Map((productsRes?.data || []).map(p => [p.id,p]));
+    state.liked = new Set((userLikesRes?.data || []).map(x => x.reel_id));
+    state.following = new Set((userFollowsRes?.data || []).map(x => x.creator_id));
     const savedKey = 'zune_reel_saves:' + (ctx.user?.id || 'guest');
     state.cloudSaves = false;
     if (ctx.user?.id && ids.length) {
@@ -178,7 +187,7 @@ async function loadFeed() {
       }
     }
     state.viewed = new Set();
-    try { state.sessionKey = localStorage.getItem('zune_reel_view_session') || ''; if (!state.sessionKey) { state.sessionKey = crypto.randomUUID(); localStorage.setItem('zune_reel_view_session',state.sessionKey); } } catch (_) { state.sessionKey = crypto.randomUUID(); }
+    try { state.sessionKey = sessionStorage.getItem('zune_reel_view_session') || ''; if (!state.sessionKey) { state.sessionKey = crypto.randomUUID(); sessionStorage.setItem('zune_reel_view_session',state.sessionKey); } } catch (_) { state.sessionKey = crypto.randomUUID(); }
     state.reels = reels.map(r => Object.assign({},r,{
       product: state.products.get(r.product_id) || null,
       sound: soundMap.get(r.sound_id) || null,
@@ -194,14 +203,14 @@ async function loadFeed() {
   } finally { state.loading = false; }
 }
 async function recordView(reelId) {
-  if (!reelId || !state.context.user?.id || state.viewed.has(reelId)) return;
+  if (!reelId || state.viewed.has(reelId)) return;
   state.viewed.add(reelId);
   try {
     const {data,error} = await state.context.db.rpc('zune_reel_record_view',{p_reel_id:reelId,p_session_key:state.sessionKey || crypto.randomUUID()});
-    if (error || data !== true) return;
+    if (error || data !== true) { state.viewed.delete(reelId); return; }
     const reel = state.reels.find(x => x.id === reelId);
     if (reel) { reel.views_count = Number(reel.views_count || 0)+1; const label = state.root.querySelector('[data-view-count="' + CSS.escape(reelId) + '"]'); if (label) label.textContent = reel.views_count.toLocaleString() + ' views'; }
-  } catch (_) {}
+  } catch (_) { state.viewed.delete(reelId); }
 }
 function requireUser() {
   if (state.context.user?.id) return true;
@@ -279,6 +288,23 @@ async function shareReel(reelId) {
     }
   } catch (error) { if (error.name !== 'AbortError') toast('Imeshindikana kushare Reel.'); }
 }
+async function reportReel(reelId) {
+  if (!requireUser()) return;
+  const reason = window.prompt('Kwa nini unaripoti Reel hii? Andika sababu kwa ufupi:');
+  if (reason === null) return;
+  const clean = reason.trim();
+  if (clean.length < 5) { toast('Tafadhali eleza sababu kwa angalau herufi 5.'); return; }
+  try {
+    const {error} = await state.context.db.from('zune_reel_reports').insert({
+      reel_id: reelId, reporter_id: state.context.user.id, reason: clean.slice(0,180), details: null
+    });
+    if (error) throw error;
+    toast('Ripoti imetumwa kwa timu ya ZUNE.');
+  } catch (error) {
+    console.error('ZUNE Reel report:',error);
+    toast(error.message || 'Ripoti haikutumwa. Jaribu tena.');
+  }
+}
 async function openComments(reelId) {
   const reel = state.reels.find(x => x.id === reelId);
   if (!reel) return;
@@ -332,12 +358,14 @@ function bindEvents() {
     const share = e.target.closest('[data-reel-share]');
     const save = e.target.closest('[data-reel-save]');
     const audio = e.target.closest('[data-reel-audio]');
+    const report = e.target.closest('[data-reel-report]');
     const product = e.target.closest('[data-reel-product]');
     if (like) return toggleLike(like.dataset.reelLike,like);
     if (follow) return toggleFollow(follow.dataset.reelFollow,follow);
     if (comments) return openComments(comments.dataset.reelComments);
     if (share) return shareReel(share.dataset.reelShare);
     if (save) return saveReel(save.dataset.reelSave,save);
+    if (report) return reportReel(report.dataset.reelReport);
     if (audio) {
       const reel = state.reels.find(x => x.id === audio.dataset.reelAudio);
       const video = root.querySelector('[data-reel-video="' + CSS.escape(audio.dataset.reelAudio) + '"]');
