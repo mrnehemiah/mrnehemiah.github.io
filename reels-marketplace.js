@@ -407,8 +407,10 @@ async function openComments(reelId) {
   const liked = new Set(likeRows.filter(row => row.user_id === state.context.user?.id).map(row => row.comment_id));
   const replyTarget = {id:null,name:''};
   const renderComment = c => '<div class="z-reel-comment" data-comment-row="' + esc(c.id) + '"><div class="z-reel-comment-main"><strong>' + esc(c.author?.full_name || 'Mtumiaji') + (c.author?.is_verified ? ' ✓' : '') + '</strong>' + esc(c.body) + '<time>' + new Date(c.created_at).toLocaleString('sw-TZ') + '</time><button type="button" data-reply-comment="' + esc(c.id) + '" style="border:0;background:transparent;color:#A78BFA;padding:5px 0;font-size:10px;font-weight:800">Jibu</button></div>' + (likeFeatureAvailable ? '<button type="button" class="z-reel-comment-like ' + (liked.has(c.id) ? 'active' : '') + '" data-comment-like="' + esc(c.id) + '">' + (liked.has(c.id) ? '♥' : '♡') + ' <span>' + Number(counts[c.id] || 0) + '</span></button>' : '') + '</div>';
+  const childrenByParent = comments.reduce((map,c) => { if (c.parent_comment_id) (map[c.parent_comment_id] ||= []).push(c); return map; },{});
+  const renderThread = (comment,depth=0) => renderComment(comment) + (childrenByParent[comment.id] || []).map(reply => '<div style="margin-left:' + Math.min(36,depth*12+12) + 'px;border-left:2px solid #A78BFA55;padding-left:10px">' + renderThread(reply,depth+1) + '</div>').join('');
   const rootComments = comments.filter(c => !c.parent_comment_id);
-  const commentMarkup = rootComments.map(c => renderComment(c) + comments.filter(reply => reply.parent_comment_id === c.id).map(reply => '<div style="margin-left:38px;border-left:2px solid #A78BFA55;padding-left:10px">' + renderComment(reply) + '</div>').join('')).join('');
+  const commentMarkup = rootComments.map(c => renderThread(c)).join('');
   const backdrop = document.createElement('div');
   backdrop.className = 'z-reel-comments-backdrop';
   backdrop.innerHTML = '<section class="z-reel-comments" role="dialog" aria-modal="true" aria-label="Maoni"><div class="z-reel-comments-head"><strong>Maoni (' + comments.length + ')</strong><button type="button" data-close-comments aria-label="Funga">×</button></div><div class="z-reel-comments-list">' +
