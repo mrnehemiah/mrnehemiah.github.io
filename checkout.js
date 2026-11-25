@@ -86,7 +86,7 @@ async function placeOrder(){
   if(address.save_address){const {error:saveError}=await supabase.from("delivery_addresses").insert({user_id:user.id,recipient_name:address.recipient_name,phone:address.phone,country:address.country,region:address.region,district:address.district,ward:address.ward||'',street:address.street,landmark:address.landmark||null,delivery_notes:address.delivery_notes||null,latitude:address.latitude?Number(address.latitude):null,longitude:address.longitude?Number(address.longitude):null,is_default:addresses.length===0});if(saveError)console.warn("Address was not saved:",saveError.message);}
   writeCart([],user.id);syncCartCountBadges([]);sessionStorage.removeItem("zune_checkout_key:"+user.id);
   const {data:createdOrderRefs}=await supabase.from("orders").select("public_order_id,order_number").eq("checkout_id",data.checkout_id);
-  const visibleOrderRefs=(createdOrderRefs||[]).map(x=>x.public_order_id||x.order_number).filter(Boolean);
+  const visibleOrderRefs=[...new Set((createdOrderRefs||[]).map(x=>x.public_order_id||x.order_number).filter(Boolean))];
   const orderReferenceText=visibleOrderRefs.length?visibleOrderRefs.join(" · "):data.checkout_id;
   root.innerHTML='<section class="zc-success"><div class="zc-success-icon">✓</div><h1>'+t("success")+'</h1><p>Order ID: '+esc(orderReferenceText)+'</p><p>'+money(data.grand_total)+'</p><a class="zc-primary" href="./orders.html">'+t("orders")+'</a><a class="zc-back" href="./index.html">'+t("back")+'</a></section>';
  }catch(e){busy=false;button.disabled=false;button.textContent=t("place");root.querySelector("#zc-hint").textContent=e.message||t("error");}
