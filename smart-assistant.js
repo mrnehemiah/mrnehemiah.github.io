@@ -362,7 +362,7 @@ export async function openZuneAssistant({
    const orders=result.data||[];
    if(!orders.length){say(sw?"Sijaona oda kwenye akaunti hii bado.":"No orders were found for this account yet.");return;}
    const cards=orders.map(o=>'<div class="z-assistant-order"><b>'+(sw?"Oda ":"Order ")+safe(o.order_number||o.public_order_id||String(o.id).slice(0,8))+'</b><small>'+safe(String(o.status||"unknown"))+' · '+safe(String(o.payment_status||"payment status not listed"))+' · '+safe(money(Number(o.total_price||0)))+'</small><small>'+safe(o.created_at?new Date(o.created_at).toLocaleDateString(sw?"sw-TZ":"en-US"):"")+'</small></div>').join("");
-   say((sw?"Oda zako za hivi karibuni (akaunti yako tu):":"Your recent orders (your account only):")+cards+'<button type="button" data-assistant-action="orders">'+(sw?"Fungua Oda Zangu":"Open My Orders")+'</button>');return;
+   const orderMessage=say((sw?"Oda zako za hivi karibuni (akaunti yako tu):":"Your recent orders (your account only):")+cards+'<button type="button" data-assistant-action="orders">'+(sw?"Fungua Oda Zangu":"Open My Orders")+'</button>');Promise.resolve(orderMessage).then(bindActionCards);return;
   }
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
   if(knowledge){lastKnowledgeTopic=knowledge.topic;saveContextMemory(q);if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
