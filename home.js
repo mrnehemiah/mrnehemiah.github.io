@@ -1793,10 +1793,18 @@ function openProductDetails(product) {
         ${location ? `<div class="z-product-location">⌖ ${safe(location)}</div>` : ""}
         <h2>${safe(product.title || tx("emptyName"))}</h2>
         <p class="z-detail-price">${money(product.price)}</p>
+        <div class="z-detail-rating" id="z-detail-rating" aria-live="polite">${Number(product.average_rating||product.rating_average||product.rating||0)>0 ? "★ "+Number(product.average_rating||product.rating_average||product.rating).toFixed(1)+" · "+Number(product.review_count||product.reviews_count||0)+" "+(language()==="sw"?"tathmini":"reviews") : (language()==="sw"?"Bado hakuna tathmini":"No ratings yet")}</div>
         ${product.description ? `<p class="z-detail-description">${safe(product.description)}</p>` : ""}
         ${product.category ? `<p class="z-detail-category">${safe(product.category)}</p>` : ""}
         ${stock !== null ? `<p class="z-detail-stock">${stock > 0 ? (language()==="sw" ? "Stock iliyopo: " : "Available stock: ") + stock : (language()==="sw" ? "Bidhaa imeisha stock" : "Out of stock")}</p>` : ""}
-        <button type="button" class="z-primary-button z-detail-add" ${stock !== null && stock <= 0 ? "disabled" : ""}>${tx("addCart")}</button>
+        <div class="z-detail-actions">
+          <button type="button" class="z-primary-button z-detail-add" ${stock !== null && stock <= 0 ? "disabled" : ""}>${tx("addCart")}</button>
+          <button type="button" class="z-detail-compare" data-detail-compare>${language()==="sw"?"⇄ Linganisha":"⇄ Compare"}</button>
+        </div>
+        <section class="z-detail-reviews" aria-labelledby="z-detail-reviews-title">
+          <div class="z-detail-reviews-heading"><h3 id="z-detail-reviews-title">${language()==="sw"?"Tathmini za wanunuzi":"Buyer reviews"}</h3><button type="button" data-detail-all-reviews>${language()==="sw"?"Zote":"See all"}</button></div>
+          <div id="z-detail-reviews-list"><p class="z-detail-reviews-empty">${language()==="sw"?"Inapakia tathmini...":"Loading reviews..."}</p></div>
+        </section>
         ${product.vendor_id && String(product.vendor_id)!==String(homeState.user?.id) ? `<button type="button" class="z-primary-button z-detail-message" style="margin-top:9px;background:transparent;color:var(--primary);border:1px solid var(--border)">${language()==="sw"?"Wasiliana na Seller":"Message Seller"}</button>` : ""}
       </div>
       <div class="z-detail-content z-product-recommendations" id="z-product-sponsored-recommendations">
@@ -1814,9 +1822,42 @@ function openProductDetails(product) {
     addToCart(String(product.id),product);
     close();
   });
+  overlay.querySelector("[data-detail-compare]")?.addEventListener("click", async event => {
+    const button=event.currentTarget;
+    if(!homeState.user?.id){alert(language()==="sw"?"Ingia kwanza ili kulinganisha bidhaa.":"Please sign in to compare products.");return;}
+    button.disabled=true;
+    try{
+      const {error}=await supabase.from("zune_comparison_items").insert({user_id:homeState.user.id,product_id:product.id});
+      if(error && error.code!=="23505") throw error;
+      close();
+      await renderMarketplacePage("features");
+      requestAnimationFrame(()=>document.getElementById("z-feature-compare")?.scrollIntoView({behavior:"smooth",block:"start"}));
+    }catch(error){
+      console.warn("ZUNE compare product:",error);
+      button.disabled=false;
+      alert(language()==="sw"?"Imeshindikana kuongeza bidhaa kwenye ulinganisho. Jaribu tena.":"Could not add this product to comparison. Please try again.");
+    }
+  });
+  overlay.querySelector("[data-detail-all-reviews]")?.addEventListener("click",async()=>{
+    close();
+    await renderMarketplacePage("features");
+    requestAnimationFrame(()=>document.getElementById("z-feature-reviews")?.scrollIntoView({behavior:"smooth",block:"start"}));
+  });
+  loadProductReviewPreview(overlay,product).catch(error=>console.warn("ZUNE product reviews:",error));
   overlay.querySelector(".z-detail-message")?.addEventListener("click",()=>openBuyerSellerChat(product));
   const onKey = event => { if (event.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
   document.addEventListener("keydown", onKey);
+}
+
+async function loadProductReviewPreview(overlay,product){
+ const host=overlay.querySelector("#z-detail-reviews-list");if(!host)return;
+ const {data,error}=await supabase.from("product_reviews")
+  .select("id,rating,review_text,created_at")
+  .eq("product_id",product.id).eq("moderation_status","approved").eq("is_visible",true)
+  .order("created_at",{ascending:false}).limit(3);
+ if(error)throw error;
+ if(!data?.length){host.innerHTML='<p class="z-detail-reviews-empty">'+(language()==="sw"?"Bado hakuna tathmini zilizoidhinishwa kwa bidhaa hii.":"No approved reviews for this product yet.")+'</p>';return;}
+ host.innerHTML=data.map(review=>'<article class="z-detail-review"><div class="z-detail-review-stars" aria-label="'+Number(review.rating)+' out of 5 stars">'+"★".repeat(Math.max(0,Math.min(5,Number(review.rating)||0)))+'</div><p>'+safe(review.review_text||"")+'</p><small>'+safe(review.created_at?new Intl.DateTimeFormat(language()==="sw"?"sw-TZ":"en-TZ",{dateStyle:"medium"}).format(new Date(review.created_at)):"")+'</small></article>').join("");
 }
 
 async function loadProductSponsoredRecommendations(overlay,currentProduct){
