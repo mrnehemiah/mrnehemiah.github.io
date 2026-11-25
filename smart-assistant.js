@@ -295,8 +295,8 @@ export async function openZuneAssistant({
   if(has("refund","rejesh","return","rudish","cancel","futa oda")){say(sw?"Kughairi oda, kurudisha bidhaa au kurejeshewa fedha hutegemea hatua ya oda na masharti ya duka. Kagua Oda Zangu au wasiliana na msaada rasmi wa ZUNE.":"Cancellations, returns and refunds depend on the order stage and store terms. Check My Orders or contact official ZUNE support.");return;}
   if(has("akaunti","account","login","ingia","jisajili","signup","password","nenosiri")){say(sw?"Tumia sehemu ya Akaunti kwenye menyu ya Marketplace kuingia, kujisajili na kusimamia taarifa zako. Usishiriki nenosiri au OTP.":"Use Account in Marketplace navigation to sign in, register and manage your details. Never share your password or OTP.");return;}
   if(has("help","msaada","support","wasilian","contact","huduma","whatsapp")){say((sw?"Kwa msaada wa ZUNE Market, wasiliana nasi kupitia WhatsApp au jiunge na Channel kwa matangazo. Usitume PIN, OTP au nenosiri.":"For ZUNE Market help, contact us on WhatsApp or join the Channel for announcements. Never share your PIN, OTP or password.")+"<br>"+supportLinks());return;}
-  const wantsComparison=/(linganisha|compare|comparison|tofauti kati ya|\\bversus\\b|\\bvs\\b)/i.test(n);
-  const comparisonTerms=wantsComparison?String(q).replace(/linganisha|compare|comparison|tofauti kati ya|versus|\\bvs\\b/gi," ").split(/\\s+(?:na|and)\\s+/i).map(x=>x.replace(/[?!,.;]+/g," ").trim()).filter(x=>x.length>1).slice(0,4):[];
+  const wantsComparison=/(linganisha|compare|comparison|tofauti kati ya|\bversus\b|\bvs\b)/i.test(n);
+  const comparisonTerms=wantsComparison?String(q).split(/\s+(?:na|and|vs|versus)\s+/i).map(x=>x.replace(/linganisha|compare|comparison|tofauti kati ya/gi," ").replace(/[?!,.;]+/g," ").trim()).filter(x=>x.length>1).slice(0,4):[];
   const wantsDeals=has("punguzo","discount","sale","oferta","deals");
   const inStockOnly=has("stock iliyopo","zilizopo","in stock","available now","bidhaa zilizopo","bado zipo");
   const sortMode=has("bei nafuu","cheap","cheapest","lowest price","bei ndogo")?"price_low":has("ghali zaidi","most expensive","highest price","bei kubwa")?"price_high":"recent";
@@ -329,7 +329,7 @@ export async function openZuneAssistant({
     productQuery.limit(wantsDeals?60:20),
     (!term||wantsDeals||wantsComparison)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
     (!term||wantsDeals||wantsComparison)?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10),
-    wantsComparison?Promise.all(comparisonTerms.map(name=>{const safeTerm=name.replace(/[%_,().*]/g," ").replace(/\\s+/g," ").trim();const like="%"+safeTerm+"%";return supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).or("title.ilike."+like+",brand.ilike."+like+",description.ilike."+like).limit(5);})):Promise.resolve([])
+    wantsComparison?Promise.all(comparisonTerms.map(name=>{const safeTerm=name.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim();const like="%"+safeTerm+"%";return supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).or("title.ilike."+like+",brand.ilike."+like+",description.ilike."+like).limit(5);})):Promise.resolve([])
    ]);
    const comparisonProducts=wantsComparison?Array.from(new Map(comparisonRes.flatMap(r=>r.error?[]:(r.data||[])).map(p=>[String(p.id),p])).values()):[];
    const products=pRes.error?[]:(pRes.data||[]),stores=sRes.error?[]:(sRes.data||[]),categories=cRes.error?[]:(cRes.data||[]);
