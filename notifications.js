@@ -492,7 +492,7 @@ function renderNotificationPreview(notification) {
   previewType.textContent = String(notification.type || "general").replace(/[_-]+/g, " ").toUpperCase();
   previewUnread.hidden = !!notification.is_read;
   previewDetails.replaceChildren();
-  addPreviewDetail("Order ID", data.order_number || data.order_id || data.reference);
+  addPreviewDetail("Order ID", data.public_order_id || data.order_number || data.order_id || data.reference);
   addPreviewDetail(currentLanguage === "sw" ? "Bidhaa" : "Product", data.product_name || data.product_title);
   addPreviewDetail(currentLanguage === "sw" ? "Idadi" : "Quantity", data.quantity);
   addPreviewDetail(currentLanguage === "sw" ? "Jumla" : "Total", data.total_amount ? (data.currency || "TSh") + " " + data.total_amount : null);
