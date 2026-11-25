@@ -1270,7 +1270,7 @@ async function renderAccount() {
 
     if (!marketplaceHomeModule) {
       app.innerHTML = '<section class="app-loading" role="status" aria-live="polite"><div class="zune-wave" aria-label="ZUNE"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia ZUNE Marketplace...</p></section>';
-      marketplaceHomeModule = await import("./home.js?v=20261123-3d-feature-suite-v2");
+      marketplaceHomeModule = await import("./home.js?v=20261125-phase1-product-3d");
     }
 
     await marketplaceHomeModule.renderMarketplaceHome({
