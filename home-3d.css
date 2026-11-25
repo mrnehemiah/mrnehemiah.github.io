@@ -307,3 +307,19 @@
  #z-product-detail-overlay .z-product-detail-sheet{animation:none}
  #z-product-detail-overlay .z-detail-image-wrap img,#z-product-detail-overlay .z-detail-compare{transition:none}
 }
+
+/* ZUNE 3D VISUAL SEARCH RESULTS */
+.z-search-image-sheet{perspective:1100px;border:1px solid #dcebe2!important;background:linear-gradient(145deg,#fff,#f1f8f3)!important;box-shadow:0 28px 75px rgba(4,38,25,.28),inset 0 1px 0 #fff!important}
+.z-search-image-sheet>img{display:block;width:min(100%,210px);max-height:180px;object-fit:contain;margin:0 auto 12px;border-radius:15px;background:#fff;box-shadow:0 12px 25px rgba(18,66,41,.12);transform:translateZ(12px)}
+.z-search-image-results{display:grid;gap:8px;max-height:36vh;overflow:auto;margin:12px 0}
+.z-image-search-result{display:flex;align-items:center;gap:10px;min-width:0;width:100%;padding:8px;border:1px solid #dcebe2;border-radius:14px;background:linear-gradient(145deg,#fff,#f2f8f4);color:#173a29;text-align:left;box-shadow:5px 6px 13px rgba(25,74,48,.075),inset 0 1px 0 #fff;transition:transform .18s ease,box-shadow .18s ease}
+.z-image-search-result:active{transform:translateY(2px);box-shadow:inset 2px 3px 7px rgba(25,74,48,.12)}
+.z-image-search-thumb{width:58px;height:58px;flex:0 0 58px;overflow:hidden;border-radius:10px;background:#edf5ef}
+.z-image-search-thumb .z-product-image,.z-image-search-thumb img{width:100%;height:100%;object-fit:contain}
+.z-image-search-copy{display:grid;gap:4px;min-width:0;flex:1}
+.z-image-search-copy strong{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.z-image-search-copy small{font-size:11px;font-weight:850;color:#087a55}
+.z-image-search-score{flex:0 0 auto;padding:5px 7px;border-radius:999px;background:#e4f5eb;color:#087a55;font-size:10px;font-weight:900}
+.z-image-search-empty{padding:18px;text-align:center;border:1px dashed #cbded1;border-radius:13px;color:#71867a;font-size:12px;background:#ffffffa8}
+@media(hover:hover) and (pointer:fine){.z-image-search-result:hover{transform:translateY(-2px);box-shadow:0 11px 18px rgba(25,74,48,.13)}}
+@media(prefers-reduced-motion:reduce){.z-image-search-result{transition:none}}
