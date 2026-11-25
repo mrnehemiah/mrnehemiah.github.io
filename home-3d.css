@@ -323,3 +323,47 @@
 .z-image-search-empty{padding:18px;text-align:center;border:1px dashed #cbded1;border-radius:13px;color:#71867a;font-size:12px;background:#ffffffa8}
 @media(hover:hover) and (pointer:fine){.z-image-search-result:hover{transform:translateY(-2px);box-shadow:0 11px 18px rgba(25,74,48,.13)}}
 @media(prefers-reduced-motion:reduce){.z-image-search-result{transition:none}}
+
+
+/* HYBRID SMART PRODUCT CARD — marketplace product grid */
+#app .z-home .z-product-card{
+  overflow:hidden;
+  border:1px solid rgba(213,231,220,.95);
+  border-radius:20px;
+  background:linear-gradient(155deg,#fff 0%,#f8fcf9 100%);
+  box-shadow:0 10px 24px rgba(20,65,43,.09),0 2px 6px rgba(20,65,43,.045),inset 0 1px 0 #fff;
+}
+#app .z-home .z-product-media{background:radial-gradient(ellipse at 50% 35%,#fff 0%,#edf5ef 100%)}
+#app .z-home .z-product-gallery .z-product-image{object-fit:contain;padding:7px;mix-blend-mode:multiply}
+#app .z-home .z-product-info{gap:2px;padding:12px}
+#app .z-home .z-product-name{font-size:13px;line-height:1.4;min-height:36px}
+#app .z-home .z-product-price{font-size:15px;letter-spacing:-.35px}
+#app .z-home .z-product-card-footer{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-top:9px;padding:9px 11px;border:1px solid #d9ebe0;border-radius:12px;
+  background:linear-gradient(145deg,#f7fcf8,#e9f5ed);color:#087a55;
+  font-size:11px;font-weight:850;box-shadow:3px 4px 9px rgba(25,74,48,.065),inset 0 1px 0 #fff;
+}
+#app .z-home .z-product-card-footer span:last-child{font-size:15px}
+#app .z-home .z-product-stock-available{color:#16804e;background:#e8f7ed}
+#z-product-detail-overlay .z-detail-quantity{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  margin:12px 0;padding:12px;border:1px solid #dcebe1;border-radius:15px;
+  background:linear-gradient(145deg,#fff,#f0f8f3);
+}
+#z-product-detail-overlay .z-detail-quantity[hidden]{display:none}
+#z-product-detail-overlay .z-detail-quantity>label{font-size:12px;font-weight:850;color:#254a35}
+#z-product-detail-overlay .z-detail-quantity-control{display:flex;align-items:center;gap:7px}
+#z-product-detail-overlay .z-detail-quantity-control button{
+  width:34px;height:34px;border:1px solid #cfe3d5;border-radius:10px;
+  background:#fff;color:#087a55;font-size:19px;font-weight:800;
+}
+#z-product-detail-overlay .z-detail-quantity-control input{
+  width:48px;height:34px;border:1px solid #d8e8dd;border-radius:9px;
+  background:#fff;color:#173b2a;text-align:center;font:800 13px inherit;
+}
+#z-product-detail-overlay .z-detail-quantity>small{width:100%;text-align:right;color:#087a55;font-size:13px;font-weight:900}
+@media(hover:hover) and (pointer:fine){
+ #app .z-home .z-product-card:hover{transform:translateY(-4px);box-shadow:0 16px 30px rgba(20,65,43,.14),0 4px 9px rgba(20,65,43,.06)}
+ #app .z-home .z-product-card:hover .z-product-card-footer{background:linear-gradient(145deg,#eaf7ef,#dff1e6)}
+}
