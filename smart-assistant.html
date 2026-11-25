@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ZUNE Smart Assistant</title>
+</head>
+<body>
+  <template id="zune-smart-assistant-template">
+    <section class="z-assistant-panel" role="dialog" aria-modal="true" aria-label="ZUNE Smart Assistant">
+      <header class="z-assistant-head">
+        <strong>✦ ZUNE Smart Assistant</strong>
+        <button type="button" class="z-assistant-close" aria-label="Close">×</button>
+      </header>
+      <div class="z-assistant-messages" id="z-assistant-messages">
+        <div class="z-assistant-message" data-assistant-welcome></div>
+      </div>
+      <div class="z-assistant-chips" data-assistant-chips></div>
+      <form class="z-assistant-form" id="z-assistant-form">
+        <input id="z-assistant-input" autocomplete="off" placeholder="Andika swali au unachotafuta...">
+        <button type="submit" aria-label="Send">➤</button>
+      </form>
+    </section>
+  </template>
+</body>
+</html>
