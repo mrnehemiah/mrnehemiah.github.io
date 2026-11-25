@@ -305,18 +305,18 @@ export async function openZuneAssistant({
   };
   let searchText=activeSearchText;
   let minBudget=null,maxBudget=null;
-  const maxBudgetMatch=searchText.match(/(?:chini ya|isizidi|hadi|under|below|less than|max(?:imum)?|budget(?: ya)?|at most)\\s*(?:tsh|tzs)?\\s*([\\d,]+(?:\\.\\d+)?)\\s*([km])?/i);
-  const minBudgetMatch=searchText.match(/(?:kuanzia|zaidi ya|kuvuka|above|over|from|at least)\\s*(?:tsh|tzs)?\\s*([\\d,]+(?:\\.\\d+)?)\\s*([km])?/i);
+  const maxBudgetMatch=searchText.match(/(?:chini ya|isizidi|hadi|under|below|less than|max(?:imum)?|budget(?: ya)?|at most)\s*(?:tsh|tzs)?\s*([\d,]+(?:\.\d+)?)\s*([km])?/i);
+  const minBudgetMatch=searchText.match(/(?:kuanzia|zaidi ya|kuvuka|above|over|from|at least)\s*(?:tsh|tzs)?\s*([\d,]+(?:\.\d+)?)\s*([km])?/i);
   if(maxBudgetMatch){maxBudget=parseBudgetValue(maxBudgetMatch[1],maxBudgetMatch[2]);searchText=searchText.replace(maxBudgetMatch[0]," ");}
   if(minBudgetMatch){minBudget=parseBudgetValue(minBudgetMatch[1],minBudgetMatch[2]);searchText=searchText.replace(minBudgetMatch[0]," ");}
-  searchText=searchText.replace(/\\b(?:tsh|tzs|shilingi|shs|bei nafuu|cheap|cheapest|lowest price|bei ndogo|ghali zaidi|most expensive|highest price|bei kubwa|zilizopo|in stock|available now|bidhaa zilizopo|bado zipo|punguzo|discount|sale|oferta|deals|nataka|tafuta|kutafuta|nunua|kununua|agiza|kuagiza|naomba|onyesha|nionyeshe|nipatie|tafadhali|bidhaa|please|find|show|search|the|for|with|za|zaidi|ya|wa|wao|ni|na|je|gani|kwenye|marketplace|chini|hadi|under|below|above|over|price|bei)\\b/gi," ").replace(/\\s+/g," ").trim();
+  searchText=searchText.replace(/\b(?:tsh|tzs|shilingi|shs|bei nafuu|cheap|cheapest|lowest price|bei ndogo|ghali zaidi|most expensive|highest price|bei kubwa|zilizopo|in stock|available now|bidhaa zilizopo|bado zipo|punguzo|discount|sale|oferta|deals|nataka|tafuta|kutafuta|nunua|kununua|agiza|kuagiza|naomba|onyesha|nionyeshe|nipatie|tafadhali|bidhaa|please|find|show|search|the|for|with|za|zaidi|ya|wa|wao|ni|na|je|gani|kwenye|marketplace|chini|hadi|under|below|above|over|price|bei)\b/gi," ").replace(/\s+/g," ").trim();
   const stop=new Set(["nataka","tafuta","kutafuta","nunua","kununua","agiza","kuagiza","naomba","onyesha","nionyeshe","nipatie","tafadhali","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in","stock","tsh","tzs","shilingi"]);
   let query=getSwahiliSearchTokens(searchText).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
   if(!query&&wantsDeals)query="__deals__";
   if(!query&&!maxBudget&&!minBudget&&!inStockOnly){say(sw?"Taja jina au aina ya bidhaa unayotafuta, au eleza bajeti yako.":"Tell me the product or category you want, or describe your budget.");return;}
   say(sw?"Natafuta bidhaa zinazolingana kwenye ZUNE Market...":"Finding matching products in ZUNE Market...");
   try{
-   const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\\s+/g," ").trim(),pattern="%"+term+"%";
+   const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim(),pattern="%"+term+"%";
    let productQuery=supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null);
    if(term)productQuery=productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
    if(maxBudget)productQuery=productQuery.lte("price",maxBudget);
