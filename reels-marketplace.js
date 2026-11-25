@@ -29,7 +29,14 @@ function installStyles() {
   const style = document.createElement('style');
   style.id = 'zuneReelsStyles';
   style.textContent = [
-    '.z-reels-page{max-width:900px;margin:0 auto;padding:10px 12px 100px;background:#070b09;color:#fff;min-height:calc(100vh - 70px)}',
+    '.z-reels-shell{min-height:100svh;background:#080b09;color:#fff;padding-bottom:90px}.z-reels-page{max-width:100%;margin:0 auto;padding:0 0 90px;background:#080b09;color:#fff;min-height:100svh}',
+    '.z-reels-head{position:sticky;top:0;z-index:15;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 8px;background:#080b09f2;backdrop-filter:blur(14px)}.z-reels-title{margin:0;font:800 23px Arial,sans-serif;letter-spacing:-.5px;color:#fff}',
+    '.z-reels-head-actions{display:flex;gap:8px}.z-reels-icon-btn{width:38px;height:38px;border:0;border-radius:50%;background:#252a27;color:#fff;font-size:27px;line-height:1;display:grid;place-items:center}',
+    '.z-reels-search[hidden]{display:none}.z-reels-search{display:block;width:calc(100% - 24px);margin:5px 12px 9px;border:1px solid #ffffff20;background:#ffffff0c;color:#fff;border-radius:20px;padding:10px 14px}.z-reels-search input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:13px}',
+    '.z-reels-tabs{position:sticky;top:58px;z-index:14;display:flex;gap:0;overflow:auto;padding:0 10px;background:#080b09f2;backdrop-filter:blur(14px);scrollbar-width:none;border-bottom:1px solid #ffffff12}.z-reels-tabs button{position:relative;flex:1;min-width:0;border:0;border-radius:0;background:transparent;color:#b9c1bc;padding:13px 10px 12px;font-size:13px;font-weight:700;white-space:nowrap}.z-reels-tabs button.active{color:#fff}.z-reels-tabs button.active:after{content:"";position:absolute;left:14%;right:14%;bottom:0;height:3px;border-radius:4px 4px 0 0;background:#18a66f}',
+    '.z-reels-feed{display:flex;flex-direction:column;gap:8px;padding:8px 0}.z-reel-card{position:relative;height:calc(100svh - 166px);min-height:500px;max-height:850px;max-width:560px;width:100%;margin:0 auto;border-radius:14px;overflow:hidden;background:#101713;isolation:isolate;box-shadow:0 12px 32px #0005}',
+    '@media(min-width:700px){.z-reels-page{max-width:560px}.z-reels-head{border-radius:0}.z-reel-card{height:min(780px,calc(100svh - 180px))}}',
+    '@media(max-width:520px){.z-reels-shell{padding-bottom:76px}.z-reels-page{padding-bottom:76px}.z-reels-feed{gap:0;padding:0}.z-reel-card{height:calc(100svh - 160px);min-height:440px;border-radius:0;max-width:none}.z-reels-tabs{top:58px}.z-reel-actions{right:10px;bottom:118px;gap:12px}.z-reel-copy{left:14px;bottom:16px;right:66px}.z-reel-product{max-width:100%}}',
     '.z-reels-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 2px 14px}',
     '.z-reels-brand{font:900 18px Manrope,Arial,sans-serif;letter-spacing:1px}.z-reels-brand small{display:block;font:700 9px Arial,sans-serif;letter-spacing:2px;color:#9db8aa;margin-top:2px}',
     '.z-reels-head-actions{display:flex;gap:8px}.z-reels-head-actions button,.z-reels-search{border:1px solid #ffffff20;background:#ffffff0c;color:#fff;border-radius:12px;padding:10px 12px}',
@@ -84,7 +91,7 @@ function cardHTML(reel) {
 }
 function visibleReels() {
   let list = state.reels.slice();
-  if (state.tab === 'following') list = list.filter(r => state.following.has(r.creator_id));
+  if (state.tab === 'following' || state.tab === 'friends') list = list.filter(r => state.following.has(r.creator_id));
   if (state.tab === 'products') list = list.filter(r => !!r.product_id);
   const score = r => {
     const ageHours = Math.max(1,(Date.now()-new Date(r.created_at).getTime())/3600000);
@@ -351,7 +358,13 @@ async function openComments(reelId) {
 }
 function bindEvents() {
   const root = state.root;
-  root.querySelector('[data-open-cart]')?.addEventListener('click',state.context.onCart);
+  root.querySelector('[data-reels-search-toggle]')?.addEventListener('click',() => {
+    const wrap = root.querySelector('#z-reels-search-wrap');
+    if (!wrap) return;
+    wrap.hidden = !wrap.hidden;
+    if (!wrap.hidden) root.querySelector('#z-reels-search')?.focus();
+    else { state.search = ''; const input = root.querySelector('#z-reels-search'); if (input) input.value = ''; renderFeed(); }
+  });
   root.querySelector('#z-reels-search')?.addEventListener('input',e => { state.search = e.target.value; renderFeed(); });
   root.querySelectorAll('[data-reels-tab]').forEach(button => button.addEventListener('click',() => {
     state.tab = button.dataset.reelsTab;
@@ -398,10 +411,9 @@ function bindEvents() {
 export function renderZuneReelsPage() {
   installStyles();
   const sw = state.context?.language !== 'en';
-  return '<section class="z-home"><header class="z-home-header"><div class="z-home-top"><div class="z-home-brand"><div class="zune-logo">ⓏⓊⓃⒺ</div></div><div class="z-home-actions"><button type="button" class="z-icon-button" data-open-cart aria-label="Kikapu">🛒</button></div></div></header>' +
-    '<main class="z-reels-page"><div class="z-reels-head"><div class="z-reels-brand">ZUNE REELS<small>SHOP · WATCH · DISCOVER</small></div><div class="z-reels-head-actions"><button type="button" data-reels-explore>Explore</button></div></div>' +
-    '<label class="z-reels-search"><input id="z-reels-search" type="search" placeholder="' + (sw ? 'Tafuta video, duka au bidhaa...' : 'Search videos, stores or products...') + '"></label>' +
-    '<nav class="z-reels-tabs"><button class="active" type="button" data-reels-tab="for-you">For You</button><button type="button" data-reels-tab="following">Following</button><button type="button" data-reels-tab="trending">Trending</button><button type="button" data-reels-tab="new">New</button><button type="button" data-reels-tab="products">Products</button></nav><div class="z-reels-feed" id="z-reels-feed"><div class="z-reels-empty"><div class="mark">◌</div><h2>Inapakia Reels...</h2></div></div></main></section>';
+  return '<section class="z-reels-shell"><main class="z-reels-page"><header class="z-reels-head"><h1 class="z-reels-title">Reels</h1><div class="z-reels-head-actions"><button type="button" class="z-reels-icon-btn" data-reels-search-toggle aria-label="Tafuta Reels" title="Tafuta">⌕</button></div></header>' +
+    '<label class="z-reels-search" id="z-reels-search-wrap" hidden><input id="z-reels-search" type="search" placeholder="' + (sw ? 'Tafuta video, duka au bidhaa...' : 'Search videos, stores or products...') + '"></label>' +
+    '<nav class="z-reels-tabs" aria-label="Reels feed"><button class="active" type="button" data-reels-tab="for-you">For You</button><button type="button" data-reels-tab="following">Following</button><button type="button" data-reels-tab="friends">Friends</button></nav><div class="z-reels-feed" id="z-reels-feed"><div class="z-reels-empty"><div class="mark">◌</div><h2>Inapakia Reels...</h2></div></div></main></section>';
 }
 export async function bindZuneReelsPage(context) {
   state.context = context;
