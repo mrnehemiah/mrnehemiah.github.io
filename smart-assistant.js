@@ -169,7 +169,7 @@ export async function openZuneAssistant({
  const openAssistantPage=page=>{close();renderMarketplacePage(page);};
  const bindActionCards=root=>root?.querySelectorAll("[data-assistant-action]")?.forEach(button=>button.addEventListener("click",()=>{
   const action=button.dataset.assistantAction;
-  if(action==="orders"){openAssistantPage("me");return;}
+  if(action==="orders"){close();renderMarketplacePage("me").then(()=>document.querySelector("[data-account-orders]")?.click());return;}
   const page={explore:"explore",cart:"cart",saved:"saved",account:"me",features:"features",reels:"reels",live:"live"}[action];
   if(page)openAssistantPage(page);
  }));
@@ -353,10 +353,7 @@ export async function openZuneAssistant({
   if(/(?:recommend|mapendekezo|nipendekezee|pendekeza bidhaa)/i.test(n)){showRecommendations();return;}
   if(/(?:marketplace overview|marketplace intelligence|muhtasari wa marketplace|takwimu za marketplace|hali ya marketplace)/i.test(n)){showMarketplaceIntelligence();return;}
   if(/(?:show actions|action cards|quick actions|vitendo vya haraka|menu ya assistant)/i.test(n)){showActionCards();return;}
-  if(/(?:open reels|zune reels|angalia reels|video fupi)/i.test(n)){openAssistantPage("reels");return;}
-  const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
-  if(knowledge){lastKnowledgeTopic=knowledge.topic;saveContextMemory(q);if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
-  saveContextMemory(followUp&&previousContextQuery?previousContextQuery:q);
+  if(/(?:^reels?$|open reels|zune reels|angalia reels|video fupi)/i.test(n)){openAssistantPage("reels");return;}
   if(has("track","fuatilia","hali ya oda","order status","oda zangu","my orders")){
    if(!homeState.user?.id){say(sw?"Ingia kwenye akaunti yako ili kuona oda zako binafsi.":"Sign in to view your private orders.");return;}
    assistantStats.ordersLookups++;
@@ -367,6 +364,10 @@ export async function openZuneAssistant({
    const cards=orders.map(o=>'<div class="z-assistant-order"><b>'+(sw?"Oda ":"Order ")+safe(o.order_number||o.public_order_id||String(o.id).slice(0,8))+'</b><small>'+safe(String(o.status||"unknown"))+' · '+safe(String(o.payment_status||"payment status not listed"))+' · '+safe(money(Number(o.total_price||0)))+'</small><small>'+safe(o.created_at?new Date(o.created_at).toLocaleDateString(sw?"sw-TZ":"en-US"):"")+'</small></div>').join("");
    say((sw?"Oda zako za hivi karibuni (akaunti yako tu):":"Your recent orders (your account only):")+cards+'<button type="button" data-assistant-action="orders">'+(sw?"Fungua Oda Zangu":"Open My Orders")+'</button>');return;
   }
+  const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
+  if(knowledge){lastKnowledgeTopic=knowledge.topic;saveContextMemory(q);if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
+  saveContextMemory(followUp&&previousContextQuery?previousContextQuery:q);
+
   if(has("oda","order","nunua","buy","agiz","cart","kikapu")){say(sw?"Fungua bidhaa, chagua variant na idadi, kisha bonyeza Weka Kikapuni. Fungua Kikapu kuendelea na checkout.":"Open a product, choose a variant and quantity, then tap Add to Cart. Open your Cart to continue checkout.");return;}
   if(has("delivery","usafiri","dereva","driver","kusafir","fikisha")){say(sw?"Delivery hutegemea duka, bidhaa na eneo lako. Thibitisha upatikanaji, gharama na muda wa kufikishiwa na duka kabla ya kulipa.":"Delivery depends on the store, product and your location. Confirm availability, cost and timing with the store before payment.");return;}
   if(has("malipo","payment","lipa","kulipa","airtel","mpesa","tigopesa","mixx","visa","mastercard")){say(sw?"Njia halisi zinazopatikana kwa oda yako zitaonyeshwa kwenye checkout. Hakiki kiasi na mpokeaji kabla ya kuthibitisha.":"Payment methods available for your order are shown at checkout. Verify the amount and recipient before confirming.");return;}
