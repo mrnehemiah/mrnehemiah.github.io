@@ -47,44 +47,51 @@ export async function openZuneAssistant({
  const speechSupported=typeof window!=="undefined"&&!!window.speechSynthesis&&typeof window.SpeechSynthesisUtterance==="function";
  let speechEnabled=!!speechSupported;
  let voiceList=[];
- let speechQueueToken=0;
+ let speechQueueToken=0,speechQueue=[],speechPlaying=false;
  let recognition=null,recognitionActive=false,recognitionText="";
  const setVoiceStatus=message=>{if(speechStatus)speechStatus.textContent=message||"";};
  const loadVoices=()=>{if(!speechSupported)return[];voiceList=window.speechSynthesis.getVoices()||[];return voiceList;};
  if(speechSupported){loadVoices();window.speechSynthesis.addEventListener?.("voiceschanged",loadVoices);}
- const stopSpeaking=()=>{speechQueueToken++;if(speechSupported){window.speechSynthesis.cancel();window.speechSynthesis.resume();}};
+ const stopSpeaking=()=>{
+  speechQueueToken++;speechQueue.length=0;speechPlaying=false;
+  if(speechSupported){try{window.speechSynthesis.cancel();window.speechSynthesis.resume();}catch(_){}}
+ };
  const pickVoice=lang=>{
   const voices=loadVoices(),prefix=lang.slice(0,2).toLowerCase();
   const matching=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(prefix));
-  const female=/female|woman|zira|samantha|victoria|karen|susan|ava|aria|jenny|natasha|google.*uk english female|microsoft.*zira/i;
-  return matching.find(v=>female.test(v.name))||matching[0]||null;
+  if(!matching.length)return null;
+  if(prefix==="sw")return matching.find(v=>String(v.lang||"").toLowerCase()==="sw-tz")||matching[0];
+  const preferred=/female|woman|zira|samantha|victoria|karen|susan|ava|aria|jenny/i;
+  return matching.find(v=>preferred.test(v.name))||matching[0]||null;
  };
- const speakReply=text=>{
-  if(!speechEnabled||!speechSupported||!text)return;
+ const playSpeechQueue=token=>{
+  if(!speechEnabled||!speechSupported||token!==speechQueueToken||speechPlaying)return;
+  const part=speechQueue.shift();
+  if(!part)return;
+  speechPlaying=true;
+  const lang=sw?"sw-TZ":"en-US",utterance=new window.SpeechSynthesisUtterance(part);
+  const voice=pickVoice(lang);
+  utterance.lang=voice?.lang||lang;
+  if(voice)utterance.voice=voice;
+  utterance.rate=sw?.90:.96;utterance.pitch=1;utterance.volume=1;
+  utterance.onstart=()=>setVoiceStatus(sw?"ZUNE inazungumza...":"ZUNE is speaking...");
+  utterance.onend=()=>{speechPlaying=false;if(token===speechQueueToken)playSpeechQueue(token);};
+  utterance.onerror=event=>{
+   speechPlaying=false;
+   console.warn("ZUNE speech playback:",event.error);
+   if(token===speechQueueToken){
+    setVoiceStatus(sw?"Sauti imeshindwa kuchezwa. Angalia mipangilio ya Text-to-Speech kwenye simu.":"Voice playback failed. Check your device Text-to-Speech settings.");
+    playSpeechQueue(token);
+   }
+  };
+  try{window.speechSynthesis.resume();window.speechSynthesis.speak(utterance);}
+  catch(error){speechPlaying=false;console.error("ZUNE speech playback:",error);setVoiceStatus(sw?"Sauti haipatikani kwenye kifaa hiki.":"Voice is unavailable on this device.");}
+ };
+ const enqueueSpeech=(text,token)=>{
+  if(!speechEnabled||!speechSupported||token!==speechQueueToken||!text)return;
   const clean=String(text).replace(/<[^>]*>/g," ").replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
   if(clean.length<2)return;
-  stopSpeaking();
-  const token=speechQueueToken,lang=sw?"sw-TZ":"en-US";
-  const chunks=clean.match(/[^.!?…]+[.!?…]*/g)||[clean];
-  let index=0;
-  const speakNext=()=>{
-   if(token!==speechQueueToken||!speechEnabled||index>=chunks.length){if(token===speechQueueToken)setVoiceStatus("");return;}
-   const part=chunks[index++].trim();if(!part){speakNext();return;}
-   const utterance=new window.SpeechSynthesisUtterance(part);
-   const voice=pickVoice(lang);
-   utterance.lang=voice?.lang||lang;
-   if(voice)utterance.voice=voice;
-   utterance.rate=.92;utterance.pitch=1.04;utterance.volume=1;
-   utterance.onstart=()=>setVoiceStatus(sw?"ZUNE inazungumza...":"ZUNE is speaking...");
-   utterance.onend=speakNext;
-   utterance.onerror=event=>{
-    console.warn("ZUNE speech playback:",event.error);
-    setVoiceStatus(sw?"Sauti haikuweza kuchezwa. Hakikisha Text-to-Speech imewashwa kwenye simu.":"Voice playback failed. Check your device Text-to-Speech settings.");
-   };
-   try{window.speechSynthesis.resume();window.speechSynthesis.speak(utterance);}
-   catch(error){console.error("ZUNE speech playback:",error);setVoiceStatus(sw?"Sauti haipatikani kwenye kifaa hiki.":"Voice is unavailable on this device.");}
-  };
-  speakNext();
+  speechQueue.push(clean);playSpeechQueue(token);
  };
  const updateSpeechToggle=()=>{
   if(!speechToggle)return;
@@ -99,9 +106,9 @@ export async function openZuneAssistant({
   speechEnabled=!speechEnabled;
   if(!speechEnabled){stopSpeaking();setVoiceStatus(sw?"Majibu ya sauti yamezimwa.":"Voice replies are off.");}
   else{
-   try{window.speechSynthesis.cancel();window.speechSynthesis.resume();}catch(_){}
-   setVoiceStatus(sw?"Inajaribu sauti...":"Testing voice...");
-   speakReply(sw?"Sauti ya ZUNE imewashwa.":"ZUNE voice is now on.");
+   setVoiceStatus(sw?"Sauti imewashwa. Majibu yatasomwa kadiri yanavyoandikwa.":"Voice is on. Replies will be spoken as they appear.");
+   const token=speechQueueToken;
+   enqueueSpeech(sw?"Sauti ya ZUNE imewashwa.":"ZUNE voice is now on.",token);
   }
   updateSpeechToggle();
  });
@@ -144,7 +151,7 @@ export async function openZuneAssistant({
   if(user){d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return Promise.resolve(d);}
   if(activeTyping)activeTyping.cancelled=true;
   stopSpeaking();
-  const stream={cancelled:false};activeTyping=stream;
+  const stream={cancelled:false,speechToken:speechQueueToken,speechBuffer:""};activeTyping=stream;
   const content=document.createElement("div");
   content.innerHTML=html;
   const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
@@ -166,20 +173,25 @@ export async function openZuneAssistant({
     for(const token of tokens){
      if(stream.cancelled||!overlay.isConnected)break;
      part.node.nodeValue+=token;
+     if(speechEnabled)stream.speechBuffer+=token;
      box.scrollTop=box.scrollHeight;
      if(/^\s+$/.test(token)){
       if(token.includes("\n"))await pause(320);
      }else{
       const sentenceEnd=/[.!?…]$/.test(token);
       const commaEnd=/[,;:]$/.test(token);
+      if(sentenceEnd&&stream.speechBuffer.trim()){
+       enqueueSpeech(stream.speechBuffer,stream.speechToken);
+       stream.speechBuffer="";
+      }
       await pause(sentenceEnd?520:commaEnd?320:190);
      }
     }
     if(stream.cancelled||!overlay.isConnected)break;
    }
+   if(stream.speechBuffer.trim())enqueueSpeech(stream.speechBuffer,stream.speechToken);
    typing.remove();stop.remove();
    if(activeTyping===stream)activeTyping=null;
-   if(!stream.cancelled&&overlay.isConnected)speakReply(content.innerText||content.textContent||"");
   })();
   return Promise.resolve(d);
  };
