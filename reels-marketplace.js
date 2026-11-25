@@ -107,6 +107,7 @@ function observeVideos() {
   const videos = Array.from(state.root.querySelectorAll('[data-reel-video]'));
   if (!('IntersectionObserver' in window)) {
     videos[0]?.play().catch(() => {});
+    if (videos[0]) recordView(videos[0].dataset.reelVideo);
     return;
   }
   state.observer = new IntersectionObserver(entries => {
@@ -335,9 +336,10 @@ function bindEvents() {
       const reel = state.reels.find(x => x.id === audio.dataset.reelAudio);
       const video = root.querySelector('[data-reel-video="' + CSS.escape(audio.dataset.reelAudio) + '"]');
       if (reel?.sound?.url) {
+        if (state.audioPlayer && state.audioPlayer._zuneReelId === reel.id && !state.audioPlayer.paused) { state.audioPlayer.pause(); state.audioPlayer = null; audio.querySelector('.glyph').textContent = '♫'; audio.querySelector('span:last-child').textContent = 'Music'; return; }
         if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
-        state.audioPlayer = new Audio(reel.sound.url); if (video) video.muted = true;
-        state.audioPlayer.play().then(() => { audio.querySelector('.glyph').textContent = '🔊'; audio.querySelector('span:last-child').textContent = 'Music'; }).catch(() => toast('Gusa tena ili kuruhusu music kucheza.'));
+        state.audioPlayer = new Audio(reel.sound.url); state.audioPlayer._zuneReelId = reel.id; if (video) video.muted = true;
+        state.audioPlayer.play().then(() => { audio.querySelector('.glyph').textContent = '🔊'; audio.querySelector('span:last-child').textContent = 'Mute music'; }).catch(() => toast('Gusa tena ili kuruhusu music kucheza.'));
       } else if (video) { video.muted = !video.muted; audio.querySelector('.glyph').textContent = video.muted ? '♫' : '🔊'; audio.querySelector('span:last-child').textContent = video.muted ? 'Sound' : 'Mute'; }
       return;
     }
