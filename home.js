@@ -2006,23 +2006,13 @@ function addToCart(productId, productOverride = null, selectedVariant = null) {
 // 13. CHANGE CART QUANTITY
 // --------------------------------------------
 
-function changeCartQuantity(productId, change) {
-  const id = String(productId);
-
-  const item = homeState.cart.find(
-    cartItem => String(cartItem.productId) === id
-  );
-
+function homeCartItemKey(item){return String(item.productId)+"::"+String(item.variantId||"");}
+function changeCartQuantity(cartKey, change) {
+  const key = String(cartKey);
+  const item = homeState.cart.find(cartItem => homeCartItemKey(cartItem) === key);
   if (!item) return;
-
   item.quantity = Number(item.quantity || 1) + change;
-
-  if (item.quantity <= 0) {
-    homeState.cart = homeState.cart.filter(
-      cartItem => String(cartItem.productId) !== id
-    );
-  }
-
+  if (item.quantity <= 0) homeState.cart = homeState.cart.filter(cartItem => homeCartItemKey(cartItem) !== key);
   saveCart();
 }
 
@@ -2030,13 +2020,9 @@ function changeCartQuantity(productId, change) {
 // 14. REMOVE CART ITEM
 // --------------------------------------------
 
-function removeCartItem(productId) {
-  const id = String(productId);
-
-  homeState.cart = homeState.cart.filter(
-    item => String(item.productId) !== id
-  );
-
+function removeCartItem(cartKey) {
+  const key=String(cartKey);
+  homeState.cart=homeState.cart.filter(item=>homeCartItemKey(item)!==key);
   saveCart();
 }
 
@@ -3167,7 +3153,7 @@ function bindCartEvents() {
     }
   });
 
-  const key = homeState.cart.map(item => String(item.productId)).sort().join("|");
+  const key = homeState.cart.map(item => homeCartItemKey(item)).sort().join("|");
   if (key === homeState.cartProductsKey || homeState.cartProductsLoading) return;
 
   homeState.cartProductsLoading = true;
@@ -4138,7 +4124,7 @@ async function renderMarketplacePage(page) {
       if (!cartModule) {
         app.innerHTML = '<section class="z-cart-loading" role="status" aria-live="polite"><div class="zune-wave"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia kikapu...</p></section>';
         try {
-          cartModule = await import("./cart.js?v=20261115-cart-lazy-v1");
+          cartModule = await import("./cart.js?v=product-variants-cart-2");
         } catch (error) {
           console.error("ZUNE cart module could not be loaded:", error);
           app.innerHTML = '<section class="z-cart-loading" role="alert"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><button type="button" id="z-cart-retry">Jaribu tena</button></section>';
