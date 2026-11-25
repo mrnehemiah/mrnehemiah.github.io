@@ -78,11 +78,11 @@ async function placeOrder(){
  busy=true;const button=root.querySelector("#zc-place");button.disabled=true;button.textContent=t("placing");
  try{
   const couponCode=String(root.querySelector("#zc-coupon")?.value||"").trim()||null;
-  const {data:latestQuote,error:quoteError}=await supabase.rpc("zune_quote_checkout",{p_items:cart.map(x=>({product_id:x.productId,quantity:x.quantity})),p_address:address,p_coupon_code:couponCode});
+  const {data:latestQuote,error:quoteError}=await supabase.rpc("zune_quote_checkout",{p_items:cart.map(x=>({product_id:x.productId,variant_id:x.variantId||null,quantity:x.quantity})),p_address:address,p_coupon_code:couponCode});
   if(quoteError)throw quoteError;
   if(!latestQuote?.ready)throw new Error(latestQuote?.message||t("quoteFail"));
   quote=latestQuote;updateQuoteUI();
-  const {data,error}=await supabase.rpc("zune_create_checkout",{p_items:cart.map(x=>({product_id:x.productId,quantity:x.quantity})),p_address:address,p_idempotency_key:key,p_coupon_code:couponCode});
+  const {data,error}=await supabase.rpc("zune_create_checkout",{p_items:cart.map(x=>({product_id:x.productId,variant_id:x.variantId||null,quantity:x.quantity})),p_address:address,p_idempotency_key:key,p_coupon_code:couponCode});
   if(error)throw error;
   if(address.save_address){const {error:saveError}=await supabase.from("delivery_addresses").insert({user_id:user.id,recipient_name:address.recipient_name,phone:address.phone,country:address.country,region:address.region,district:address.district,ward:address.ward||'',street:address.street,landmark:address.landmark||null,delivery_notes:address.delivery_notes||null,latitude:address.latitude?Number(address.latitude):null,longitude:address.longitude?Number(address.longitude):null,is_default:addresses.length===0});if(saveError)console.warn("Address was not saved:",saveError.message);}
   writeCart([],user.id);syncCartCountBadges([]);sessionStorage.removeItem("zune_checkout_key:"+user.id);
