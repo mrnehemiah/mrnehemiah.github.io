@@ -279,19 +279,13 @@ function saveCart() {
   if (!key || !userId) return;
   localStorage.setItem(key, JSON.stringify(homeState.cart));
   updateCartBadges();
-  const snapshot = homeState.cart.map(item => ({ productId: String(item.productId), quantity: Math.max(1, Math.min(99, Number(item.quantity) || 1)) }));
+  const snapshot = homeState.cart.map(item => ({ productId: String(item.productId), variantId: item.variantId || null, quantity: Math.max(1, Math.min(99, Number(item.quantity) || 1)) }));
   cartCloudSync = cartCloudSync.then(async () => {
-    const current = await supabase.from("cart_items").select("product_id").eq("user_id", userId);
-    if (current.error) throw current.error;
-    const keep = new Set(snapshot.map(item => item.productId));
-    const removeIds = (current.data || []).map(row => String(row.product_id)).filter(id => !keep.has(id));
-    if (removeIds.length) {
-      const removed = await supabase.from("cart_items").delete().eq("user_id", userId).in("product_id", removeIds);
-      if (removed.error) throw removed.error;
-    }
+    const removed = await supabase.from("cart_items").delete().eq("user_id", userId);
+    if (removed.error) throw removed.error;
     if (snapshot.length) {
-      const rows = snapshot.map(item => ({ user_id: userId, product_id: item.productId, quantity: item.quantity }));
-      const saved = await supabase.from("cart_items").upsert(rows, { onConflict: "user_id,product_id" });
+      const rows = snapshot.map(item => ({ user_id: userId, product_id: item.productId, variant_id: item.variantId, quantity: item.quantity }));
+      const saved = await supabase.from("cart_items").insert(rows);
       if (saved.error) throw saved.error;
     }
   }).catch(error => console.warn("ZUNE cart cloud sync:", error.message));
@@ -884,6 +878,7 @@ function addHomeStyles() {
       background: rgb(0 0 0 / 55%);
       backdrop-filter: blur(4px);
     }
+.z-detail-variants{margin:12px 0}.z-variant-label{display:grid;gap:7px;font-size:13px;font-weight:700;color:var(--text)}.z-variant-label select{width:100%;min-height:46px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--surface);color:var(--text);font:inherit}.z-detail-add:disabled{opacity:.5;cursor:not-allowed}
     .z-product-detail-sheet {
       position: relative;
       width: min(100%, 620px);
@@ -1792,11 +1787,12 @@ function openProductDetails(product) {
         <div class="z-product-store"><button type="button" class="z-product-store-name z-store-open" data-open-store="${safe(product.vendor_id||"")}">${safe(storeName)}</button>${accountVerified ? '<span class="z-verified-account-mark" title="Verified Account" aria-label="Verified Account"><svg viewBox="-30 -30 60 60" role="img"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : ""}${verified ? '<span class="z-verified-store-mark" aria-label="Verified Store">✓</span>' : ""}</div>
         ${location ? `<div class="z-product-location">⌖ ${safe(location)}</div>` : ""}
         <h2>${safe(product.title || tx("emptyName"))}</h2>
-        <p class="z-detail-price">${money(product.price)}</p>
+        <p class="z-detail-price" id="z-detail-price">${money(product.price)}</p>
+        <div id="z-detail-variants" class="z-detail-variants" aria-live="polite"></div>
         <div class="z-detail-rating" id="z-detail-rating" aria-live="polite">${Number(product.average_rating||product.rating_average||product.rating||0)>0 ? "★ "+Number(product.average_rating||product.rating_average||product.rating).toFixed(1)+" · "+Number(product.review_count||product.reviews_count||0)+" "+(language()==="sw"?"tathmini":"reviews") : (language()==="sw"?"Bado hakuna tathmini":"No ratings yet")}</div>
         ${product.description ? `<p class="z-detail-description">${safe(product.description)}</p>` : ""}
         ${product.category ? `<p class="z-detail-category">${safe(product.category)}</p>` : ""}
-        ${stock !== null ? `<p class="z-detail-stock">${stock > 0 ? (language()==="sw" ? "Stock iliyopo: " : "Available stock: ") + stock : (language()==="sw" ? "Bidhaa imeisha stock" : "Out of stock")}</p>` : ""}
+        ${stock !== null ? `<p class="z-detail-stock" id="z-detail-stock">${stock > 0 ? (language()==="sw" ? "Stock iliyopo: " : "Available stock: ") + stock : (language()==="sw" ? "Bidhaa imeisha stock" : "Out of stock")}</p>` : `<p class="z-detail-stock" id="z-detail-stock"></p>`}
         <div class="z-detail-actions">
           <button type="button" class="z-primary-button z-detail-add" ${stock !== null && stock <= 0 ? "disabled" : ""}>${tx("addCart")}</button>
           <button type="button" class="z-detail-compare" data-detail-compare>${language()==="sw"?"⇄ Linganisha":"⇄ Compare"}</button>
@@ -1818,8 +1814,31 @@ function openProductDetails(product) {
   overlay.addEventListener("click", event => { if (event.target === overlay) close(); });
   overlay.querySelector(".z-detail-close")?.addEventListener("click", close);
   overlay.querySelector("[data-open-store]")?.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();openStoreDetails(event.currentTarget.dataset.openStore,product);});
-  overlay.querySelector(".z-detail-add")?.addEventListener("click", () => {
-    addToCart(String(product.id),product);
+  let availableVariants=[];
+  let selectedVariant=null;
+  const addButton=overlay.querySelector(".z-detail-add");
+  if(addButton)addButton.disabled=true;
+  supabase.from("product_variants").select("id,label,sku,attributes,price,stock_quantity").eq("product_id",product.id).eq("is_active",true).order("sort_order",{ascending:true}).then(({data,error})=>{
+    if(error){console.warn("ZUNE product variants:",error);if(addButton)addButton.disabled=Number(product.stock_quantity||0)<=0;return;}
+    availableVariants=data||[];
+    product.__zuneHasVariants=availableVariants.length>0;
+    const host=overlay.querySelector("#z-detail-variants");
+    if(availableVariants.length){
+      host.innerHTML='<label class="z-variant-label">'+(language()==="sw"?"Chagua aina / ukubwa / rangi":"Choose option / size / color")+'<select id="z-detail-variant-select"><option value="">'+(language()==="sw"?"Chagua chaguo":"Select an option")+'</option>'+availableVariants.map(v=>'<option value="'+safe(v.id)+'" '+(Number(v.stock_quantity)<=0?'disabled':'')+'>'+safe(v.label)+' · '+money(v.price)+(v.stock_quantity<=0?(language()==="sw"?" (Imeisha)":" (Out of stock)"):"")+'</option>').join("")+'</select></label>';
+      const select=host.querySelector("select");
+      select.addEventListener("change",()=>{
+        selectedVariant=availableVariants.find(v=>String(v.id)===select.value)||null;
+        const price=overlay.querySelector("#z-detail-price"),stockNode=overlay.querySelector("#z-detail-stock");
+        if(price)price.textContent=money(selectedVariant?selectedVariant.price:product.price);
+        if(stockNode)stockNode.textContent=selectedVariant?(language()==="sw"?"Stock iliyopo: ":"Available stock: ")+selectedVariant.stock_quantity:"";
+        if(addButton)addButton.disabled=!selectedVariant||Number(selectedVariant.stock_quantity)<=0;
+      });
+      if(addButton)addButton.disabled=true;
+    }else if(addButton)addButton.disabled=Number(product.stock_quantity||0)<=0;
+  });
+  addButton?.addEventListener("click",()=>{
+    if(product.__zuneHasVariants&&!selectedVariant){alert(language()==="sw"?"Chagua aina ya bidhaa kwanza.":"Please select a product option first.");return;}
+    addToCart(String(product.id),product,selectedVariant);
     close();
   });
   overlay.querySelector("[data-detail-compare]")?.addEventListener("click", async event => {
@@ -1969,40 +1988,17 @@ async function toggleSaved(productId) {
 // 12. ADD TO CART
 // --------------------------------------------
 
-function addToCart(productId, productOverride = null) {
+function addToCart(productId, productOverride = null, selectedVariant = null) {
   const id = String(productId);
-
-  const product = productOverride && String(productOverride.id)===id
-    ? productOverride
-    : homeState.products.find(item => String(item.id) === id);
-
-  if (!product) {
-    alert(
-      language() === "sw"
-        ? "Bidhaa haijapatikana. Jaribu kupakia tena."
-        : "Product not found. Please reload and try again."
-    );
-    return;
-  }
-
-  const existing = homeState.cart.find(
-    item => String(item.productId) === id
-  );
-
-  if (existing) {
-    existing.quantity = Math.max(
-      1,
-      Number(existing.quantity || 1) + 1
-    );
-  } else {
-    homeState.cart.push({
-      productId: id,
-      quantity: 1
-    });
-  }
-
+  const product = productOverride && String(productOverride.id)===id ? productOverride : homeState.products.find(item => String(item.id) === id);
+  if (!product) { alert(language()==="sw"?"Bidhaa haijapatikana. Jaribu tena.":"Product not found. Please try again."); return; }
+  const variantId = selectedVariant?.id || null;
+  if (selectedVariant && (Number(selectedVariant.stock_quantity)||0) < 1) { alert(language()==="sw"?"Chaguo hili limeisha stock.":"This option is out of stock."); return; }
+  if (!selectedVariant && product.__zuneHasVariants) { alert(language()==="sw"?"Chagua aina ya bidhaa kwanza.":"Please select a product option first."); return; }
+  const existing = homeState.cart.find(item => String(item.productId)===id && String(item.variantId||"")===String(variantId||""));
+  if (existing) existing.quantity=Math.min(99,Math.max(1,Number(existing.quantity||1)+1));
+  else homeState.cart.push({productId:id,variantId,quantity:1});
   saveCart();
-
   alert(tx("added"));
 }
 
