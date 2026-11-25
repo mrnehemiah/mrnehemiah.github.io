@@ -41,7 +41,48 @@ export async function openZuneAssistant({
  document.body.appendChild(overlay);const close=()=>overlay.remove();
  overlay.addEventListener("click",e=>{if(e.target===overlay)close();});overlay.querySelector(".z-assistant-close").addEventListener("click",close);
  const box=overlay.querySelector("#z-assistant-messages"),field=overlay.querySelector("#z-assistant-input");
- const say=(html,user=false)=>{const d=document.createElement("div");d.className="z-assistant-message"+(user?" user":"");d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;};
+ let activeTyping=null;
+ const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+ const say=(html,user=false)=>{
+  const d=document.createElement("div");
+  d.className="z-assistant-message"+(user?" user":"");
+  if(user){d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return Promise.resolve(d);}
+  if(activeTyping)activeTyping.cancelled=true;
+  const stream={cancelled:false};activeTyping=stream;
+  const content=document.createElement("div");
+  content.innerHTML=html;
+  const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
+  const textNodes=[];let node;
+  while((node=walker.nextNode())){textNodes.push({node,text:node.nodeValue||""});node.nodeValue="";}
+  const typing=document.createElement("span");
+  typing.className="z-assistant-typing";
+  typing.setAttribute("aria-label",sw?"ZUNE inaandika":"ZUNE is typing");
+  typing.innerHTML="<i></i><i></i><i></i>";
+  const stop=document.createElement("button");
+  stop.type="button";stop.className="z-assistant-stop";
+  stop.textContent=sw?"Simamisha":"Stop";
+  stop.addEventListener("click",()=>{stream.cancelled=true;});
+  d.append(content,typing,stop);box.appendChild(d);box.scrollTop=box.scrollHeight;
+  (async()=>{
+   await pause(260);
+   for(const part of textNodes){
+    const tokens=part.text.match(/\s+|[^\s]+/g)||[];
+    for(const token of tokens){
+     if(stream.cancelled||!overlay.isConnected)break;
+     part.node.nodeValue+=token;
+     box.scrollTop=box.scrollHeight;
+     if(!/^\s+$/.test(token)){
+      const punctuation=/[.!?…,:;]$/.test(token);
+      await pause(punctuation?105:24);
+     }
+    }
+    if(stream.cancelled||!overlay.isConnected)break;
+   }
+   typing.remove();stop.remove();
+   if(activeTyping===stream)activeTyping=null;
+  })();
+  return Promise.resolve(d);
+ };
  const remember=q=>{const key="zune_search_history:"+(homeState.user?.id||"guest");try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
  let lastKnowledgeTopic=null;
  const ask=async raw=>{
