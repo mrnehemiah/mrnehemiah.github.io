@@ -194,7 +194,7 @@ async function loadFeed() {
   } finally { state.loading = false; }
 }
 async function recordView(reelId) {
-  if (!reelId || state.viewed.has(reelId)) return;
+  if (!reelId || !state.context.user?.id || state.viewed.has(reelId)) return;
   state.viewed.add(reelId);
   try {
     const {data,error} = await state.context.db.rpc('zune_reel_record_view',{p_reel_id:reelId,p_session_key:state.sessionKey || crypto.randomUUID()});
