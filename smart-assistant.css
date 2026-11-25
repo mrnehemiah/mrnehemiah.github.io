@@ -95,3 +95,14 @@
 .z-premium-voice-mode .z-premium-chat-hero{display:none}
 @media(max-width:640px){.z-premium-chat-hero{padding:13px 4px 18px}.z-premium-chat-orb{width:100px}.z-premium-chat-hero p{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.z-premium-chat-orb,.z-premium-chat-orb:before,.z-premium-chat-orb:after,.z-premium-chat-orb span,.z-premium-chat-orb i{animation:none}}
+
+/* Premium message composer: persistent, expandable and mobile-safe */
+.z-assistant-form{position:sticky;bottom:0;z-index:6;align-items:flex-end;gap:9px;padding:12px 16px max(14px,env(safe-area-inset-bottom));background:var(--za-surface,#fff);box-shadow:0 -8px 28px rgba(12,64,37,.07)}
+.z-assistant-form textarea{display:block;flex:1 1 auto;min-width:0;min-height:48px;max-height:132px;resize:none;overflow-y:auto;box-sizing:border-box;padding:13px 16px;border:1px solid #d5e7dc;border-radius:19px;background:#f7fbf8;color:#173b29;font:inherit;font-size:14px;line-height:1.45;outline:none;transition:border-color .18s,box-shadow .18s}
+.z-assistant-form textarea:focus{border-color:#0b8a59;box-shadow:0 0 0 4px #0b8a5918}
+.z-assistant-form textarea::placeholder{color:#81948a}
+.z-assistant-form>button[type=submit]{background:linear-gradient(145deg,#12a768,#087b50);box-shadow:0 5px 14px #087b5033;font-size:21px}
+.z-assistant-form .z-premium-tools{flex:0 0 44px;width:44px;height:44px;border-radius:50%;font-size:25px}
+.z-assistant-form .z-assistant-mic{flex:0 0 44px;width:44px;height:44px;border-radius:50%;font-size:19px}
+.z-assistant-tool-menu{bottom:calc(100% + 8px)}
+@media(max-width:640px){.z-assistant-form{gap:7px;padding:10px 11px max(12px,env(safe-area-inset-bottom))}.z-assistant-form textarea{min-height:46px;padding:12px 13px;font-size:14px}.z-assistant-form>button[type=submit],.z-assistant-form .z-assistant-mic,.z-assistant-form .z-premium-tools{flex-basis:42px;width:42px;height:42px}}
