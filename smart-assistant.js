@@ -1,6 +1,6 @@
 import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-6";
 import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
-import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261125-premium-1";
+import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261125-orb-ui-2";
 
 /**
  * Opens the Marketplace assistant from the existing Search Bar.
