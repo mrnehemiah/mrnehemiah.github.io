@@ -193,3 +193,45 @@ BEGIN
   'completed_deliveries',v_delivery_count),'payments',v_payments,'deliveries',v_deliveries);
 END;
 $function$;
+
+-- Include the same public identifier in Seller Dashboard recent activity.
+CREATE OR REPLACE FUNCTION public.zune_seller_dashboard_overview()
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path TO 'public','private'
+AS $function$
+DECLARE
+ v_owner uuid; v_products integer:=0; v_pending integer:=0;
+ v_sales numeric:=0; v_customers integer:=0; v_orders jsonb:='[]'::jsonb;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Seller session is missing. Please sign in again.'; END IF;
+ SELECT i.owner_id INTO v_owner
+ FROM private.seller_portal_identities i
+ JOIN public.stores s ON s.id=i.store_id AND s.owner_id=i.owner_id AND s.is_active=true
+ JOIN public.profiles p ON p.id=i.owner_id
+ WHERE i.auth_user_id=auth.uid() AND p.role='vendor'
+  AND coalesce(p.account_status,'active')='active' AND p.removed_at IS NULL
+  AND EXISTS(SELECT 1 FROM public.seller_applications a WHERE a.user_id=i.owner_id AND a.status='approved')
+ LIMIT 1;
+ IF v_owner IS NULL THEN RAISE EXCEPTION 'Seller account mapping is invalid. Please sign in to the correct store account.'; END IF;
+ SELECT count(*)::integer INTO v_products FROM public.products p
+ WHERE p.vendor_id=v_owner AND p.removed_at IS NULL AND p.seller_archived_at IS NULL;
+ SELECT count(*)::integer INTO v_pending FROM public.orders o
+ JOIN public.products p ON p.id=o.product_id WHERE p.vendor_id=v_owner AND o.status='pending';
+ SELECT coalesce(sum(o.total_price),0) INTO v_sales FROM public.orders o
+ JOIN public.products p ON p.id=o.product_id
+ WHERE p.vendor_id=v_owner AND o.status='completed' AND o.created_at>=date_trunc('day',now());
+ SELECT count(DISTINCT o.buyer_id)::integer INTO v_customers FROM public.orders o
+ JOIN public.products p ON p.id=o.product_id WHERE p.vendor_id=v_owner AND o.buyer_id IS NOT NULL;
+ SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x.created_at DESC),'[]'::jsonb) INTO v_orders
+ FROM (
+  SELECT o.id,o.public_order_id,o.order_number,o.buyer_id,o.product_id,o.total_price,
+         o.status::text AS status,o.created_at,o.recipient_name
+  FROM public.orders o JOIN public.products p ON p.id=o.product_id
+  WHERE p.vendor_id=v_owner ORDER BY o.created_at DESC LIMIT 2000
+ ) x;
+ RETURN jsonb_build_object('owner_id',v_owner,'products',v_products,'pending_orders',v_pending,
+  'today_sales',v_sales,'customers',v_customers,'orders',v_orders);
+END;
+$function$;
