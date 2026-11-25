@@ -322,7 +322,8 @@ export async function openZuneAssistant({
    if(maxBudget)productQuery=productQuery.lte("price",maxBudget);
    if(minBudget)productQuery=productQuery.gte("price",minBudget);
    if(inStockOnly)productQuery=productQuery.gt("stock_quantity",0);
-   productQuery=productQuery.order("price",{ascending:sortMode==="price_low"}).limit(wantsDeals?80:30);
+   productQuery=sortMode==="recent"?productQuery.order("created_at",{ascending:false}):productQuery.order("price",{ascending:sortMode==="price_low"});
+   productQuery=productQuery.limit(wantsDeals?80:30);
    const [pRes,sRes,cRes]=await Promise.all([
     productQuery.limit(wantsDeals?60:20),
     (!term||wantsDeals)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
