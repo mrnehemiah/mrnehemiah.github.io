@@ -2611,7 +2611,6 @@ function loadImageForSearch(url){
 }
 async function runVisualProductSearch(file,overlay,previewUrl){
  const status=overlay.querySelector(".z-search-image-note"),results=overlay.querySelector(".z-search-image-results"),run=overlay.querySelector("#z-search-image-run");
- if(!homeState.user?.id){status.textContent=language()==="sw"?"Ingia kwenye akaunti yako ili kutafuta bidhaa kwa picha.":"Sign in to search products by image.";return;}
  run.disabled=true;run.textContent=language()==="sw"?"Inalinganisha picha...":"Matching images...";
  status.textContent=language()==="sw"?"Inachambua picha na kulinganisha na picha za bidhaa zilizopo...":"Analyzing your image and comparing it with marketplace product photos...";
  results.innerHTML="";
