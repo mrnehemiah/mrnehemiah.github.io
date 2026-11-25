@@ -2985,7 +2985,7 @@ function renderBottomNavigation() {
     <nav class="z-bottom-nav" aria-label="Main navigation">
       ${items.map(item => `
         <button type="button"
-          class="z-nav-item ${homeState.activeTab === item.id ? "active" : ""}"
+          class="z-nav-item ${(homeState.activeTab === item.id || (item.id === "explore" && homeState.activeTab === "categories")) ? "active" : ""}"
           data-nav="${item.id}" aria-current="${homeState.activeTab === item.id ? "page" : "false"}">
           <span class="z-nav-icon">${zIcon(item.icon)}</span>
           <span>${item.label}</span>
@@ -3121,6 +3121,7 @@ function renderReelsPage() {
 }
 
 function bindReelsEvents() {
+  document.querySelector("[data-open-cart]")?.addEventListener("click", () => renderMarketplacePage("cart"));
   document.querySelector("[data-reels-explore]")?.addEventListener("click", () => renderMarketplacePage("explore"));
 }
 
@@ -3306,6 +3307,7 @@ function bindExploreEvents() {
   document.querySelectorAll("[data-explore-store]").forEach(button => {
     button.addEventListener("click", () => openStoreDetails(button.dataset.exploreStore));
   });
+  document.querySelector("[data-open-cart]")?.addEventListener("click", () => renderMarketplacePage("cart"));
   document.getElementById("z-explore-clear")?.addEventListener("click", async () => {
     homeState.selectedCategory = "";
     homeState.selectedBrand = "";
