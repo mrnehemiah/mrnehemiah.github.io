@@ -2765,7 +2765,7 @@ function bindSearchEvents() {
  const closeSuggestions=()=>{suggestionBox?.classList.remove("open");input.setAttribute("aria-expanded","false");};
  const runSearch=async value=>{
   const q=String(value||"").trim();if(!q)return;
-  clearTimeout(searchTimeout);input.value=q;homeState.search=q;homeState.selectedVendor="";homeState.selectedCategory="";homeState.page=0;homeState.products=[];homeState.hasMore=true;saveHistory(q);closeSuggestions();input.blur();await loadProducts(true);
+  clearTimeout(searchTimeout);input.value=q;homeState.search=q;homeState.selectedVendor="";homeState.selectedCategory="";homeState.selectedBrand="";homeState.page=0;homeState.products=[];homeState.hasMore=true;saveHistory(q);closeSuggestions();input.blur();await loadProducts(true);
  };
  const renderSuggestions=async()=>{
   if(!suggestionBox)return;const q=input.value.trim();const request=++suggestionRequest;
@@ -3131,8 +3131,11 @@ function renderCategoriesPage() {
     <section class="z-home z-all-categories-page">
       <header class="z-home-header">
         <div class="z-home-top">
-          <div class="zune-logo">ⓏⓊⓃⒺ</div>
-          <button type="button" class="z-all-categories" data-back-home>← ${tx("explore")}</button>
+          <div class="z-home-brand"><div class="zune-logo">ⓏⓊⓃⒺ</div></div>
+          <div class="z-home-actions">
+            <button type="button" class="z-icon-button" data-open-cart aria-label="${tx("cart")}">${zIcon("cart")}<span class="z-cart-badge" data-cart-count hidden>0</span></button>
+            <button type="button" class="z-all-categories" data-back-home>← ${tx("explore")}</button>
+          </div>
         </div>
         <label class="z-search-box z-category-search">
           ${zIcon("search")}
@@ -3184,6 +3187,7 @@ function bindCategoriesPage() {
   document.querySelector("[data-back-home]")?.addEventListener("click", () => {
     renderMarketplacePage("explore");
   });
+  document.querySelector("[data-open-cart]")?.addEventListener("click", () => renderMarketplacePage("cart"));
 }
 
 function renderExplorePage() {
@@ -3256,6 +3260,7 @@ function renderExplorePage() {
 
         <section class="z-explore-block z-explore-results" id="z-explore-results" ${showResults ? "" : "hidden"}>
           <div class="z-explore-block-head"><h2>${language()==="sw"?"Matokeo ya utafutaji":"Search results"}</h2><button type="button" class="z-explore-see-all" id="z-explore-clear">${language()==="sw"?"Futa":"Clear"}</button></div>
+          <div id="z-explore-store-results"></div>
           <div id="z-product-area">${homeState.products.length ? `<div class="z-product-grid">${homeState.products.map(productCard).join("")}</div>` : ""}</div>
           <div class="z-load-status" id="z-load-status"></div><div id="z-scroll-trigger"></div>
         </section>
@@ -3271,7 +3276,40 @@ function renderExplorePage() {
 function bindExploreEvents() {
   const categoryArea = document.getElementById("z-explore-category-area");
   const results = document.getElementById("z-explore-results");
+  const storeResults = document.getElementById("z-explore-store-results");
+  let storeSearchRequest = 0;
   const revealResults = () => { if (results) results.hidden = false; };
+  const searchStores = async query => {
+    const request = ++storeSearchRequest;
+    if (!storeResults) return;
+    if (!query) { storeResults.innerHTML = ""; return; }
+    try {
+      const { data, error } = await supabase.from("stores")
+        .select("owner_id,store_name,verification_status,logo_url,region,district")
+        .ilike("store_name", "%" + query.replace(/[,%()]/g, " ") + "%")
+        .limit(8);
+      if (request !== storeSearchRequest) return;
+      if (error) throw error;
+      const matches = data || [];
+      storeResults.innerHTML = matches.length ? `
+        <section class="z-explore-block">
+          <div class="z-explore-block-head"><h2>${language()==="sw"?"Maduka yanayolingana":"Matching stores"}</h2></div>
+          <div class="z-explore-store-grid">${matches.map(store => {
+            const name = store.store_name || (language()==="sw"?"Duka la ZUNE":"ZUNE Store");
+            const initials = String(name).trim().split(/\\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase() || "Z";
+            const logo = store.logo_url || "";
+            return `<button type="button" class="z-explore-store-card" data-explore-store="${safe(store.owner_id)}">
+              <span class="z-explore-store-logo">${logo ? `<img src="${safe(logo)}" alt="" loading="lazy" onerror="this.remove()">` : safe(initials)}</span>
+              <span class="z-explore-store-meta"><strong>${safe(name)}</strong><small>${safe([store.district,store.region].filter(Boolean).join(", ") || "ZUNE Store")}</small></span>
+            </button>`;
+          }).join("")}</div>
+        </section>` : "";
+      storeResults.querySelectorAll("[data-explore-store]").forEach(button => button.addEventListener("click", () => openStoreDetails(button.dataset.exploreStore)));
+    } catch (error) {
+      console.warn("ZUNE Explore store search unavailable:", error.message);
+      if (request === storeSearchRequest) storeResults.innerHTML = "";
+    }
+  };
   categoryArea?.querySelectorAll("[data-category]").forEach(button => {
     button.addEventListener("click", async () => {
       homeState.selectedCategory = button.dataset.category || "";
@@ -3319,6 +3357,8 @@ function bindExploreEvents() {
     const input = document.getElementById("z-explore-search");
     if (input) input.value = "";
     if (results) results.hidden = true;
+    if (storeResults) storeResults.innerHTML = "";
+    storeSearchRequest++;
     await loadProducts(true);
   });
   const input = document.getElementById("z-explore-search");
@@ -3335,7 +3375,12 @@ function bindExploreEvents() {
         homeState.products = [];
         homeState.page = 0;
         homeState.hasMore = true;
-        if (homeState.search) await loadProducts(true);
+        if (homeState.search) {
+          await Promise.all([loadProducts(true), searchStores(homeState.search)]);
+        } else {
+          storeSearchRequest++;
+          if (storeResults) storeResults.innerHTML = "";
+        }
       }, 450);
     });
   }
