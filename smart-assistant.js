@@ -54,7 +54,8 @@ export async function openZuneAssistant({
   const voices=window.speechSynthesis.getVoices()||[];
   const matching=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(lang.slice(0,2)));
   const female=/female|woman|zira|samantha|victoria|karen|susan|ava|aria|jenny|natasha|google.*uk english female|microsoft.*zira/i;
-  return matching.find(v=>female.test(v.name))||matching[0]||voices.find(v=>female.test(v.name))||null;
+  if(matching.length)return matching.find(v=>female.test(v.name))||matching[0];
+  return lang.toLowerCase().startsWith("sw")?null:(voices.find(v=>female.test(v.name))||null);
  };
  const speakReply=text=>{
   if(!speechEnabled||!speechSupported||!text)return;
@@ -122,6 +123,7 @@ export async function openZuneAssistant({
   d.className="z-assistant-message"+(user?" user":"");
   if(user){d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return Promise.resolve(d);}
   if(activeTyping)activeTyping.cancelled=true;
+  stopSpeaking();
   const stream={cancelled:false};activeTyping=stream;
   const content=document.createElement("div");
   content.innerHTML=html;
