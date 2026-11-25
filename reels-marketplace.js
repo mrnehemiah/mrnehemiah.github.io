@@ -133,7 +133,12 @@ async function loadFeed() {
       .select('*,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)')
       .eq('status','published').order('created_at',{ascending:false}).limit(40);
     if (error) throw error;
-    const reels = data || [];
+    let reels = data || [];
+    const requestedReel = new URLSearchParams(location.search).get('reel');
+    if (requestedReel && !reels.some(x => x.id === requestedReel)) {
+      const target = await ctx.db.from('zune_reels').select('*,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)').eq('id',requestedReel).eq('status','published').maybeSingle();
+      if (!target.error && target.data) reels = [target.data,...reels];
+    }
     const ids = reels.map(x => x.id);
     const creators = [...new Set(reels.map(x => x.creator_id))];
     const productIds = [...new Set(reels.map(x => x.product_id).filter(Boolean))];
@@ -182,6 +187,7 @@ async function loadFeed() {
       followers_count: followCounts[r.creator_id] || 0
     }));
     renderFeed();
+    if (requestedReel) state.root.querySelector('[data-reel-card="' + CSS.escape(requestedReel) + '"]')?.scrollIntoView({behavior:'smooth',block:'center'});
   } catch (error) {
     console.error('ZUNE Reels feed:',error);
     host.innerHTML = '<section class="z-reels-empty"><div class="mark">!</div><h2>Reels hazijapakia</h2><p>' + esc(error.message || 'Jaribu tena.') + '</p><button type="button" data-reels-retry>Jaribu tena</button></section>';
