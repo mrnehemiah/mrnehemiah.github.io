@@ -58,7 +58,7 @@ export async function openZuneAssistant({
  };
  const speakReply=text=>{
   if(!speechEnabled||!speechSupported||!text)return;
-  const clean=String(text).replace(/https?:\\/\\/\\S+/g,"").replace(/\\s+/g," ").trim();
+  const clean=String(text).replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
   if(clean.length<12)return;
   stopSpeaking();
   const utterance=new SpeechSynthesisUtterance(clean);
