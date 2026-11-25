@@ -314,7 +314,7 @@ function zIcon(name) {
     explore: '<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5M14 8l-2 5-5 2 2-5z"/>',
 
     live: '<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/><path d="M3 7h2M19 7h2M3 17h2M19 17h2"/>',
-    reels: '<path d="M4 4h16v16H4z"/><path d="m4 9 16-5M4 15l16-5M9 4l3 5M15 4l3 5"/><path d="m10 12 5 3-5 3z"/>',
+    reels: '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="m10 9 5 3-5 3z" fill="currentColor" stroke="none"/><path d="M9 5h.01M15 19h.01"/>',
 
     cart: '<path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>',
 
