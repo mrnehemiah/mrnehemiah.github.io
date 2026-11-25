@@ -39,9 +39,83 @@ export async function openZuneAssistant({
  const chipContainer=overlay.querySelector("[data-assistant-chips]");
  chips.forEach(label=>{const chip=document.createElement("button");chip.type="button";chip.className="z-assistant-chip";chip.textContent=label;chipContainer?.appendChild(chip);});
 
- document.body.appendChild(overlay);const close=()=>overlay.remove();
- overlay.addEventListener("click",e=>{if(e.target===overlay)close();});overlay.querySelector(".z-assistant-close").addEventListener("click",close);
+ document.body.appendChild(overlay);
  const box=overlay.querySelector("#z-assistant-messages"),field=overlay.querySelector("#z-assistant-input");
+ const speechStatus=overlay.querySelector("[data-assistant-voice-status]");
+ const speechToggle=overlay.querySelector("[data-assistant-speech-toggle]");
+ const micButton=overlay.querySelector("[data-assistant-mic]");
+ const speechSupported=typeof window!=="undefined"&&"speechSynthesis" in window&&"SpeechSynthesisUtterance" in window;
+ let speechEnabled=!!speechSupported;
+ let recognition=null,recognitionActive=false,recognitionText="";
+ const setVoiceStatus=message=>{if(speechStatus)speechStatus.textContent=message||"";};
+ const stopSpeaking=()=>{if(speechSupported)window.speechSynthesis.cancel();};
+ const pickVoice=lang=>{
+  if(!speechSupported)return null;
+  const voices=window.speechSynthesis.getVoices()||[];
+  const matching=voices.filter(v=>String(v.lang||"").toLowerCase().startsWith(lang.slice(0,2)));
+  const female=/female|woman|zira|samantha|victoria|karen|susan|ava|aria|jenny|natasha|google.*uk english female|microsoft.*zira/i;
+  if(matching.length)return matching.find(v=>female.test(v.name))||matching[0];
+  return lang.toLowerCase().startsWith("sw")?null:(voices.find(v=>female.test(v.name))||null);
+ };
+ const speakReply=text=>{
+  if(!speechEnabled||!speechSupported||!text)return;
+  const clean=String(text).replace(/https?:\/\/\S+/g,"").replace(/\s+/g," ").trim();
+  if(clean.length<12)return;
+  stopSpeaking();
+  const utterance=new SpeechSynthesisUtterance(clean);
+  const lang=sw?"sw-TZ":"en-US";
+  const voice=pickVoice(lang);
+  utterance.lang=voice?.lang||lang;
+  if(voice)utterance.voice=voice;
+  utterance.rate=.94;utterance.pitch=1.08;utterance.volume=1;
+  utterance.onerror=()=>setVoiceStatus(sw?"Sauti haipatikani kwenye kifaa hiki.":"Voice playback is unavailable on this device.");
+  window.speechSynthesis.speak(utterance);
+ };
+ const updateSpeechToggle=()=>{
+  if(!speechToggle)return;
+  speechToggle.textContent=speechEnabled?"🔊":"🔇";
+  speechToggle.setAttribute("aria-pressed",String(speechEnabled));
+  speechToggle.setAttribute("aria-label",speechEnabled?(sw?"Zima majibu ya sauti":"Turn voice replies off"):(sw?"Washa majibu ya sauti":"Turn voice replies on"));
+  speechToggle.title=speechToggle.getAttribute("aria-label");
+ };
+ updateSpeechToggle();
+ if(!speechSupported){speechEnabled=false;updateSpeechToggle();setVoiceStatus(sw?"Kifaa hiki hakitumii usomaji wa majibu kwa sauti.":"This device does not support spoken replies.");}
+ speechToggle?.addEventListener("click",()=>{
+  speechEnabled=!speechEnabled;
+  if(!speechEnabled)stopSpeaking();
+  updateSpeechToggle();
+  setVoiceStatus(speechEnabled?(sw?"Majibu ya sauti yamewashwa.":"Voice replies are on."):(sw?"Majibu ya sauti yamezimwa.":"Voice replies are off."));
+ });
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(SpeechRecognition){
+  recognition=new SpeechRecognition();
+  recognition.lang=sw?"sw-TZ":"en-US";
+  recognition.interimResults=true;recognition.continuous=false;
+  recognition.onstart=()=>{recognitionActive=true;recognitionText="";micButton?.classList.add("is-listening");micButton?.setAttribute("aria-pressed","true");setVoiceStatus(sw?"Ninakusikiliza...":"Listening...");};
+  recognition.onresult=event=>{
+   recognitionText=Array.from(event.results).map(result=>result[0]?.transcript||"").join(" ").trim();
+   if(field&&recognitionText)field.value=recognitionText;
+  };
+  recognition.onerror=event=>{
+   const message=event.error==="not-allowed"?(sw?"Ruhusu matumizi ya kipaza sauti kwenye browser.":"Allow microphone access in your browser."):(sw?"Sauti haikutambulika. Jaribu tena.":"Could not recognize speech. Please try again.");
+   setVoiceStatus(message);
+  };
+  recognition.onend=()=>{
+   recognitionActive=false;micButton?.classList.remove("is-listening");micButton?.setAttribute("aria-pressed","false");
+   const transcript=recognitionText.trim();recognitionText="";
+   if(transcript){setVoiceStatus(sw?"Swali limepokelewa.":"Voice question received.");ask(transcript);}
+   else if(!speechStatus?.textContent)setVoiceStatus("");
+  };
+  micButton?.addEventListener("click",()=>{
+   if(recognitionActive){recognition.stop();return;}
+   try{stopSpeaking();recognition.start();}catch(error){setVoiceStatus(sw?"Kipaza sauti hakiwezi kuanzishwa sasa.":"Microphone cannot start right now.");}
+  });
+ }else{
+  micButton?.setAttribute("disabled","true");micButton?.setAttribute("title",sw?"Voice input haitumiki kwenye browser hii":"Voice input is not supported by this browser");
+  setVoiceStatus(sw?"Kifaa au browser hii hakitumii maswali ya sauti.":"Voice input is not supported by this browser.");
+ }
+ const close=()=>{try{recognition?.stop();}catch(_){}stopSpeaking();overlay.remove();};
+ overlay.addEventListener("click",e=>{if(e.target===overlay)close();});overlay.querySelector(".z-assistant-close").addEventListener("click",close);
  let activeTyping=null;
  const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const say=(html,user=false)=>{
@@ -49,6 +123,7 @@ export async function openZuneAssistant({
   d.className="z-assistant-message"+(user?" user":"");
   if(user){d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return Promise.resolve(d);}
   if(activeTyping)activeTyping.cancelled=true;
+  stopSpeaking();
   const stream={cancelled:false};activeTyping=stream;
   const content=document.createElement("div");
   content.innerHTML=html;
@@ -62,7 +137,7 @@ export async function openZuneAssistant({
   const stop=document.createElement("button");
   stop.type="button";stop.className="z-assistant-stop";
   stop.textContent=sw?"Simamisha":"Stop";
-  stop.addEventListener("click",()=>{stream.cancelled=true;});
+  stop.addEventListener("click",()=>{stream.cancelled=true;stopSpeaking();});
   d.append(content,typing,stop);box.appendChild(d);box.scrollTop=box.scrollHeight;
   (async()=>{
    await pause(650);
@@ -84,6 +159,7 @@ export async function openZuneAssistant({
    }
    typing.remove();stop.remove();
    if(activeTyping===stream)activeTyping=null;
+   if(!stream.cancelled&&overlay.isConnected)speakReply(content.innerText||content.textContent||"");
   })();
   return Promise.resolve(d);
  };
