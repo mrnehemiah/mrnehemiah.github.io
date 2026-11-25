@@ -3043,7 +3043,8 @@ function bindReelsEvents() {
     language: language(),
     onCart: () => renderMarketplacePage("cart"),
     onExplore: () => renderMarketplacePage("explore"),
-    onOpenProduct: product => openProductDetails(product)
+    onOpenProduct: product => openProductDetails(product),
+    onAddToCart: product => addToCart(String(product.id), product, null, 1)
   }).catch(error => {
     console.error("ZUNE Reels could not initialize:", error);
     const host = homeState.app?.querySelector("#z-reels-feed");
