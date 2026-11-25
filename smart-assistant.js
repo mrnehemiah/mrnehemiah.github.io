@@ -65,7 +65,7 @@ export async function openZuneAssistant({
   stop.addEventListener("click",()=>{stream.cancelled=true;});
   d.append(content,typing,stop);box.appendChild(d);box.scrollTop=box.scrollHeight;
   (async()=>{
-   await pause(450);
+   await pause(650);
    for(const part of textNodes){
     const tokens=part.text.match(/\s+|[^\s]+/g)||[];
     for(const token of tokens){
@@ -73,11 +73,11 @@ export async function openZuneAssistant({
      part.node.nodeValue+=token;
      box.scrollTop=box.scrollHeight;
      if(/^\s+$/.test(token)){
-      if(token.includes("\n"))await pause(190);
+      if(token.includes("\n"))await pause(320);
      }else{
       const sentenceEnd=/[.!?…]$/.test(token);
       const commaEnd=/[,;:]$/.test(token);
-      await pause(sentenceEnd?280:commaEnd?165:82);
+      await pause(sentenceEnd?520:commaEnd?320:190);
      }
     }
     if(stream.cancelled||!overlay.isConnected)break;
