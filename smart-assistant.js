@@ -373,6 +373,8 @@ export async function openZuneAssistant({
  };
  const ask=async raw=>{
   const q=String(raw||"").trim();if(!q)return;
+  if(activeTyping)activeTyping.cancelled=true;
+  stopSpeaking();
   const previousContextQuery=lastContextQuery;
   say(safe(q),true);field.value="";
   const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
