@@ -232,6 +232,13 @@ export function normalizeSwahiliQuery(value) {
  return clean(value).split(/\s+/).filter(Boolean).map(token=>TYPO_MAP[token]||token).join(" ");
 }
 
+export function getSwahiliSearchTokens(value) {
+ return clean(value).split(/\s+/).filter(Boolean).map(token=>{
+  const corrected=TYPO_MAP[token]||token;
+  return stemVerb(corrected);
+ });
+}
+
 export function getSwahiliLexiconStats() {
  return { synonymGroups: GROUPS.length, indexedForms: aliasToGroup.size, note:"Broad practical lexicon; not an exhaustive dictionary of every Kiswahili word or dialect." };
 }
