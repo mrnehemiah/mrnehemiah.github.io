@@ -22,3 +22,5 @@ jobs:
           node-version: 22
       - name: Validate source files and asset references
         run: node deployment-check.mjs
+      - name: Run ZUNE Smart Assistant regression tests
+        run: npm test
