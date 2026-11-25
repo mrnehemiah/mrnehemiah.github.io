@@ -164,7 +164,7 @@ export async function openZuneAssistant({
   return Promise.resolve(d);
  };
  const supportLinks=()=>`<div class="z-assistant-support-links"><a href="https://wa.me/255691067855?text=Habari%20ZUNE%20Market%20Support" target="_blank" rel="noopener noreferrer">Chat na Support kupitia WhatsApp</a><a href="https://whatsapp.com/channel/0029Vb98cx12v1J0skZQ5K36" target="_blank" rel="noopener noreferrer">ZUNE Market WhatsApp Channel</a></div>`;
-  const remember=q=>{const key="zune_search_history:"+(homeState.user?.id||"guest");try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
+  const remember=q=>{if(!memoryUserId||memoryConsent!=="granted"||sensitiveMemoryQuery(q))return;const key="zune_search_history:"+memoryUserId;try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
  const memoryRoot=overlay.querySelector("[data-assistant-memory]");
  const memoryPrompt=overlay.querySelector("[data-assistant-memory-prompt]");
  const memoryStatus=overlay.querySelector("[data-assistant-memory-status]");
