@@ -90,9 +90,47 @@ export async function openZuneAssistant({
  const supportLinks=()=>`<div class="z-assistant-support-links"><a href="https://wa.me/255691067855?text=Habari%20ZUNE%20Market%20Support" target="_blank" rel="noopener noreferrer">WhatsApp Support · 0691067855</a><a href="https://whatsapp.com/channel/0029Vb98cx12v1J0skZQ5K36" target="_blank" rel="noopener noreferrer">ZUNE Market WhatsApp Channel</a></div>`;
   const remember=q=>{const key="zune_search_history:"+(homeState.user?.id||"guest");try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
  let lastKnowledgeTopic=null;
+ let smallTalkTurn=0;
+ const smallTalkReply=input=>{
+  const text=normalizeSwahiliQuery(input).trim();
+  const replies=sw?{
+   greeting:["Poa kabisa! 😄 Wewe vipi? Nikusaidie nini leo?","Salama kabisa! 😊 Karibu ZUNE Market. Kuna jambo nikusaidie?","Niko fresh! 😃 Tuambie, leo tunatafuta nini?"],
+   wellbeing:["Niko vizuri, asante kwa kuuliza! 😊 Wewe unaendeleaje?","Niko tayari kukusaidia muda wowote! 😄 Habari zako?"],
+   morning:["Habari za asubuhi! ☀️ Nakutakia siku njema. Nikusaidie nini leo?"],
+   evening:["Habari za jioni! 🌆 Karibu, nikusaidie nini?"],
+   night:["Usiku mwema! 🌙 Kama una swali lolote, niko hapa kukusaidia."],
+   thanks:["Karibu sana! 😊 Nimefurahi kusaidia.","Usijali kabisa! ❤️ Ukiwa na swali lingine niambie."],
+   apology:["Hakuna shida kabisa. 😊 Tuendelee, ungependa nikusaidie nini?"],
+   goodbye:["Kwaheri! 👋 Asante kwa kutumia ZUNE Market. Karibu tena!","Tutaonana tena! 😊 Nakutakia siku njema."],
+   praise:["Asante sana! 🥰 Tunajitahidi kufanya ZUNE Market iwe rahisi na bora zaidi."]
+  }:{
+   greeting:["Doing great! 😄 How are you? What can I help you with today?","All good here! 😊 Welcome to ZUNE Market. What can I help you find?"],
+   wellbeing:["I’m doing well, thanks for asking! 😊 How are you?","Ready to help! 😃 What would you like to do today?"],
+   morning:["Good morning! ☀️ Hope you have a great day. How can I help?"],
+   evening:["Good evening! 🌆 Welcome. What can I help you with?"],
+   night:["Good night! 🌙 I’m here if you need help with anything."],
+   thanks:["You’re very welcome! 😊 Happy to help.","Anytime! ❤️ Let me know if you need anything else."],
+   apology:["No worries at all. 😊 What would you like help with?"],
+   goodbye:["Goodbye! 👋 Thanks for using ZUNE Market. See you again!","Take care! 😊 You’re always welcome back."],
+   praise:["Thank you! 🥰 We’re working to make ZUNE Market better and easier to use."]
+  };
+  const pick=key=>{const list=replies[key];return list[smallTalkTurn++%list.length];};
+  if(/^(mambo|vipi|poa|niaje|sasa|habari|hujambo|salama|shikamoo|marahaba|hello|hi|hey|heya|yo)( kabisa)?$/.test(text))return pick("greeting");
+  if(/^(ukoje|unaendeleaje|habari yako|habari za kwako|how are you|how are you doing|how do you do|are you okay|are you good)$/.test(text))return pick("wellbeing");
+  if(/^(habari za asubuhi|asubuhi njema|good morning)$/.test(text))return pick("morning");
+  if(/^(habari za jioni|jioni njema|good evening)$/.test(text))return pick("evening");
+  if(/^(habari za usiku|usiku mwema|good night|goodnight)$/.test(text))return pick("night");
+  if(/^(asante|asanteni|shukrani|ahsante|thanks|thank you|thankyou|thx|cheers)$/.test(text))return pick("thanks");
+  if(/^(samahani|nisamehe|pole|sorry|my apologies)$/.test(text))return pick("apology");
+  if(/^(kwaheri|tutaonana|baadaye|bye|goodbye|see you|see you later|see ya)$/.test(text))return pick("goodbye");
+  if(/^(hongera|vizuri sana|umesaidia|you are great|you are helpful|well done|nice work)$/.test(text))return pick("praise");
+  return null;
+ };
  const ask=async raw=>{
   const q=String(raw||"").trim();if(!q)return;say(safe(q),true);field.value="";remember(q);
   const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
+  const chatReply=smallTalkReply(q);
+  if(chatReply){say(chatReply);return;}
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
   if(knowledge){lastKnowledgeTopic=knowledge.topic;const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
   if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
