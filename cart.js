@@ -243,7 +243,7 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
                     <div class="z-quantity-controls" role="group" aria-label="${t("quantity")}">
                       <button type="button" data-cart-minus="${escapeHTML(row.cartKey)}" aria-label="${t("decreaseQty")}" ${quantity <= 1 ? "disabled" : ""}>−</button>
                       <span aria-live="polite">${quantity}</span>
-                      <button type="button" data-cart-plus="${escapeHTML(row.cartKey)}" aria-label="${t("increaseQty")}" ${quantity >= MAX_QTY ? "disabled" : ""}>+</button>
+                      <button type="button" data-cart-plus="${escapeHTML(row.cartKey)}" aria-label="${t("increaseQty")}" ${quantity >= Math.min(MAX_QTY, Number(row.variant?.stock_quantity ?? MAX_QTY)) ? "disabled" : ""}>+</button>
                     </div>
                   </div>
                   <div class="z-cart-item-end">
@@ -371,7 +371,7 @@ export async function mountStandaloneCart(root) {
     const minus = row.querySelector("[data-cart-minus]");
     const plus  = row.querySelector("[data-cart-plus]");
     if (minus) minus.disabled = quantity <= 1;
-    if (plus)  plus.disabled  = quantity >= MAX_QTY;
+    if (plus)  plus.disabled  = quantity >= Math.min(MAX_QTY, Number(variant?.stock_quantity ?? MAX_QTY));
 
     const lineTotal = row.querySelector(".z-cart-line-total");
     const item=cart.find(x=>cartItemKey(x)===String(key));
