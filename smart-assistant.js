@@ -295,6 +295,8 @@ export async function openZuneAssistant({
   if(has("refund","rejesh","return","rudish","cancel","futa oda")){say(sw?"Kughairi oda, kurudisha bidhaa au kurejeshewa fedha hutegemea hatua ya oda na masharti ya duka. Kagua Oda Zangu au wasiliana na msaada rasmi wa ZUNE.":"Cancellations, returns and refunds depend on the order stage and store terms. Check My Orders or contact official ZUNE support.");return;}
   if(has("akaunti","account","login","ingia","jisajili","signup","password","nenosiri")){say(sw?"Tumia sehemu ya Akaunti kwenye menyu ya Marketplace kuingia, kujisajili na kusimamia taarifa zako. Usishiriki nenosiri au OTP.":"Use Account in Marketplace navigation to sign in, register and manage your details. Never share your password or OTP.");return;}
   if(has("help","msaada","support","wasilian","contact","huduma","whatsapp")){say((sw?"Kwa msaada wa ZUNE Market, wasiliana nasi kupitia WhatsApp au jiunge na Channel kwa matangazo. Usitume PIN, OTP au nenosiri.":"For ZUNE Market help, contact us on WhatsApp or join the Channel for announcements. Never share your PIN, OTP or password.")+"<br>"+supportLinks());return;}
+  const wantsComparison=/(linganisha|compare|comparison|tofauti kati ya|\\bversus\\b|\\bvs\\b)/i.test(n);
+  const comparisonTerms=wantsComparison?String(q).replace(/linganisha|compare|comparison|tofauti kati ya|versus|\\bvs\\b/gi," ").split(/\\s+(?:na|and)\\s+/i).map(x=>x.replace(/[?!,.;]+/g," ").trim()).filter(x=>x.length>1).slice(0,4):[];
   const wantsDeals=has("punguzo","discount","sale","oferta","deals");
   const inStockOnly=has("stock iliyopo","zilizopo","in stock","available now","bidhaa zilizopo","bado zipo");
   const sortMode=has("bei nafuu","cheap","cheapest","lowest price","bei ndogo")?"price_low":has("ghali zaidi","most expensive","highest price","bei kubwa")?"price_high":"recent";
@@ -323,14 +325,39 @@ export async function openZuneAssistant({
    if(minBudget)productQuery=productQuery.gte("price",minBudget);
    if(inStockOnly)productQuery=productQuery.gt("stock_quantity",0);
    productQuery=sortMode==="recent"?productQuery.order("created_at",{ascending:false}):productQuery.order("price",{ascending:sortMode==="price_low"});
-   const [pRes,sRes,cRes]=await Promise.all([
+   const [pRes,sRes,cRes,comparisonRes]=await Promise.all([
     productQuery.limit(wantsDeals?60:20),
-    (!term||wantsDeals)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
-    (!term||wantsDeals)?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10)
+    (!term||wantsDeals||wantsComparison)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
+    (!term||wantsDeals||wantsComparison)?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10),
+    wantsComparison?Promise.all(comparisonTerms.map(name=>{const safeTerm=name.replace(/[%_,().*]/g," ").replace(/\\s+/g," ").trim();const like="%"+safeTerm+"%";return supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).or("title.ilike."+like+",brand.ilike."+like+",description.ilike."+like).limit(5);})):Promise.resolve([])
    ]);
+   const comparisonProducts=wantsComparison?Array.from(new Map(comparisonRes.flatMap(r=>r.error?[]:(r.data||[])).map(p=>[String(p.id),p])).values()):[];
    const products=pRes.error?[]:(pRes.data||[]),stores=sRes.error?[]:(sRes.data||[]),categories=cRes.error?[]:(cRes.data||[]);
    const brands=[...new Set(products.map(p=>p.brand||p.brand_name).filter(Boolean))].slice(0,8);
    const deals=products.filter(p=>Number(p.discount_percent||p.discount_percentage||p.discount||0)>0||Number(p.compare_at_price||p.original_price||0)>Number(p.price||0)).slice(0,6);
+   if(wantsComparison){
+    const chosen=comparisonProducts.slice(0,4);
+    if(chosen.length<2){say(sw?"Nimepata bidhaa chache kwa ulinganisho. Taja majina mawili ya bidhaa tofauti, kwa mfano: Linganisha iPhone 15 na Samsung S24.":"I found too few products to compare. Name two different products, for example: Compare iPhone 15 and Samsung S24.");return;}
+    const value=(p,keys)=>{for(const key of keys){const v=p?.[key];if(v!==undefined&&v!==null&&v!==""&&typeof v!=="object")return String(v);}return "";};
+    const rows=[
+     {label:sw?"Chapa":"Brand",keys:["brand","brand_name"]},
+     {label:sw?"Bei":"Price",keys:["price"],format:v=>money(Number(v))},
+     {label:sw?"Bei ya awali":"Original price",keys:["compare_at_price","original_price"],format:v=>money(Number(v))},
+     {label:sw?"Stock":"Stock",keys:["stock_quantity"],format:v=>Number(v)>0?(sw?"Inapatikana ("+v+")":"In stock ("+v+")"):(sw?"Haipo/haijatajwa":"Unavailable/not listed")},
+     {label:sw?"Category":"Category",keys:["category","category_name"]},
+     {label:sw?"Hali":"Condition",keys:["condition"]},
+     {label:sw?"Warranty":"Warranty",keys:["warranty","warranty_period"]},
+     {label:sw?"Maelezo":"Description",keys:["description"]}
+    ];
+    const table='<div style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;min-width:440px;font-size:12px"><thead><tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ccd8d0">'+(sw?"Kipengele":"Feature")+'</th>'+chosen.map(p=>'<th style="text-align:left;padding:8px;border-bottom:1px solid #ccd8d0">'+safe(p.title||"Product")+'</th>').join("")+'</tr></thead><tbody>'+rows.map(row=>'<tr><th style="text-align:left;vertical-align:top;padding:8px;border-bottom:1px solid #e1e8e3">'+row.label+'</th>'+chosen.map(p=>{const v=value(p,row.keys);return '<td style="vertical-align:top;padding:8px;border-bottom:1px solid #e1e8e3">'+(v?safe(row.format?row.format(v):v):'<span style="opacity:.65">'+(sw?"Haijawekwa":"Not listed")+'</span>')+'</td>';}).join("")+'</tr>').join("")+'</tbody></table></div>';
+    const available=chosen.filter(p=>Number(p.stock_quantity)>0);
+    const priced=available.filter(p=>Number(p.price)>0).sort((a,b)=>Number(a.price)-Number(b.price));
+    const recommendation=priced.length?'<p style="margin-top:10px"><strong>'+ (sw?"Pendekezo la bei":"Price pick") +':</strong> '+safe(priced[0].title)+' — '+safe(money(Number(priced[0].price)))+(sw?", ina stock.":"; in stock.")+'</p>':(sw?"<p>Stock au bei hazijatosha kutoa pendekezo la moja kwa moja. Hakiki taarifa kwenye ukurasa wa bidhaa.</p>":"<p>There is not enough stock or price data for a confident pick. Verify details on each product page.</p>");
+    const actions=chosen.map(p=>'<button type="button" data-assistant-product="'+safe(p.id)+'" style="margin:5px 5px 0 0">'+(sw?"Angalia ":"View ")+safe(p.title||"Product")+'</button>').join("");
+    say((sw?"Ulinganisho wa bidhaa (taarifa zilizopo kwenye Marketplace):":"Product comparison (available Marketplace data):")+table+recommendation+'<p style="margin-top:10px">'+actions+'</p><small>'+(sw?"Sehemu zisizo na taarifa zimeachwa wazi; hakiki variant, bei na stock kabla ya kununua.":"Missing fields are marked as not listed; verify variant, price and stock before buying.")+'</small>');
+    box.querySelectorAll("[data-assistant-product]").forEach(b=>b.onclick=()=>{const p=chosen.find(x=>String(x.id)===b.dataset.assistantProduct);if(p){close();openProductDetails(p);}});
+    return;
+   }
    const sections=[];
    if(products.length)sections.push('<section><strong>'+(sw?"Bidhaa zinazolingana":"Matching products")+'</strong>'+products.slice(0,8).map(p=>{const oldPrice=Number(p.compare_at_price||p.original_price||0),price=Number(p.price||0),stock=p.stock_quantity==null?null:Number(p.stock_quantity),discount=Number(p.discount_percent||p.discount_percentage||p.discount||0);return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px;border:1px solid #e1ebe4;border-radius:10px"><span style="min-width:0"><b>'+safe(p.title||"Bidhaa")+'</b><br><small>'+safe(money(price))+(oldPrice>price?' · <s>'+safe(money(oldPrice))+'</s>':"")+'</small><br><small>'+(stock===null?(sw?"Stock haijatajwa":"Stock not listed"):stock>0?(sw?"Inapatikana: ":"In stock: ")+stock:(sw?"Imeisha":"Out of stock"))+(discount>0?' · '+discount+'% OFF':"")+'</small></span><button type="button" data-assistant-product="'+safe(p.id)+'">'+(sw?"Angalia":"View")+'</button></div>';}).join("")+'</section>');
    if(stores.length)sections.push('<section style="margin-top:13px"><strong>'+(sw?"Maduka":"Stores")+'</strong>'+stores.map(st=>'<div style="margin-top:7px"><button type="button" data-assistant-store="'+safe(st.owner_id)+'">'+safe(st.store_name||"Store")+'</button><small> '+safe([st.district,st.region].filter(Boolean).join(", "))+'</small>'+(["verified","approved"].includes(String(st.verification_status||"").toLowerCase())?" ✓":"")+'</div>').join("")+'</section>');
