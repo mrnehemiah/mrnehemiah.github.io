@@ -38,5 +38,6 @@ test("a new 'show me' request is not mistaken for a follow-up because it contain
 test("known Marketplace topics route in both languages and unknown text stays unmatched", () => {
   assert.equal(answerZuneKnowledge("ZUNE Reels ni nini?", "sw")?.topic, "reels");
   assert.equal(answerZuneKnowledge("How do I track my order?", "en")?.topic, "orders");
+  assert.equal(answerZuneKnowledge("Oda yangu iko wapi?", "sw")?.topic, "orders");
   assert.equal(answerZuneKnowledge("zxqv blorpt", "sw"), null);
 });
