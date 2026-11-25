@@ -2725,9 +2725,11 @@ function openZuneAssistant(){
   if(query.length<2){say(sw?"Uliza kuhusu bidhaa, maduka, categories, chapa, ofa, oda, malipo au delivery.":"Ask about products, stores, categories, brands, deals, orders, payments or delivery.");return;}
   say(sw?"Natafuta kwenye Marketplace...":"Searching Marketplace...");
   try{
-   const term=query.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim(),pattern="%"+term+"%";
+   const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim(),pattern="%"+term+"%";
+   const productQuery=supabase.from("products").select("*").eq("moderation_status","approved");
+   if(term)productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
    const [pRes,sRes,cRes]=await Promise.all([
-    supabase.from("products").select("*").eq("moderation_status","approved").or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern).limit(20),
+    productQuery.limit(wantsDeals?60:20),
     supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
     supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10)
    ]);
