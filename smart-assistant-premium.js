@@ -1,0 +1,84 @@
+/**
+ * ZUNE Smart Assistant Premium UI layer.
+ * Local-only conversation storage; no external AI service or remote memory.
+ */
+export function initializePremiumAssistant({overlay,sw,ask,close,stopSpeaking,setVoiceStatus,speechToggle,micButton,field,box,homeState}){
+ if(!overlay||overlay.dataset.premiumReady==="true")return;
+ overlay.dataset.premiumReady="true";
+ const t=(swText,enText)=>sw?swText:enText;
+ const userKey=String(homeState?.user?.id||"guest");
+ const storageKey="zune_assistant_conversations_v1:"+userKey;
+ const prefsKey="zune_assistant_preferences_v1:"+userKey;
+ const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||"null");return v??fallback;}catch(_){return fallback;}};
+ const write=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true;}catch(_){setVoiceStatus(t("Hifadhi ya kifaa imejaa au haipatikani.","Device storage is unavailable or full."));return false;}};
+ let conversations=read(storageKey,[]);
+ if(!Array.isArray(conversations))conversations=[];
+ let currentId="chat-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
+ let currentTitle=t("Mazungumzo mapya","New conversation");
+ let prefs=read(prefsKey,{theme:"adaptive",language:"auto",voice:true,memory:true});
+ let lastQuestion="";
+ let saveTimer=null;
+ const messages=()=>Array.from(box.querySelectorAll(".z-assistant-message")).map(node=>({
+  role:node.classList.contains("user")?"user":"assistant",
+  html:node.querySelector(".z-assistant-message-content")?.innerHTML||node.querySelector(":scope > div")?.innerHTML||node.innerHTML,
+  text:(node.innerText||"").replace(/^(Copy|Share|Regenerate|Like|Dislike|Speak|Translate).*$/gm,"").trim()
+ })).filter(x=>x.text);
+ const snapshot=()=>({id:currentId,title:currentTitle,updatedAt:Date.now(),pinned:!!conversations.find(x=>x.id===currentId)?.pinned,messages:messages()});
+ const persist=()=>{clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const snap=snapshot();if(!snap.messages.length)return;const i=conversations.findIndex(x=>x.id===currentId);if(i>=0)conversations[i]={...conversations[i],...snap};else conversations.unshift(snap);conversations.sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.updatedAt-a.updatedAt);conversations=conversations.slice(0,100);write(storageKey,conversations);},250);};
+ const observer=new MutationObserver(()=>{persist();overlay.querySelectorAll(".z-assistant-message:not(.user)").forEach(node=>{if(node.querySelector(".z-assistant-typing,.z-assistant-stop")||node.querySelector(".z-assistant-response-actions"))return;addResponseActions(node);});});
+ observer.observe(box,{childList:true,subtree:true,characterData:true});
+ const header=overlay.querySelector(".z-assistant-head");
+ const title=header?.querySelector("strong");
+ if(title)title.innerHTML='<span class="z-premium-brand-mark">✦</span> ZUNE <span>Assistant</span>';
+ const headActions=overlay.querySelector(".z-assistant-head-actions");
+ const makeButton=(label,cls,aria)=>{const b=document.createElement("button");b.type="button";b.className=cls;b.textContent=label;b.setAttribute("aria-label",aria||label);return b;};
+ const menuButton=makeButton("☰","z-premium-menu-trigger",t("Fungua menyu","Open menu"));
+ const newButton=makeButton("＋","z-premium-new-trigger",t("Mazungumzo mapya","New chat"));
+ const voiceButton=makeButton("◉","z-premium-voice-trigger",t("Fungua Voice Mode","Open Voice Mode"));
+ headActions?.prepend(menuButton,newButton,voiceButton);
+ const drawer=document.createElement("aside");drawer.className="z-premium-drawer";drawer.setAttribute("aria-hidden","true");
+ drawer.innerHTML='<div class="z-premium-drawer-head"><b>ZUNE Assistant</b><button type="button" data-drawer-close aria-label="Close">×</button></div><button data-nav="new">＋ <span>New Chat</span></button><button data-nav="history">◷ <span>Conversation History</span></button><button data-nav="voice">◉ <span>Voice Mode</span></button><button data-nav="privacy">♧ <span>Privacy Center</span></button><button data-nav="settings">⚙ <span>Settings</span></button><button data-nav="help">? <span>Help & Support</span></button><div class="z-premium-drawer-foot">Private device experience</div>';
+ overlay.appendChild(drawer);
+ const backdrop=document.createElement("button");backdrop.type="button";backdrop.className="z-premium-drawer-backdrop";backdrop.setAttribute("aria-label",t("Funga menyu","Close menu"));overlay.appendChild(backdrop);
+ const page=document.createElement("section");page.className="z-premium-page";page.hidden=true;page.setAttribute("aria-live","polite");overlay.appendChild(page);
+ const openDrawer=()=>{drawer.classList.add("is-open");drawer.setAttribute("aria-hidden","false");backdrop.classList.add("is-open");};
+ const closeDrawer=()=>{drawer.classList.remove("is-open");drawer.setAttribute("aria-hidden","true");backdrop.classList.remove("is-open");};
+ menuButton.addEventListener("click",openDrawer);backdrop.addEventListener("click",closeDrawer);drawer.querySelector("[data-drawer-close]").addEventListener("click",closeDrawer);
+ const showPage=(heading,content)=>{closeDrawer();page.innerHTML="";page.hidden=false;const top=document.createElement("div");top.className="z-premium-page-head";const back=makeButton("‹","z-premium-back",t("Rudi kwenye chat","Back to chat"));const h=document.createElement("h2");h.textContent=heading;top.append(back,h);page.append(top,content);back.onclick=()=>{page.hidden=true;};};
+ const newChat=()=>{closeDrawer();page.hidden=true;currentId="chat-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);currentTitle=t("Mazungumzo mapya","New conversation");box.innerHTML="";const welcome=document.createElement("div");welcome.className="z-assistant-message z-assistant-welcome";welcome.dataset.assistantWelcome="";welcome.textContent=t("Karibu ZUNE! Nipo hapa kukusaidia. Ungependa kufanya nini leo?","Welcome to ZUNE! I’m here to help. What would you like to do today?");box.appendChild(welcome);field.value="";field.focus();};
+ newButton.addEventListener("click",newChat);
+ const openVoice=()=>{closeDrawer();page.hidden=true;overlay.classList.add("z-premium-voice-mode");const panel=overlay.querySelector(".z-assistant-panel");if(panel&&!panel.querySelector(".z-premium-orb-stage")){const stage=document.createElement("section");stage.className="z-premium-orb-stage";stage.innerHTML='<div class="z-premium-orb"><span></span></div><strong data-orb-state>Ready to talk</strong><p data-orb-transcript></p><div class="z-premium-voice-controls"><button type="button" data-voice-mic>🎙</button><button type="button" data-voice-stop>Ⅱ</button><button type="button" data-voice-exit>↓</button></div>';panel.insertBefore(stage,box);}const stage=panel?.querySelector(".z-premium-orb-stage");if(stage){stage.hidden=false;stage.querySelector("[data-orb-state]").textContent=t("Nipo tayari kukusikiliza","Ready to listen");stage.querySelector("[data-voice-mic]").onclick=()=>micButton?.click();stage.querySelector("[data-voice-stop]").onclick=()=>{stopSpeaking?.();setVoiceStatus(t("Sauti imesimamishwa.","Speech stopped."));};stage.querySelector("[data-voice-exit]").onclick=()=>overlay.classList.remove("z-premium-voice-mode");}setVoiceStatus(t("Voice Mode imefunguliwa.","Voice Mode is open."));};
+ voiceButton.addEventListener("click",openVoice);
+ overlay.querySelector(".z-assistant-close")?.addEventListener("click",()=>{observer.disconnect();});
+ const makeHistoryPage=()=>{
+  const wrap=document.createElement("div");wrap.className="z-premium-history";
+  const search=document.createElement("input");search.type="search";search.placeholder=t("Tafuta mazungumzo...","Search conversations...");
+  const list=document.createElement("div");list.className="z-premium-history-list";wrap.append(search,list);
+  const render=()=>{list.innerHTML="";const q=search.value.toLowerCase();const items=conversations.filter(c=>(c.title||"").toLowerCase().includes(q)||(c.messages||[]).some(m=>(m.text||"").toLowerCase().includes(q)));if(!items.length){const empty=document.createElement("p");empty.textContent=t("Hakuna mazungumzo yaliyopatikana.","No conversations found.");list.append(empty);return;}items.forEach(c=>{const card=document.createElement("article");card.className="z-premium-history-card";const name=document.createElement("button");name.className="z-premium-history-open";name.textContent=(c.pinned?"📌 ":"")+(c.title||t("Mazungumzo","Conversation"));const meta=document.createElement("small");meta.textContent=new Date(c.updatedAt||Date.now()).toLocaleString();const actions=document.createElement("div");actions.className="z-premium-history-actions";const pin=makeButton(c.pinned?"Unpin":"Pin","");const rename=makeButton("Rename","");const exp=makeButton("Export","");const del=makeButton("Delete","");actions.append(pin,rename,exp,del);card.append(name,meta,actions);list.append(card);name.onclick=()=>{loadConversation(c);page.hidden=true;};pin.onclick=()=>{c.pinned=!c.pinned;write(storageKey,conversations);render();};rename.onclick=()=>{const next=prompt(t("Jina jipya la mazungumzo:","New conversation name:"),c.title||"");if(next?.trim()){c.title=next.trim().slice(0,80);write(storageKey,conversations);render();}};exp.onclick=()=>exportConversation(c);del.onclick=()=>{if(confirm(t("Futa mazungumzo haya?","Delete this conversation?"))){conversations=conversations.filter(x=>x.id!==c.id);write(storageKey,conversations);render();}};});};
+  search.addEventListener("input",render);render();return wrap;
+ };
+ const loadConversation=c=>{currentId=c.id;currentTitle=c.title||t("Mazungumzo","Conversation");box.innerHTML="";(c.messages||[]).forEach(m=>{const d=document.createElement("div");d.className="z-assistant-message"+(m.role==="user"?" user":"");const body=document.createElement("div");body.className="z-assistant-message-content";body.textContent=m.text||"";d.append(body);box.append(d);if(m.role!=="user")addResponseActions(d);});box.scrollTop=box.scrollHeight;};
+ const exportConversation=c=>{const text=(c.messages||[]).map(m=>(m.role==="user"?"You":"ZUNE Assistant")+": "+(m.text||"")).join("\n\n");const blob=new Blob([text],{type:"text/plain;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=(c.title||"zune-conversation").replace(/[^a-z0-9-_]+/gi,"-")+".txt";a.click();URL.revokeObjectURL(url);};
+ const addResponseActions=node=>{if(node.querySelector(".z-premium-response-actions"))return;const content=node.querySelector(":scope > div");if(!content)return;const actions=document.createElement("div");actions.className="z-premium-response-actions";const add=(label,fn)=>{const b=makeButton(label,"");b.onclick=fn;actions.append(b);};add("Copy",()=>navigator.clipboard?.writeText(content.innerText).then(()=>setVoiceStatus(t("Jibu limenakiliwa.","Answer copied."))).catch(()=>setVoiceStatus(t("Copy haikufaulu.","Copy failed."))));add("Share",()=>{if(navigator.share)navigator.share({text:content.innerText}).catch(()=>{});else exportConversation({title:"zune-answer",messages:[{role:"assistant",text:content.innerText}]});});add("Regenerate",()=>{if(lastQuestion)ask(lastQuestion);});add("♥",()=>setVoiceStatus(t("Asante kwa mrejesho.","Thanks for your feedback.")));add("Dislike",()=>setVoiceStatus(t("Mrejesho umepokelewa.","Feedback received.")));add("Speak",()=>{const Utterance=window.SpeechSynthesisUtterance;if(Utterance&&window.speechSynthesis){stopSpeaking?.();const u=new Utterance(content.innerText);u.lang=sw?"sw-TZ":"en-US";window.speechSynthesis.speak(u);}});add("Translate",()=>ask(sw?"Tafsiri jibu lako la mwisho kwa English.":"Translate your last answer into Kiswahili."));node.append(actions);};
+ const historyNav=()=>showPage(t("Conversation History","Conversation History"),makeHistoryPage());
+ const privacyPage=()=>{const c=document.createElement("div");c.className="z-premium-settings";const h=document.createElement("p");h.textContent=t("Udhibiti wa taarifa zako kwenye kifaa hiki.","Control your information on this device.");const memory=makeButton(t("Futa Local Memory","Clear Local Memory"),"z-premium-danger");const history=makeButton(t("Futa Conversation History","Clear Conversation History"),"z-premium-danger");c.append(h,memory,history);memory.onclick=()=>{if(confirm(t("Futa kumbukumbu za kifaa hiki?","Erase local memory on this device?"))){Object.keys(localStorage).filter(k=>k.includes(userKey)&&(/memory|search_history/i.test(k))).forEach(k=>localStorage.removeItem(k));setVoiceStatus(t("Local Memory imefutwa.","Local Memory cleared."));}};history.onclick=()=>{if(confirm(t("Futa historia yote ya mazungumzo?","Erase all conversation history?"))){conversations=[];write(storageKey,conversations);setVoiceStatus(t("Historia imefutwa.","History cleared."));}};showPage(t("Privacy Center","Privacy Center"),c);};
+ const settingsPage=()=>{const c=document.createElement("div");c.className="z-premium-settings";const theme=document.createElement("label");theme.textContent=t("Muonekano","Appearance");const select=document.createElement("select");[["adaptive","Adaptive"],["light","Light"],["dark","Dark"]].forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;select.append(o);});select.value=prefs.theme||"adaptive";select.onchange=()=>{prefs.theme=select.value;write(prefsKey,prefs);applyTheme();};const language=document.createElement("label");language.textContent=t("Lugha","Language");const lang=document.createElement("select");[["auto","Auto detect"],["sw","Kiswahili"],["en","English"]].forEach(([v,l])=>{const o=document.createElement("option");o.value=v;o.textContent=l;lang.append(o);});lang.value=prefs.language||"auto";lang.onchange=()=>{prefs.language=lang.value;write(prefsKey,prefs);};const voice=document.createElement("label");voice.textContent=t("Majibu ya sauti","Voice replies");const toggle=document.createElement("input");toggle.type="checkbox";toggle.checked=prefs.voice!==false;toggle.onchange=()=>{prefs.voice=toggle.checked;write(prefsKey,prefs);speechToggle?.click();};c.append(theme,select,language,lang,voice,toggle);showPage(t("Assistant Settings","Assistant Settings"),c);};
+ const applyTheme=()=>{overlay.dataset.assistantTheme=prefs.theme||"adaptive";};
+ applyTheme();
+ drawer.querySelectorAll("[data-nav]").forEach(b=>b.addEventListener("click",()=>{const n=b.dataset.nav;if(n==="new")newChat();else if(n==="history")historyNav();else if(n==="voice")openVoice();else if(n==="privacy")privacyPage();else if(n==="settings")settingsPage();else{showPage(t("Help & Support","Help & Support"),Object.assign(document.createElement("div"),{textContent:t("Uliza ZUNE Assistant au wasiliana na Support kupitia Marketplace.","Ask ZUNE Assistant or contact Marketplace Support.")}));}closeDrawer();}));
+ const addComposerTools=()=>{const form=overlay.querySelector("#z-assistant-form");if(!form||form.querySelector(".z-premium-tools"))return;const tools=makeButton("＋","z-premium-tools",t("Marketplace tools","Marketplace tools"));form.prepend(tools);tools.onclick=()=>{const menu=document.createElement("div");menu.className="z-premium-tool-menu";[["Bidhaa","Tafuta bidhaa"],["Maduka","Tafuta maduka"],["Picha","Tafuta kwa picha"],["Oda","Oda zangu"],["Reels","ZUNE Reels"]].forEach(([label,q])=>{const b=makeButton(label,"");b.onclick=()=>{menu.remove();ask(q);};menu.append(b);});form.append(menu);};};
+ addComposerTools();
+ const inputResize=()=>{if(field){field.rows=1;field.addEventListener("input",()=>{field.style.height="auto";field.style.height=Math.min(field.scrollHeight,120)+"px";});}};
+ inputResize();
+ const originalAsk=ask;
+ // Keep the latest user prompt for the Regenerate action and update orb transcript.
+ const originalForm=overlay.querySelector("#z-assistant-form");
+ originalForm?.addEventListener("submit",()=>{lastQuestion=field?.value?.trim()||lastQuestion;},{capture:true});
+ const originalMic=micButton?.onclick;
+ if(micButton){micButton.addEventListener("click",()=>{const stage=overlay.querySelector("[data-orb-transcript]");if(stage)stage.textContent=t("Ninakusikiliza...","Listening...");});}
+ // Persist on every chat mutation and keep the welcome suggestions contextual.
+ overlay.querySelectorAll(".z-assistant-chip").forEach(chip=>chip.addEventListener("click",()=>{lastQuestion=chip.textContent;}));
+ if(overlay.querySelector("[data-assistant-welcome]"))overlay.querySelector("[data-assistant-welcome]").classList.add("z-assistant-welcome");
+ overlay.addEventListener("keydown",e=>{if(e.key==="Escape"){closeDrawer();page.hidden=true;overlay.classList.remove("z-premium-voice-mode");}});
+ const saved=read(prefsKey,null);if(saved?.voice===false&&speechToggle?.getAttribute("aria-pressed")==="true")speechToggle.click();
+}

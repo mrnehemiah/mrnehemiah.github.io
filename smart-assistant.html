@@ -1,48 +1,19 @@
 <!doctype html>
 <html lang="sw">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ZUNE Smart Assistant</title>
-</head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ZUNE Smart Assistant Premium</title></head>
 <body>
-  <template id="zune-smart-assistant-template">
-    <section class="z-assistant-panel" role="dialog" aria-modal="true" aria-label="ZUNE Smart Assistant">
-      <header class="z-assistant-head">
-        <strong>✦ ZUNE Smart Assistant</strong>
-        <div class="z-assistant-head-actions">
-          <button type="button" class="z-assistant-speech-toggle" data-assistant-speech-toggle aria-pressed="true" aria-label="Zima majibu ya sauti" title="Zima majibu ya sauti">🔊 Sauti ON</button>
-          <button type="button" class="z-assistant-close" aria-label="Close">×</button>
-        </div>
-      </header>
-      <section class="z-assistant-memory" data-assistant-memory aria-label="Conversation memory">
-        <div data-assistant-memory-prompt>
-          <strong data-assistant-memory-title>Ruhusu kumbukumbu?</strong>
-          <p data-assistant-memory-copy>ZUNE inaweza kukumbuka mada za mazungumzo yako ili kuelewa maswali ya ufuatiliaji. Kumbukumbu huhifadhiwa kwenye kifaa hiki tu; unaweza kuziona au kuzifuta wakati wowote. Usiweke PIN, OTP, nywila au taarifa za malipo hapa.</p>
-          <div class="z-assistant-memory-actions">
-            <button type="button" data-assistant-memory-allow>Ruhusu kumbukumbu</button>
-            <button type="button" data-assistant-memory-decline>Sio sasa</button>
-          </div>
-        </div>
-        <div data-assistant-memory-status hidden>
-          <span data-assistant-memory-label>Kumbukumbu imewashwa</span>
-          <div class="z-assistant-memory-actions">
-            <button type="button" data-assistant-memory-view>Angalia kumbukumbu</button>
-            <button type="button" data-assistant-memory-disable>Zima na futa</button>
-          </div>
-        </div>
-      </section>
-      <div class="z-assistant-messages" id="z-assistant-messages" aria-live="polite" aria-relevant="additions text">
-        <div class="z-assistant-message" data-assistant-welcome></div>
-      </div>
-      <div class="z-assistant-chips" data-assistant-chips></div>
-      <div class="z-assistant-voice-status" data-assistant-voice-status aria-live="polite"></div>
-      <form class="z-assistant-form" id="z-assistant-form">
-        <input id="z-assistant-input" autocomplete="off" placeholder="Andika swali au unachotafuta...">
-        <button type="button" class="z-assistant-mic" data-assistant-mic aria-label="Uliza kwa sauti" title="Uliza kwa sauti">🎙</button>
-        <button type="submit" aria-label="Send">➤</button>
-      </form>
-    </section>
-  </template>
-</body>
-</html>
+<template id="zune-smart-assistant-template">
+<section class="z-assistant-panel" role="dialog" aria-modal="true" aria-label="ZUNE Smart Assistant">
+<header class="z-assistant-head">
+<strong>✦ ZUNE Assistant</strong>
+<div class="z-assistant-head-actions">
+<button type="button" class="z-assistant-speech-toggle" data-assistant-speech-toggle aria-pressed="true" aria-label="Zima majibu ya sauti" title="Zima majibu ya sauti">🔊 Sauti ON</button>
+<button type="button" class="z-assistant-close" aria-label="Close">×</button>
+</div></header>
+<section class="z-assistant-memory" data-assistant-memory aria-label="Conversation memory">
+<div data-assistant-memory-prompt><strong data-assistant-memory-title>Ruhusu kumbukumbu?</strong><p data-assistant-memory-copy>ZUNE inaweza kukumbuka mada za mazungumzo yako kwenye kifaa hiki tu. Unaweza kuziona au kuzifuta wakati wowote. Usiweke PIN, OTP, nywila au taarifa za malipo hapa.</p><div class="z-assistant-memory-actions"><button type="button" data-assistant-memory-allow>Ruhusu kumbukumbu</button><button type="button" data-assistant-memory-decline>Sio sasa</button></div></div>
+<div data-assistant-memory-status hidden><span data-assistant-memory-label>Kumbukumbu imewashwa</span><div class="z-assistant-memory-actions"><button type="button" data-assistant-memory-view>Angalia kumbukumbu</button><button type="button" data-assistant-memory-disable>Zima na futa</button></div></div></section>
+<div class="z-assistant-messages" id="z-assistant-messages" aria-live="polite" aria-relevant="additions text"><div class="z-assistant-message" data-assistant-welcome></div></div>
+<div class="z-assistant-chips" data-assistant-chips></div><div class="z-assistant-voice-status" data-assistant-voice-status aria-live="polite"></div>
+<form class="z-assistant-form" id="z-assistant-form"><input id="z-assistant-input" autocomplete="off" placeholder="Andika swali au unachotafuta..."><button type="button" class="z-assistant-mic" data-assistant-mic aria-label="Uliza kwa sauti" title="Uliza kwa sauti">🎙</button><button type="submit" aria-label="Send">➤</button></form>
+</section></template></body></html>

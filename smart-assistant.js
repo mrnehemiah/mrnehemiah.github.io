@@ -1,5 +1,6 @@
 import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-6";
 import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
+import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261125-premium-1";
 
 /**
  * Opens the Marketplace assistant from the existing Search Bar.
@@ -491,6 +492,8 @@ export async function openZuneAssistant({
   }catch(e){console.error("ZUNE Universal Search assistant:",e);say((sw?"Utafutaji wa ZUNE Market haupatikani kwa sasa. Tafadhali jaribu tena au wasiliana na Support.":"ZUNE Market search is temporarily unavailable. Please try again or contact Support.")+"<br>"+supportLinks());}
  };
  overlay.querySelector("#z-assistant-form").onsubmit=e=>{e.preventDefault();unlockSpeech();ask(field.value);};
- overlay.querySelectorAll(".z-assistant-chip").forEach(b=>b.onclick=()=>{unlockSpeech();ask(b.textContent);});field.focus();
+ overlay.querySelectorAll(".z-assistant-chip").forEach(b=>b.onclick=()=>{unlockSpeech();ask(b.textContent);});
+ initializePremiumAssistant({overlay,sw,ask,close,stopSpeaking,setVoiceStatus,speechToggle,micButton,field,box,homeState});
+ field.focus();
 
 }
