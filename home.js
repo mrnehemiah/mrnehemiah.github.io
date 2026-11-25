@@ -4,7 +4,7 @@
 // ============================================
 
 import { supabase } from "./supabase.js";
-import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-3";
+import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-4";
 
 // --------------------------------------------
 // 1. SETTINGS AND STATE
