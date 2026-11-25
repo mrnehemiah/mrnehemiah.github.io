@@ -71,19 +71,21 @@ export function answerZuneKnowledge(question, lang="sw", previousTopic=null) {
  }
  let best=null,bestScore=0;
  for(const item of KNOWLEDGE) {
-  let score=0;
+  let exactScore=0,phraseScore=0,singleScore=0,overlapScore=0;
   for(const term of item.terms) {
    const t=normalizeKnowledgeText(term);
    if(!t) continue;
-   if(q===t) score+=8;
-   else if(t.includes(" ") && q.includes(t)) score+=6;
-   else if(!t.includes(" ") && queryTokens.has(t)) score+=3;
-   else {
+   if(q===t) exactScore=Math.max(exactScore,8);
+   else if(t.includes(" ") && q.includes(t)) phraseScore=Math.max(phraseScore,6);
+   else if(!t.includes(" ")) {
+    if(queryTokens.has(t)) singleScore=Math.max(singleScore,3);
+   } else {
     const termTokens=expandSwahiliTokens(term);
     const overlap=termTokens.filter(token=>queryTokens.has(token)).length;
-    if(overlap) score+=Math.min(3,overlap*1.15);
+    if(overlap) overlapScore=Math.max(overlapScore,Math.min(3,overlap*1.15));
    }
   }
+  const score=exactScore+phraseScore+singleScore+overlapScore;
   if(score>bestScore){best=item;bestScore=score;}
  }
  if(!best || bestScore<2.8) return null;
