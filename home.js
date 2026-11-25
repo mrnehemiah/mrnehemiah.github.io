@@ -5,7 +5,7 @@
 
 import { supabase } from "./supabase.js";
 import { openZuneAssistant } from "./smart-assistant.js?v=20261125-refactor-1";
-import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v=20261125-reels-system-1";
+import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v=20261125-public-feed-2";
 
 // --------------------------------------------
 // 1. SETTINGS AND STATE

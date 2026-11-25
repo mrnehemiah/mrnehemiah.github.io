@@ -130,13 +130,13 @@ async function loadFeed() {
   host.innerHTML = '<div class="z-reels-empty"><div class="mark">◌</div><h2>Inapakia Reels...</h2><p>Tunasoma video zilizochapishwa.</p></div>';
   try {
     const {data,error} = await ctx.db.from('zune_reels')
-      .select('*,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)')
+      .select('id,creator_id,video_path,thumbnail_path,caption,hashtags,product_id,status,views_count,created_at,creator_display_name,sound_id,duration_seconds,likes_count,comments_count,shares_count,saves_count,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)')
       .eq('status','published').order('created_at',{ascending:false}).limit(40);
     if (error) throw error;
     let reels = data || [];
     const requestedReel = new URLSearchParams(location.search).get('reel');
     if (requestedReel && !reels.some(x => x.id === requestedReel)) {
-      const target = await ctx.db.from('zune_reels').select('*,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)').eq('id',requestedReel).eq('status','published').maybeSingle();
+      const target = await ctx.db.from('zune_reels').select('id,creator_id,video_path,thumbnail_path,caption,hashtags,product_id,status,views_count,created_at,creator_display_name,sound_id,duration_seconds,likes_count,comments_count,shares_count,saves_count,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)').eq('id',requestedReel).eq('status','published').maybeSingle();
       if (!target.error && target.data) reels = [target.data,...reels];
     }
     const ids = reels.map(x => x.id);
