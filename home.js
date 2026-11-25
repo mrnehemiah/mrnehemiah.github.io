@@ -2726,7 +2726,7 @@ function openZuneAssistant(){
   say(sw?"Natafuta kwenye Marketplace...":"Searching Marketplace...");
   try{
    const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim(),pattern="%"+term+"%";
-   const productQuery=supabase.from("products").select("*").eq("moderation_status","approved");
+   const productQuery=supabase.from("products").select("*");
    if(term)productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
    const [pRes,sRes,cRes]=await Promise.all([
     productQuery.limit(wantsDeals?60:20),
