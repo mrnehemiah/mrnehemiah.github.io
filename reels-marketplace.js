@@ -28,32 +28,84 @@ function installStyles() {
   if (document.getElementById('zuneReelsStyles')) return;
   const style = document.createElement('style');
   style.id = 'zuneReelsStyles';
-  style.textContent = [
-    '.z-reels-shell{min-height:100svh;background:#080b09;color:#fff;padding-bottom:90px}.z-reels-page{max-width:100%;margin:0 auto;padding:0 0 90px;background:#080b09;color:#fff;min-height:100svh}',
-    '.z-reels-head{position:sticky;top:0;z-index:15;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px 8px;background:#080b09f2;backdrop-filter:blur(14px)}.z-reels-title{margin:0;font:800 23px Arial,sans-serif;letter-spacing:-.5px;color:#fff}',
-    '.z-reels-head-actions{display:flex;gap:8px}.z-reels-icon-btn{width:38px;height:38px;border:0;border-radius:50%;background:#252a27;color:#fff;font-size:27px;line-height:1;display:grid;place-items:center}',
-    '.z-reels-search[hidden]{display:none}.z-reels-search{display:block;width:calc(100% - 24px);margin:5px 12px 9px;border:1px solid #ffffff20;background:#ffffff0c;color:#fff;border-radius:20px;padding:10px 14px}.z-reels-search input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:13px}',
-    '.z-reels-tabs{position:sticky;top:58px;z-index:14;display:flex;gap:0;overflow:auto;padding:0 10px;background:#080b09f2;backdrop-filter:blur(14px);scrollbar-width:none;border-bottom:1px solid #ffffff12}.z-reels-tabs button{position:relative;flex:1;min-width:0;border:0;border-radius:0;background:transparent;color:#b9c1bc;padding:13px 10px 12px;font-size:13px;font-weight:700;white-space:nowrap}.z-reels-tabs button.active{color:#fff}.z-reels-tabs button.active:after{content:"";position:absolute;left:14%;right:14%;bottom:0;height:3px;border-radius:4px 4px 0 0;background:#18a66f}',
-    '.z-reels-feed{display:flex;flex-direction:column;gap:8px;padding:8px 0}.z-reel-card{position:relative;height:calc(100svh - 166px);min-height:500px;max-height:850px;max-width:560px;width:100%;margin:0 auto;border-radius:14px;overflow:hidden;background:#101713;isolation:isolate;box-shadow:0 12px 32px #0005}',
-    '@media(min-width:700px){.z-reels-page{max-width:560px}.z-reels-head{border-radius:0}.z-reel-card{height:min(780px,calc(100svh - 180px))}}',
-    '@media(max-width:520px){.z-reels-shell{padding-bottom:76px}.z-reels-page{padding-bottom:76px}.z-reels-feed{gap:0;padding:0}.z-reel-card{height:calc(100svh - 160px);min-height:440px;border-radius:0;max-width:none}.z-reels-tabs{top:58px}.z-reel-actions{right:10px;bottom:118px;gap:12px}.z-reel-copy{left:14px;bottom:16px;right:66px}.z-reel-product{max-width:100%}}',
-    '.z-reels-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 2px 14px}',
-    '.z-reels-brand{font:900 18px Manrope,Arial,sans-serif;letter-spacing:1px}.z-reels-brand small{display:block;font:700 9px Arial,sans-serif;letter-spacing:2px;color:#9db8aa;margin-top:2px}',
-    '.z-reels-head-actions{display:flex;gap:8px}.z-reels-head-actions button,.z-reels-search{border:1px solid #ffffff20;background:#ffffff0c;color:#fff;border-radius:12px;padding:10px 12px}',
-    '.z-reels-search{display:block;width:100%;margin:0 0 12px}.z-reels-search input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:13px}',
-    '.z-reels-tabs{display:flex;gap:7px;overflow:auto;padding:0 0 12px;scrollbar-width:none}.z-reels-tabs button{flex:none;border:1px solid #ffffff20;border-radius:999px;background:#ffffff0b;color:#c7d3cc;padding:8px 13px;font-size:11px;font-weight:800}.z-reels-tabs button.active{background:#0a8b60;border-color:#0a8b60;color:#fff}',
-    '.z-reels-feed{display:flex;flex-direction:column;gap:14px}.z-reel-card{position:relative;height:min(760px,calc(100svh - 190px));min-height:510px;max-width:520px;width:100%;margin:0 auto;border-radius:23px;overflow:hidden;background:#101713;isolation:isolate;box-shadow:0 16px 40px #0006}',
-    '.z-reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#101713}.z-reel-shade{position:absolute;inset:0;background:linear-gradient(180deg,#0007 0%,transparent 26%,transparent 50%,#000b 100%);pointer-events:none}',
-    '.z-reel-top{position:absolute;top:14px;left:14px;right:14px;display:flex;align-items:center;gap:9px;z-index:2}.z-reel-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#e5efe9;color:#07563c;font-weight:900;border:2px solid #ffffffa0;overflow:hidden}.z-reel-creator{min-width:0;flex:1;text-shadow:0 1px 4px #000}.z-reel-creator strong{display:flex;align-items:center;gap:5px;font-size:12px}.z-reel-creator small{display:block;font-size:10px;color:#e0e9e3;margin-top:3px}.z-reel-badge{display:inline-flex;align-items:center;gap:3px;color:#8ed0ff;font-size:10px;font-weight:900}.z-reel-follow{border:1px solid #fff9;border-radius:999px;background:#ffffff18;color:#fff;padding:8px 12px;font-size:10px;font-weight:900;backdrop-filter:blur(8px)}.z-reel-follow.following{background:#087c57;border-color:#087c57}',
-    '.z-reel-actions{position:absolute;right:11px;bottom:132px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:14px}.z-reel-action{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:transparent;color:#fff;text-shadow:0 1px 5px #000;padding:0;min-width:43px;font-size:10px;font-weight:800}.z-reel-action .glyph{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#07130db0;border:1px solid #ffffff35;font-size:20px;backdrop-filter:blur(8px)}.z-reel-action.active .glyph{color:#ff5b78}.z-reel-action.saved .glyph{color:#f4d477}',
-    '.z-reel-copy{position:absolute;left:15px;right:70px;bottom:16px;z-index:2;text-shadow:0 1px 5px #000}.z-reel-caption{font-size:12px;line-height:1.5;margin:7px 0;color:#fff}.z-reel-tags{font-size:10px;color:#d8eee2}.z-reel-audio{font-size:10px;color:#d9e7df;margin-top:7px;display:flex;align-items:center;gap:5px}',
-    '.z-reel-product{display:flex;align-items:center;gap:9px;margin-top:10px;padding:8px;border:1px solid #ffffff45;border-radius:14px;background:#06120dcc;backdrop-filter:blur(10px);color:#fff;text-align:left;width:100%}.z-reel-product img{width:42px;height:42px;border-radius:9px;object-fit:cover;background:#fff}.z-reel-product span{min-width:0;flex:1}.z-reel-product strong{display:block;font-size:11px}.z-reel-product small{display:block;color:#d5e4da;font-size:10px;margin-top:3px}.z-reel-product b{font-size:11px;color:#a9edcf}',
-    '.z-reels-empty{max-width:520px;margin:30px auto;padding:35px 22px;border:1px solid #ffffff1b;border-radius:22px;background:linear-gradient(145deg,#102c21,#0b1510);text-align:center}.z-reels-empty .mark{font-size:38px}.z-reels-empty h2{font:800 20px Manrope;margin:12px 0}.z-reels-empty p{color:#a9bbb0;font-size:12px;line-height:1.7}.z-reels-empty button{border:0;border-radius:12px;padding:12px 17px;background:#0b8a60;color:#fff;font-weight:900;margin-top:12px}',
-    '.z-reel-comments-backdrop{position:fixed;inset:0;z-index:1000;background:#000a;display:flex;align-items:flex-end;justify-content:center}.z-reel-comments{width:min(100%,560px);max-height:78vh;background:#101b15;color:#fff;border:1px solid #ffffff24;border-radius:22px 22px 0 0;padding:16px;display:flex;flex-direction:column;gap:12px}.z-reel-comments-head{display:flex;justify-content:space-between;align-items:center}.z-reel-comments-head button{border:0;background:transparent;color:#fff;font-size:22px}.z-reel-comments-list{overflow:auto;min-height:100px;display:flex;flex-direction:column;gap:12px}.z-reel-comment{font-size:12px;line-height:1.5}.z-reel-comment strong{color:#9de3c2;margin-right:6px}.z-reel-comment time{display:block;color:#91a398;font-size:9px;margin-top:3px}.z-reel-comment-form{display:flex;gap:8px}.z-reel-comment-form input{min-width:0;flex:1;border:1px solid #ffffff28;border-radius:12px;background:#ffffff0c;color:#fff;padding:12px}.z-reel-comment-form button{border:0;border-radius:12px;background:#0b8a60;color:#fff;padding:0 15px;font-weight:900}',
-    '.z-reels-toast{position:fixed;left:50%;bottom:95px;transform:translate(-50%,15px);opacity:0;pointer-events:none;z-index:1200;padding:11px 16px;border-radius:999px;background:#e8f5ee;color:#124b35;font-size:12px;font-weight:800;transition:.2s}.z-reels-toast.show{opacity:1;transform:translate(-50%,0)}',
-    '@media(max-width:520px){.z-reels-page{padding:8px 0 95px}.z-reel-card{height:calc(100svh - 160px);min-height:440px;max-height:none;border-radius:0;max-width:none}.z-reels-tabs{padding-left:10px}.z-reels-head{padding-left:12px;padding-right:12px}.z-reels-search{width:calc(100% - 24px);margin-left:12px}.z-reel-actions{right:8px;bottom:120px;gap:12px}.z-reel-copy{left:12px;bottom:12px}.z-reel-product{max-width:100%}}',
-    '@media(prefers-reduced-motion:reduce){.z-reels-toast{transition:none}}'
-  ].join('');
+  style.textContent = `
+    :root{--zr-bg:#090D16;--zr-nav:#111827;--zr-purple:#A78BFA;--zr-white:#FFFFFF;--zr-muted:#9CA3AF}
+    .z-reels-shell{min-height:100svh;background:var(--zr-bg);color:var(--zr-white);padding:0 0 82px}
+    .z-reels-page{width:100%;max-width:520px;margin:0 auto;background:var(--zr-bg);color:var(--zr-white);min-height:100svh;padding:0 0 82px}
+    .z-reels-head{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 10px;background:#090D16f5;border-bottom:1px solid #ffffff12;backdrop-filter:blur(18px)}
+    .z-reels-brand{font:900 19px/1.1 Manrope,Arial,sans-serif;letter-spacing:1.1px;color:#fff}
+    .z-reels-brand em{font-style:normal;color:var(--zr-purple)}
+    .z-reels-brand small{display:block;margin-top:4px;font:600 9px/1 Arial,sans-serif;letter-spacing:2px;color:var(--zr-muted)}
+    .z-reels-head-actions{display:flex;gap:9px}
+    .z-reels-icon-btn{width:40px;height:40px;border:1px solid #ffffff1c;border-radius:14px;background:#ffffff0b;color:#fff;font-size:20px;display:grid;place-items:center}
+    .z-reels-icon-btn:active{transform:scale(.96);background:#A78BFA25}
+    .z-reels-search[hidden]{display:none}
+    .z-reels-search{display:block;margin:10px 14px 8px;padding:11px 14px;border:1px solid #A78BFA55;border-radius:14px;background:#111827;color:#fff}
+    .z-reels-search input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:13px}
+    .z-reels-search input::placeholder{color:#9CA3AF}
+    .z-reels-tabs{position:sticky;top:64px;z-index:25;display:flex;gap:0;padding:0 12px;background:#090D16f5;border-bottom:1px solid #ffffff12;backdrop-filter:blur(18px)}
+    .z-reels-tabs button{position:relative;flex:1;border:0;background:transparent;color:#9CA3AF;padding:13px 8px 12px;font-size:12px;font-weight:800;white-space:nowrap}
+    .z-reels-tabs button.active{color:#fff}
+    .z-reels-tabs button.active:after{content:"";position:absolute;left:25%;right:25%;bottom:0;height:3px;border-radius:5px 5px 0 0;background:#A78BFA;box-shadow:0 0 14px #A78BFA88}
+    .z-reels-feed{display:flex;flex-direction:column;gap:12px;padding:10px 10px 16px}
+    .z-reel-card{position:relative;height:min(780px,calc(100svh - 165px));min-height:500px;width:100%;max-width:500px;margin:0 auto;overflow:hidden;border:1px solid #ffffff16;border-radius:22px;background:#111827;isolation:isolate;box-shadow:0 18px 50px #0008}
+    .z-reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111827}
+    .z-reel-shade{position:absolute;inset:0;background:linear-gradient(180deg,#090D1670 0%,transparent 23%,transparent 48%,#090D16ed 100%);pointer-events:none}
+    .z-reel-top{position:absolute;top:14px;left:14px;right:14px;z-index:3;display:flex;align-items:center;gap:9px}
+    .z-reel-avatar{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;overflow:hidden;border:2px solid #A78BFA;border-radius:50%;background:#24213a;color:#fff;font-size:12px;font-weight:900}
+    .z-reel-creator{min-width:0;flex:1;text-shadow:0 2px 8px #000}
+    .z-reel-creator strong{display:flex;align-items:center;gap:5px;font-size:12px;color:#fff}
+    .z-reel-creator small{display:block;margin-top:3px;color:#e5e7eb;font-size:10px}
+    .z-reel-badge{color:#A78BFA;font-size:10px;font-weight:900}
+    .z-reel-follow{border:1px solid #A78BFA;border-radius:999px;background:#A78BFA20;color:#fff;padding:8px 13px;font-size:10px;font-weight:900;backdrop-filter:blur(10px)}
+    .z-reel-follow.following{background:#A78BFA;color:#090D16}
+    .z-reel-actions{position:absolute;right:10px;bottom:142px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:12px}
+    .z-reel-action{min-width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:transparent;color:#fff;padding:0;text-shadow:0 2px 8px #000;font-size:10px;font-weight:800}
+    .z-reel-action .glyph{width:40px;height:40px;display:grid;place-items:center;border:1px solid #ffffff35;border-radius:50%;background:#090D16b8;font-size:19px;backdrop-filter:blur(12px)}
+    .z-reel-action.active .glyph{color:#fb7185;border-color:#fb718577}
+    .z-reel-action.saved .glyph{color:#A78BFA;border-color:#A78BFA88}
+    .z-reel-copy{position:absolute;left:14px;right:64px;bottom:14px;z-index:3;color:#fff;text-shadow:0 2px 8px #000}
+    .z-reel-caption{margin:7px 0;color:#fff;font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .z-reel-tags{color:#ddd6fe;font-size:10px;font-weight:700}
+    .z-reel-audio{display:flex;align-items:center;gap:6px;margin-top:7px;color:#e5e7eb;font-size:10px}
+    .z-reel-product-list{display:flex;gap:8px;overflow-x:auto;padding:7px 0 2px;scrollbar-width:none}
+    .z-reel-product{flex:0 0 min(260px,82%);display:flex;align-items:center;gap:9px;min-width:0;padding:8px;border:1px solid #A78BFA55;border-radius:15px;background:#111827ed;color:#fff;text-align:left;backdrop-filter:blur(14px)}
+    .z-reel-product img{width:43px;height:43px;flex:0 0 43px;border-radius:10px;object-fit:cover;background:#fff}
+    .z-reel-product span{min-width:0;flex:1}
+    .z-reel-product strong{display:block;overflow:hidden;color:#fff;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+    .z-reel-product small{display:block;margin-top:3px;color:#9CA3AF;font-size:10px}
+    .z-reel-product b{color:#A78BFA;font-size:10px;white-space:nowrap}
+    .z-reel-product-actions{display:flex;gap:7px;margin-top:6px}
+    .z-reel-product-actions button{border:1px solid #A78BFA77;border-radius:10px;background:#A78BFA;color:#090D16;padding:7px 10px;font-size:10px;font-weight:900}
+    .z-reel-product-actions button.secondary{background:#111827;color:#fff}
+    .z-reels-empty{max-width:500px;margin:24px auto;padding:32px 22px;border:1px solid #ffffff18;border-radius:22px;background:linear-gradient(145deg,#151c2e,#0c1220);text-align:center}
+    .z-reels-empty .mark{font-size:36px;color:#A78BFA}
+    .z-reels-empty h2{margin:12px 0;font:800 19px Manrope,Arial,sans-serif;color:#fff}
+    .z-reels-empty p{color:#9CA3AF;font-size:12px;line-height:1.7}
+    .z-reels-empty button{margin-top:12px;border:0;border-radius:12px;background:#A78BFA;color:#090D16;padding:12px 17px;font-weight:900}
+    .z-reel-comments-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;background:#000b}
+    .z-reel-comments{width:min(100%,560px);max-height:82vh;display:flex;flex-direction:column;gap:12px;padding:17px;background:#111827;color:#fff;border:1px solid #ffffff22;border-radius:22px 22px 0 0}
+    .z-reel-comments-head{display:flex;align-items:center;justify-content:space-between}
+    .z-reel-comments-head strong{font-size:14px}
+    .z-reel-comments-head button{border:0;background:transparent;color:#fff;font-size:24px}
+    .z-reel-comments-list{display:flex;flex-direction:column;gap:13px;overflow:auto;min-height:100px}
+    .z-reel-comment{display:flex;align-items:flex-start;gap:9px;color:#e5e7eb;font-size:12px;line-height:1.5}
+    .z-reel-comment-main{min-width:0;flex:1}
+    .z-reel-comment strong{color:#fff;margin-right:5px}
+    .z-reel-comment time{display:block;margin-top:3px;color:#9CA3AF;font-size:9px}
+    .z-reel-comment-like{border:0;background:transparent;color:#9CA3AF;font-size:10px;padding:4px}
+    .z-reel-comment-like.active{color:#fb7185}
+    .z-reel-comment-form{display:flex;gap:8px}
+    .z-reel-comment-form input{min-width:0;flex:1;border:1px solid #ffffff25;border-radius:13px;background:#090D16;color:#fff;padding:12px}
+    .z-reel-comment-form button{border:0;border-radius:12px;background:#A78BFA;color:#090D16;padding:0 16px;font-weight:900}
+    .z-reels-toast{position:fixed;left:50%;bottom:95px;z-index:1200;transform:translate(-50%,14px);opacity:0;pointer-events:none;padding:11px 16px;border:1px solid #A78BFA55;border-radius:999px;background:#111827;color:#fff;font-size:12px;font-weight:800;transition:.2s}
+    .z-reels-toast.show{transform:translate(-50%,0);opacity:1}
+    .z-reel-media-error{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:25px;background:#090D16e8;color:#fff;text-align:center}
+    .z-reel-media-error small{color:#9CA3AF;line-height:1.6}
+    @media(min-width:700px){.z-reels-page{max-width:520px}.z-reel-card{height:min(780px,calc(100svh - 175px))}}
+    @media(max-width:520px){.z-reels-shell{padding-bottom:74px}.z-reels-page{padding-bottom:74px}.z-reels-feed{gap:0;padding:0}.z-reel-card{height:calc(100svh - 158px);min-height:430px;max-height:none;border:0;border-radius:0;max-width:none}.z-reels-tabs{top:62px}.z-reel-actions{right:9px;bottom:130px;gap:11px}.z-reel-copy{left:13px;bottom:12px;right:62px}.z-reel-product{flex-basis:min(245px,90%)}}
+    @media(prefers-reduced-motion:reduce){.z-reels-toast{transition:none}}
+  `;
   document.head.appendChild(style);
 }
 function icon(name) {
@@ -65,7 +117,7 @@ function cardHTML(reel) {
   const official = role === 'admin';
   const verified = official || (role === 'vendor' && creator.is_verified === true);
   const creatorName = official ? 'ZUNE Official' : (creator.full_name || reel.creator_display_name || 'ZUNE Seller');
-  const product = reel.product || null;
+  const products = Array.isArray(reel.products) && reel.products.length ? reel.products : (reel.product ? [reel.product] : []);
   const sound = reel.sound || null;
   const video = publicUrl(state.context.db, reel.video_path);
   const thumb = reel.thumbnail_path ? publicUrl(state.context.db, reel.thumbnail_path) : '';
@@ -73,21 +125,22 @@ function cardHTML(reel) {
   const following = state.following.has(reel.creator_id);
   const saved = state.saved.has(reel.id);
   const tags = Array.isArray(reel.hashtags) ? reel.hashtags.map(x => '#' + String(x).replace(/^#/, '')).join(' ') : '';
-  const productHtml = product ? '<button type="button" class="z-reel-product" data-reel-product="' + esc(reel.id) + '">' +
-    (product.image_url ? '<img src="' + esc(product.image_url) + '" alt="" loading="lazy">' : '<img src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect width=%2740%27 height=%2740%27 fill=%27%23e9eee9%27/%3E%3C/svg%3E" alt="">' ) +
-    '<span><strong>' + esc(product.title) + '</strong><small>TSh ' + Number(product.price || 0).toLocaleString('en-TZ') + '</small></span><b>Nunua ↗</b></button>' : '';
+  const productHtml = products.slice(0,10).map(product => {
+    const inStock = product.stock_quantity == null || Number(product.stock_quantity) > 0;
+    return '<div class="z-reel-product"><img src="' + esc(product.image_url || '') + '" alt="" loading="lazy"><span><strong>' + esc(product.title) + '</strong><small>TSh ' + Number(product.price || 0).toLocaleString('en-TZ') + (inStock ? ' · Inapatikana' : ' · Imeisha') + '</small><div class="z-reel-product-actions"><button type="button" class="secondary" data-reel-product="' + esc(reel.id) + '" data-product-id="' + esc(product.id) + '">Tazama</button><button type="button" data-reel-cart="' + esc(product.id) + '"' + (inStock ? '' : ' disabled') + '>Ongeza Cart</button></div></span></div>';
+  }).join('');
   return '<article class="z-reel-card" data-reel-card="' + esc(reel.id) + '">' +
     '<video class="z-reel-video" data-reel-video="' + esc(reel.id) + '" src="' + esc(video) + '" poster="' + esc(thumb) + '" playsinline loop muted preload="metadata"></video><div class="z-reel-shade"></div>' +
     '<div class="z-reel-top"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong><small>' + (official ? 'Akaunti rasmi ya ZUNE' : 'ZUNE Seller') + '</small></div>' +
     (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' +
     '<div class="z-reel-actions">' +
-    '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">' + icon('heart') + '</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
+    '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">♡</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">▢</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">➤</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
+    '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">▣</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">♫</span><span>Sound</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">⚑</span><span>Report</span></button>' +
-    '</div><div class="z-reel-copy"><div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ Original audio · Video sound</div>' + productHtml + '</div></article>';
+    '</div><div class="z-reel-copy"><div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
 }
 function visibleReels() {
   let list = state.reels.slice();
@@ -332,14 +385,43 @@ async function openComments(reelId) {
     .eq('reel_id',reelId).order('created_at',{ascending:true}).limit(100);
   if (error) { toast(error.message || 'Maoni hayajapakia.'); return; }
   const comments = data || [];
+  const ids = comments.map(c => c.id);
+  let likeRows = [];
+  let likeFeatureAvailable = false;
+  if (ids.length) {
+    const likes = await db.from('zune_reel_comment_likes').select('comment_id,user_id').in('comment_id',ids);
+    if (!likes.error) { likeRows = likes.data || []; likeFeatureAvailable = true; }
+    else console.warn('ZUNE comment likes unavailable:', likes.error.message || likes.error);
+  }
+  const counts = likeRows.reduce((out,row) => { out[row.comment_id]=(out[row.comment_id]||0)+1; return out; },{});
+  const liked = new Set(likeRows.filter(row => row.user_id === state.context.user?.id).map(row => row.comment_id));
   const backdrop = document.createElement('div');
   backdrop.className = 'z-reel-comments-backdrop';
-  backdrop.innerHTML = '<section class="z-reel-comments"><div class="z-reel-comments-head"><strong>Maoni (' + comments.length + ')</strong><button type="button" data-close-comments aria-label="Funga">×</button></div><div class="z-reel-comments-list">' +
-    (comments.length ? comments.map(c => '<div class="z-reel-comment"><strong>' + esc(c.author?.full_name || 'Mtumiaji') + (c.author?.is_verified ? ' ✓' : '') + '</strong>' + esc(c.body) + '<time>' + new Date(c.created_at).toLocaleString('sw-TZ') + '</time></div>').join('') : '<p class="z-reels-empty">Bado hakuna maoni. Anza mazungumzo.</p>') +
+  backdrop.innerHTML = '<section class="z-reel-comments" role="dialog" aria-modal="true" aria-label="Maoni"><div class="z-reel-comments-head"><strong>Maoni (' + comments.length + ')</strong><button type="button" data-close-comments aria-label="Funga">×</button></div><div class="z-reel-comments-list">' +
+    (comments.length ? comments.map(c => '<div class="z-reel-comment"><div class="z-reel-comment-main"><strong>' + esc(c.author?.full_name || 'Mtumiaji') + (c.author?.is_verified ? ' ✓' : '') + '</strong>' + esc(c.body) + '<time>' + new Date(c.created_at).toLocaleString('sw-TZ') + '</time></div>' + (likeFeatureAvailable ? '<button type="button" class="z-reel-comment-like ' + (liked.has(c.id) ? 'active' : '') + '" data-comment-like="' + esc(c.id) + '">' + (liked.has(c.id) ? '♥' : '♡') + ' <span>' + Number(counts[c.id] || 0) + '</span></button>' : '') + '</div>').join('') : '<p class="z-reels-empty">Bado hakuna maoni. Anza mazungumzo.</p>') +
     '</div><form class="z-reel-comment-form"><input name="body" maxlength="1000" placeholder="Andika maoni yako..." required><button type="submit">Tuma</button></form></section>';
   state.root.appendChild(backdrop);
   backdrop.querySelector('[data-close-comments]').onclick = () => backdrop.remove();
   backdrop.addEventListener('click',e => { if (e.target === backdrop) backdrop.remove(); });
+  backdrop.addEventListener('click',async e => {
+    const button = e.target.closest('[data-comment-like]');
+    if (!button || !requireUser()) return;
+    const id = button.dataset.commentLike;
+    const wasLiked = liked.has(id);
+    button.disabled = true;
+    try {
+      const result = wasLiked
+        ? await db.from('zune_reel_comment_likes').delete().eq('comment_id',id).eq('user_id',state.context.user.id)
+        : await db.from('zune_reel_comment_likes').insert({comment_id:id,user_id:state.context.user.id});
+      if (result.error) throw result.error;
+      if (wasLiked) liked.delete(id); else liked.add(id);
+      const count = Math.max(0,Number(counts[id] || 0) + (wasLiked ? -1 : 1));
+      counts[id] = count;
+      button.classList.toggle('active',!wasLiked);
+      button.innerHTML = (wasLiked ? '♡' : '♥') + ' <span>' + count + '</span>';
+    } catch (err) { toast(err.message || 'Like ya maoni haijahifadhiwa.'); }
+    finally { button.disabled = false; }
+  });
   backdrop.querySelector('form').addEventListener('submit',async e => {
     e.preventDefault();
     if (!requireUser()) return;
@@ -384,6 +466,19 @@ function bindEvents() {
     const audio = e.target.closest('[data-reel-audio]');
     const report = e.target.closest('[data-reel-report]');
     const product = e.target.closest('[data-reel-product]');
+    const cart = e.target.closest('[data-reel-cart]');
+    if (cart) {
+      const row = state.products.get(cart.dataset.reelCart);
+      if (!row) { toast('Bidhaa haipatikani kwa sasa.'); return; }
+      if (Number(row.stock_quantity) <= 0) { toast('Bidhaa hii imeisha stock.'); return; }
+      if (!requireUser()) return;
+      if (typeof state.context.onAddToCart !== 'function') { toast('Cart haipatikani kwa sasa.'); return; }
+      cart.disabled = true;
+      try { state.context.onAddToCart(row); toast('Bidhaa imeongezwa kwenye Cart.'); }
+      catch (err) { toast(err.message || 'Imeshindikana kuongeza bidhaa kwenye Cart.'); }
+      finally { cart.disabled = false; }
+      return;
+    }
     if (like) return toggleLike(like.dataset.reelLike,like);
     if (follow) return toggleFollow(follow.dataset.reelFollow,follow);
     if (comments) return openComments(comments.dataset.reelComments);
@@ -402,8 +497,7 @@ function bindEvents() {
       return;
     }
     if (product) {
-      const reel = state.reels.find(x => x.id === product.dataset.reelProduct);
-      const row = reel && state.products.get(reel.product_id);
+      const row = state.products.get(product.dataset.productId);
       if (row) state.context.onOpenProduct(row);
     }
   });
@@ -411,7 +505,7 @@ function bindEvents() {
 export function renderZuneReelsPage() {
   installStyles();
   const sw = state.context?.language !== 'en';
-  return '<section class="z-reels-shell"><main class="z-reels-page"><header class="z-reels-head"><h1 class="z-reels-title">Reels</h1><div class="z-reels-head-actions"><button type="button" class="z-reels-icon-btn" data-reels-search-toggle aria-label="Tafuta Reels" title="Tafuta">⌕</button></div></header>' +
+  return '<section class="z-reels-shell"><main class="z-reels-page"><header class="z-reels-head"><h1 class="z-reels-brand">ZUNE <em>REELS</em><small>DISCOVER · CONNECT · SHOP</small></h1><div class="z-reels-head-actions"><button type="button" class="z-reels-icon-btn" data-reels-search-toggle aria-label="Tafuta Reels" title="Tafuta">⌕</button></div></header>' +
     '<label class="z-reels-search" id="z-reels-search-wrap" hidden><input id="z-reels-search" type="search" placeholder="' + (sw ? 'Tafuta video, duka au bidhaa...' : 'Search videos, stores or products...') + '"></label>' +
     '<nav class="z-reels-tabs" aria-label="Reels feed"><button class="active" type="button" data-reels-tab="for-you">For You</button><button type="button" data-reels-tab="following">Following</button><button type="button" data-reels-tab="friends">Friends</button></nav><div class="z-reels-feed" id="z-reels-feed"><div class="z-reels-empty"><div class="mark">◌</div><h2>Inapakia Reels...</h2></div></div></main></section>';
 }
