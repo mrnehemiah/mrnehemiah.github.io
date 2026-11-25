@@ -67,7 +67,7 @@ export async function openZuneAssistant({
  const playSpeechQueue=token=>{
   if(!speechEnabled||!speechSupported||token!==speechQueueToken||speechPlaying)return;
   const part=speechQueue.shift();
-  if(!part)return;
+  if(!part){setVoiceStatus("");return;}
   speechPlaying=true;
   const lang=sw?"sw-TZ":"en-US",utterance=new window.SpeechSynthesisUtterance(part);
   const voice=pickVoice(lang);
@@ -156,7 +156,10 @@ export async function openZuneAssistant({
   content.innerHTML=html;
   const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
   const textNodes=[];let node;
-  while((node=walker.nextNode())){textNodes.push({node,text:node.nodeValue||""});node.nodeValue="";}
+  while((node=walker.nextNode())){
+   if(node.parentElement?.closest("button,a,input,textarea,select,script,style"))continue;
+   textNodes.push({node,text:node.nodeValue||""});node.nodeValue="";
+  }
   const typing=document.createElement("span");
   typing.className="z-assistant-typing";
   typing.setAttribute("aria-label",sw?"ZUNE inaandika":"ZUNE is typing");
