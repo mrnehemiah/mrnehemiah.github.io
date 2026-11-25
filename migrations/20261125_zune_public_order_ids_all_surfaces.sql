@@ -100,9 +100,11 @@ RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path TO '' AS $functio
 DECLARE v_numbers text;
 BEGIN
  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Tafadhali ingia kwanza.'; END IF;
- SELECT string_agg(coalesce(o.public_order_id,o.order_number),', ' ORDER BY o.created_at,o.id) INTO v_numbers
- FROM public.order_deliveries d JOIN public.orders o ON o.checkout_id=d.checkout_id
- WHERE d.id=p_delivery_id AND d.assigned_driver_id=auth.uid();
+ SELECT string_agg(x.public_id, ', ' ORDER BY x.public_id) INTO v_numbers
+ FROM (SELECT DISTINCT coalesce(o.public_order_id,o.order_number) AS public_id
+   FROM public.order_deliveries d JOIN public.orders o
+     ON o.checkout_id=d.checkout_id AND o.vendor_id=d.vendor_id
+   WHERE d.id=p_delivery_id AND d.assigned_driver_id=auth.uid()) x;
  IF NOT EXISTS(SELECT 1 FROM public.order_deliveries d WHERE d.id=p_delivery_id AND d.assigned_driver_id=auth.uid()) THEN
   RAISE EXCEPTION 'Delivery haijapatikana au si yako.';
  END IF;
@@ -117,8 +119,9 @@ BEGIN
  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Tafadhali ingia kwenye akaunti yako kwanza.'; END IF;
  SELECT jsonb_build_object(
   'delivery_id',d.id,
-  'order_numbers',coalesce((SELECT jsonb_agg(coalesce(o.public_order_id,o.order_number) ORDER BY o.created_at,o.id)
-    FROM public.orders o WHERE o.checkout_id=d.checkout_id),'[]'::jsonb),
+  'order_numbers',coalesce((SELECT jsonb_agg(x.public_id ORDER BY x.public_id)
+    FROM (SELECT DISTINCT coalesce(o.public_order_id,o.order_number) AS public_id
+      FROM public.orders o WHERE o.checkout_id=d.checkout_id AND o.vendor_id=d.vendor_id) x),'[]'::jsonb),
   'status',d.status,'delivery_fee',d.delivery_fee,'currency',d.currency,
   'estimated_delivery_at',d.estimated_delivery_at,'eta_updated_at',d.eta_updated_at,'created_at',d.created_at,
   'seller_handover_confirmed_at',d.seller_handover_confirmed_at,
@@ -164,8 +167,10 @@ BEGIN
  SELECT coalesce(jsonb_agg(x.obj ORDER BY x.created_at DESC),'[]'::jsonb) INTO v_payments
  FROM (
   SELECT jsonb_build_object('id',p.id,'delivery_id',p.delivery_id,'order_numbers',
-   (SELECT coalesce(jsonb_agg(coalesce(o.public_order_id,o.order_number) ORDER BY o.created_at,o.id),'[]'::jsonb)
-    FROM public.order_deliveries d2 JOIN public.orders o ON o.checkout_id=d2.checkout_id WHERE d2.id=p.delivery_id),
+   (SELECT coalesce(jsonb_agg(z.public_id ORDER BY z.public_id),'[]'::jsonb)
+    FROM (SELECT DISTINCT coalesce(o.public_order_id,o.order_number) AS public_id
+      FROM public.order_deliveries d2 JOIN public.orders o
+       ON o.checkout_id=d2.checkout_id AND o.vendor_id=d2.vendor_id WHERE d2.id=p.delivery_id) z),
    'amount',p.amount,'deduction',p.deduction,'net_amount',p.net_amount,'payment_method',p.payment_method,
    'payment_phone',p.payment_phone,'transaction_reference',p.transaction_reference,'status',p.status,
    'admin_note',p.admin_note,'created_at',p.created_at,'paid_at',p.paid_at) obj,p.created_at
@@ -174,8 +179,9 @@ BEGIN
  SELECT coalesce(jsonb_agg(x.obj ORDER BY x.created_at DESC),'[]'::jsonb) INTO v_deliveries
  FROM (
   SELECT jsonb_build_object('id',d.id,'order_numbers',
-   (SELECT coalesce(jsonb_agg(coalesce(o.public_order_id,o.order_number) ORDER BY o.created_at,o.id),'[]'::jsonb)
-    FROM public.orders o WHERE o.checkout_id=d.checkout_id),
+   (SELECT coalesce(jsonb_agg(z.public_id ORDER BY z.public_id),'[]'::jsonb)
+    FROM (SELECT DISTINCT coalesce(o.public_order_id,o.order_number) AS public_id
+      FROM public.orders o WHERE o.checkout_id=d.checkout_id AND o.vendor_id=d.vendor_id) z),
    'status',d.status,'delivery_fee',d.delivery_fee,'driver_payout_amount',d.driver_payout_amount,
    'zune_delivery_amount',d.zune_delivery_amount,'payout_status',d.payout_status,
    'created_at',d.created_at,'buyer_confirmed_at',d.buyer_confirmed_at) obj,d.created_at
