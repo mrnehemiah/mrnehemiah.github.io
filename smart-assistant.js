@@ -296,31 +296,50 @@ export async function openZuneAssistant({
   if(has("akaunti","account","login","ingia","jisajili","signup","password","nenosiri")){say(sw?"Tumia sehemu ya Akaunti kwenye menyu ya Marketplace kuingia, kujisajili na kusimamia taarifa zako. Usishiriki nenosiri au OTP.":"Use Account in Marketplace navigation to sign in, register and manage your details. Never share your password or OTP.");return;}
   if(has("help","msaada","support","wasilian","contact","huduma","whatsapp")){say((sw?"Kwa msaada wa ZUNE Market, wasiliana nasi kupitia WhatsApp au jiunge na Channel kwa matangazo. Usitume PIN, OTP au nenosiri.":"For ZUNE Market help, contact us on WhatsApp or join the Channel for announcements. Never share your PIN, OTP or password.")+"<br>"+supportLinks());return;}
   const wantsDeals=has("punguzo","discount","sale","oferta","deals");
-  const stop=new Set(["nataka","tafuta","kutafuta","nunua","kununua","agiza","kuagiza","naomba","onyesha","nionyeshe","nipatie","tafadhali","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in"]);
-  let query=getSwahiliSearchTokens(activeSearchText).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
+  const inStockOnly=has("stock iliyopo","zilizopo","in stock","available now","bidhaa zilizopo","bado zipo");
+  const sortMode=has("bei nafuu","cheap","cheapest","lowest price","bei ndogo")?"price_low":has("ghali zaidi","most expensive","highest price","bei kubwa")?"price_high":"recent";
+  const parseBudgetValue=(raw,suffix)=>{
+   const value=Number(String(raw||"").replace(/,/g,""));
+   if(!Number.isFinite(value)||value<=0)return null;
+   return value*(String(suffix||"").toLowerCase()==="k"?1000:String(suffix||"").toLowerCase()==="m"?1000000:1);
+  };
+  let searchText=activeSearchText;
+  let minBudget=null,maxBudget=null;
+  const maxBudgetMatch=searchText.match(/(?:chini ya|isizidi|hadi|under|below|less than|max(?:imum)?|budget(?: ya)?|at most)\s*(?:tsh|tzs)?\s*([\d,]+(?:\.\d+)?)\s*([km])?/i);
+  const minBudgetMatch=searchText.match(/(?:kuanzia|zaidi ya|kuvuka|above|over|from|at least)\s*(?:tsh|tzs)?\s*([\d,]+(?:\.\d+)?)\s*([km])?/i);
+  if(maxBudgetMatch){maxBudget=parseBudgetValue(maxBudgetMatch[1],maxBudgetMatch[2]);searchText=searchText.replace(maxBudgetMatch[0]," ");}
+  if(minBudgetMatch){minBudget=parseBudgetValue(minBudgetMatch[1],minBudgetMatch[2]);searchText=searchText.replace(minBudgetMatch[0]," ");}
+  searchText=searchText.replace(/\b(?:tsh|tzs|shilingi|shs|bei nafuu|cheap|cheapest|lowest price|bei ndogo|ghali zaidi|most expensive|highest price|bei kubwa|zilizopo|in stock|available now|bidhaa zilizopo|bado zipo|punguzo|discount|sale|oferta|deals|nataka|tafuta|kutafuta|nunua|kununua|agiza|kuagiza|naomba|onyesha|nionyeshe|nipatie|tafadhali|bidhaa|please|find|show|search|the|for|with|za|zaidi|ya|wa|wao|ni|na|je|gani|kwenye|marketplace|chini|hadi|under|below|above|over|price|bei)\b/gi," ").replace(/\s+/g," ").trim();
+  const stop=new Set(["nataka","tafuta","kutafuta","nunua","kununua","agiza","kuagiza","naomba","onyesha","nionyeshe","nipatie","tafadhali","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in","stock","tsh","tzs","shilingi"]);
+  let query=getSwahiliSearchTokens(searchText).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
   if(!query&&wantsDeals)query="__deals__";
-  if(query.length<2){say(sw?"Uliza kuhusu bidhaa, maduka, categories, chapa, ofa, oda, malipo au delivery.":"Ask about products, stores, categories, brands, deals, orders, payments or delivery.");return;}
-  say(sw?"Natafuta kwenye Marketplace...":"Searching Marketplace...");
+  if(!query&&!maxBudget&&!minBudget&&!inStockOnly){say(sw?"Taja jina au aina ya bidhaa unayotafuta, au eleza bajeti yako.":"Tell me the product or category you want, or describe your budget.");return;}
+  say(sw?"Natafuta bidhaa zinazolingana kwenye ZUNE Market...":"Finding matching products in ZUNE Market...");
   try{
    const term=query==="__deals__"?"":query.replace(/[%_,().*]/g," ").replace(/\s+/g," ").trim(),pattern="%"+term+"%";
-   const productQuery=supabase.from("products").select("*");
-   if(term)productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
+   let productQuery=supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null);
+   if(term)productQuery=productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
+   if(maxBudget)productQuery=productQuery.lte("price",maxBudget);
+   if(minBudget)productQuery=productQuery.gte("price",minBudget);
+   if(inStockOnly)productQuery=productQuery.gt("stock_quantity",0);
+   productQuery=sortMode==="recent"?productQuery.order("created_at",{ascending:false}):productQuery.order("price",{ascending:sortMode==="price_low"});
    const [pRes,sRes,cRes]=await Promise.all([
     productQuery.limit(wantsDeals?60:20),
-    wantsDeals?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
-    wantsDeals?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10)
+    (!term||wantsDeals)?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
+    (!term||wantsDeals)?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10)
    ]);
    const products=pRes.error?[]:(pRes.data||[]),stores=sRes.error?[]:(sRes.data||[]),categories=cRes.error?[]:(cRes.data||[]);
    const brands=[...new Set(products.map(p=>p.brand||p.brand_name).filter(Boolean))].slice(0,8);
-   const deals=products.filter(p=>Number(p.discount_percentage||p.discount||0)>0||Number(p.compare_at_price||p.original_price||0)>Number(p.price||0)).slice(0,6);
+   const deals=products.filter(p=>Number(p.discount_percent||p.discount_percentage||p.discount||0)>0||Number(p.compare_at_price||p.original_price||0)>Number(p.price||0)).slice(0,6);
    const sections=[];
-   if(products.length)sections.push('<section><strong>'+(sw?"Bidhaa":"Products")+'</strong>'+products.slice(0,8).map(p=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px"><span><b>'+safe(p.title||"Bidhaa")+'</b><br><small>'+safe(money(p.price))+'</small></span><button type="button" data-assistant-product="'+safe(p.id)+'">'+(sw?"Angalia":"View")+'</button></div>').join("")+'</section>');
+   if(products.length)sections.push('<section><strong>'+(sw?"Bidhaa zinazolingana":"Matching products")+'</strong>'+products.slice(0,8).map(p=>{const oldPrice=Number(p.compare_at_price||p.original_price||0),price=Number(p.price||0),stock=p.stock_quantity==null?null:Number(p.stock_quantity),discount=Number(p.discount_percent||p.discount_percentage||p.discount||0);return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding:8px;border:1px solid #e1ebe4;border-radius:10px"><span style="min-width:0"><b>'+safe(p.title||"Bidhaa")+'</b><br><small>'+safe(money(price))+(oldPrice>price?' · <s>'+safe(money(oldPrice))+'</s>':"")+'</small><br><small>'+(stock===null?(sw?"Stock haijatajwa":"Stock not listed"):stock>0?(sw?"Inapatikana: ":"In stock: ")+stock:(sw?"Imeisha":"Out of stock"))+(discount>0?' · '+discount+'% OFF':"")+'</small></span><button type="button" data-assistant-product="'+safe(p.id)+'">'+(sw?"Angalia":"View")+'</button></div>';}).join("")+'</section>');
    if(stores.length)sections.push('<section style="margin-top:13px"><strong>'+(sw?"Maduka":"Stores")+'</strong>'+stores.map(st=>'<div style="margin-top:7px"><button type="button" data-assistant-store="'+safe(st.owner_id)+'">'+safe(st.store_name||"Store")+'</button><small> '+safe([st.district,st.region].filter(Boolean).join(", "))+'</small>'+(["verified","approved"].includes(String(st.verification_status||"").toLowerCase())?" ✓":"")+'</div>').join("")+'</section>');
    if(categories.length)sections.push('<section style="margin-top:13px"><strong>Categories</strong><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">'+categories.map(c=>'<button type="button" data-assistant-category="'+safe(c.name)+'">'+safe(c.name)+'</button>').join("")+'</div></section>');
    if(brands.length)sections.push('<section style="margin-top:13px"><strong>'+(sw?"Chapa":"Brands")+'</strong><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">'+brands.map(b=>'<button type="button" data-assistant-brand="'+safe(b)+'">'+safe(b)+'</button>').join("")+'</div></section>');
    if(deals.length)sections.push('<section style="margin-top:13px"><strong>'+(sw?"Bidhaa zenye punguzo":"Discounted products")+'</strong>'+deals.map(p=>'<div style="margin-top:6px"><button type="button" data-assistant-product="'+safe(p.id)+'">'+safe(p.title)+'</button></div>').join("")+'</section>');
-   if(!sections.length){say((sw?"Sijapata taarifa inayolingana kwenye ZUNE Market kwa utafutaji huu. Jaribu jina fupi la bidhaa, duka, chapa au category. Ikiwa unahitaji msaada zaidi, wasiliana na timu yetu.":"I couldn’t find a matching result in ZUNE Market. Try a shorter product, store, brand or category name. If you need further help, contact our team.")+"<br>"+supportLinks());return;}
-   say((sw?"Matokeo kutoka Marketplace:":"Marketplace results:")+"<br>"+sections.join(""));
+   if(!sections.length){say((sw?"Sijapata bidhaa inayolingana na vigezo hivi kwenye ZUNE Market. Jaribu kuongeza bajeti, kuondoa kichujio cha stock au kutumia jina jingine.":"No products matched these filters in ZUNE Market. Try increasing the budget, removing the stock filter or using another product name.")+"<br>"+supportLinks());return;}
+   const criteria=[maxBudget?(sw?"Bajeti hadi "+money(maxBudget):"Budget up to "+money(maxBudget)):null,minBudget?(sw?"Kuanzia "+money(minBudget):"From "+money(minBudget)):null,inStockOnly?(sw?"Zilizo stock":"In stock only"):null,sortMode==="price_low"?(sw?"Bei ndogo kwanza":"Lowest price first"):sortMode==="price_high"?(sw?"Bei kubwa kwanza":"Highest price first"):null].filter(Boolean);
+   say((sw?"Matokeo ya Marketplace:":"Marketplace matches:")+(products.length?"<br>"+(sw?"Bidhaa: ":"Products: ")+products.length:"")+(stores.length?" · "+(sw?"Maduka: ":"Stores: ")+stores.length:"")+(criteria.length?"<br><small>"+criteria.map(safe).join(" · ")+"</small>":"")+"<br>"+sections.join(""));
    box.querySelectorAll("[data-assistant-product]").forEach(b=>b.onclick=()=>{const p=products.find(x=>String(x.id)===b.dataset.assistantProduct);if(p){close();openProductDetails(p);}});
    box.querySelectorAll("[data-assistant-store]").forEach(b=>b.onclick=()=>{close();openStoreDetails(b.dataset.assistantStore);});
    box.querySelectorAll("[data-assistant-category]").forEach(b=>b.onclick=()=>{close();homeState.search="";homeState.selectedCategory=b.dataset.assistantCategory;homeState.page=0;homeState.products=[];homeState.hasMore=true;renderMarketplacePage("explore");loadProducts(true);});
