@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="./cart.css">
 
   <!-- Preload module ya cart ili kuanza kupakia mapema -->
-  <link rel="modulepreload" href="./cart.js?v=product-variants-cart-2">
+  <link rel="modulepreload" href="./cart.js?v=product-variants-cart-3">
   <link rel="modulepreload" href="./supabase.js">
 </head>
 <body>
@@ -62,7 +62,7 @@
 
     (async () => {
       try {
-        const { mountStandaloneCart } = await import("./cart.js?v=product-variants-cart-2");
+        const { mountStandaloneCart } = await import("./cart.js?v=product-variants-cart-3");
         if (!app) throw new Error("#cart-app haipo kwenye DOM");
         await mountStandaloneCart(app);
         app.setAttribute("aria-busy", "false");
