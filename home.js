@@ -2730,8 +2730,8 @@ function openZuneAssistant(){
    if(term)productQuery.or("title.ilike."+pattern+",description.ilike."+pattern+",brand.ilike."+pattern+",category.ilike."+pattern);
    const [pRes,sRes,cRes]=await Promise.all([
     productQuery.limit(wantsDeals?60:20),
-    supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
-    supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10)
+    wantsDeals?Promise.resolve({data:[],error:null}):supabase.from("stores").select("id,owner_id,store_name,verification_status,logo_url,description,region,district").eq("is_active",true).or("store_name.ilike."+pattern+",description.ilike."+pattern+",region.ilike."+pattern+",district.ilike."+pattern).limit(8),
+    wantsDeals?Promise.resolve({data:[],error:null}):supabase.from("product_categories").select("id,name,parent_id").eq("is_active",true).ilike("name",pattern).limit(10)
    ]);
    const products=pRes.error?[]:(pRes.data||[]),stores=sRes.error?[]:(sRes.data||[]),categories=cRes.error?[]:(cRes.data||[]);
    const brands=[...new Set(products.map(p=>p.brand||p.brand_name).filter(Boolean))].slice(0,8);
