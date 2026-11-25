@@ -98,7 +98,7 @@ async function start(){
  const [p,a]=await Promise.all([loadCartProducts(cart),supabase.from("delivery_addresses").select("*").eq("user_id",user.id).order("is_default",{ascending:false}).order("created_at",{ascending:false})]);
  products=p.filter(x=>x.moderation_status==="approved"&&!x.removed_at);addresses=a.data||[];
  if(a.error)throw a.error;
- if(products.length!==cart.length||cart.some(x=>!products.some(p=>p.id===x.productId)))throw new Error("Baadhi ya bidhaa hazipatikani tena. Rudi kikapuni uondoe bidhaa hizo.");
+ if(products.length!==new Set(cart.map(x=>String(x.productId))).size||cart.some(x=>!products.some(p=>String(p.id)===String(x.productId))))throw new Error("Baadhi ya bidhaa hazipatikani tena. Rudi kikapuni uondoe bidhaa hizo.");
  for(const item of cart){const p=products.find(x=>x.id===item.productId);const v=item.variantId?(p?.__zuneVariants||[]).find(x=>String(x.id)===String(item.variantId)):null;if(item.variantId&&!v)throw new Error("Chaguo la bidhaa halipatikani tena: "+p.title);if(Number(v?v.stock_quantity:p.stock_quantity)<item.quantity)throw new Error("Stock haitoshi kwa "+(p.title||"bidhaa")+(v?" · "+v.label:""));}
  signature=JSON.stringify(cart.map(x=>[x.productId,x.variantId||null,x.quantity]).sort());
  const storageKey="zune_checkout_key:"+user.id;let saved={};try{saved=JSON.parse(sessionStorage.getItem(storageKey)||"{}");}catch{}
