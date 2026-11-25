@@ -127,7 +127,18 @@ function observeVideos() {
       } else video.pause();
     });
   }, {threshold:[0,0.65,1]});
-  videos.forEach(video => state.observer.observe(video));
+  videos.forEach(video => {
+    video.addEventListener('error',() => {
+      const card=video.closest('.z-reel-card');
+      if(!card||card.querySelector('.z-reel-media-error'))return;
+      video.pause();
+      const notice=document.createElement('div');
+      notice.className='z-reel-media-error';
+      notice.innerHTML='<strong>Video haipatikani kwa sasa</strong><small>Faili linaweza kuwa limeondolewa au link si sahihi. Tafadhali jaribu Reel nyingine.</small>';
+      card.appendChild(notice);
+    },{once:true});
+    state.observer.observe(video);
+  });
 }
 async function loadFeed() {
   const ctx = state.context;
