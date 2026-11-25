@@ -8,3 +8,9 @@
 .z-assistant-stop{display:block;margin:7px 0 0 auto;padding:4px 8px!important;border:1px solid #dce9e1!important;background:transparent!important;color:#65756b!important;font-size:10px;cursor:pointer}
 @keyframes zAssistantTyping{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 @media(prefers-reduced-motion:reduce){.z-assistant-typing i{animation:none;opacity:.7}}
+
+
+/* Contextual official ZUNE Market support links */
+.z-assistant-support-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.z-assistant-support-links a{display:inline-flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid var(--z-assistant-border,rgba(127,127,127,.28));border-radius:12px;text-decoration:none;font-weight:600;font-size:.9em;color:inherit;background:rgba(127,127,127,.08)}
+.z-assistant-support-links a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
