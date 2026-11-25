@@ -203,6 +203,8 @@ export async function openZuneAssistant({
    const disableButton=memoryRoot.querySelector("[data-assistant-memory-disable]");
    if(viewButton){viewButton.textContent=granted?(sw?"Angalia kumbukumbu":"Review memory"):(sw?"Washa kumbukumbu":"Enable memory");viewButton.hidden=!granted&&memoryConsent!=="denied";}
    if(disableButton){disableButton.textContent=sw?"Zima na futa":"Turn off & erase";disableButton.hidden=!granted;}
+  }
+ };
  const saveContextMemory=q=>{
   const clean=String(q||"").trim().slice(0,180);
   if(!clean||sensitiveMemoryQuery(clean))return;
