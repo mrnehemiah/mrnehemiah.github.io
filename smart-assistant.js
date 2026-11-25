@@ -64,16 +64,19 @@ export async function openZuneAssistant({
   stop.addEventListener("click",()=>{stream.cancelled=true;});
   d.append(content,typing,stop);box.appendChild(d);box.scrollTop=box.scrollHeight;
   (async()=>{
-   await pause(260);
+   await pause(450);
    for(const part of textNodes){
     const tokens=part.text.match(/\s+|[^\s]+/g)||[];
     for(const token of tokens){
      if(stream.cancelled||!overlay.isConnected)break;
      part.node.nodeValue+=token;
      box.scrollTop=box.scrollHeight;
-     if(!/^\s+$/.test(token)){
-      const punctuation=/[.!?…,:;]$/.test(token);
-      await pause(punctuation?105:24);
+     if(/^\s+$/.test(token)){
+      if(token.includes("\n"))await pause(190);
+     }else{
+      const sentenceEnd=/[.!?…]$/.test(token);
+      const commaEnd=/[,;:]$/.test(token);
+      await pause(sentenceEnd?280:commaEnd?165:82);
      }
     }
     if(stream.cancelled||!overlay.isConnected)break;
