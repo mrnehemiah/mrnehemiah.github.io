@@ -175,7 +175,7 @@ export async function openZuneAssistant({
  const memoryConsentKey=memoryUserId?"zune_assistant_memory_consent:"+memoryUserId:"";
  const memoryDataKey=memoryUserId?"zune_assistant_context_memory:"+memoryUserId:"";
  const readMemory=()=>{try{const value=JSON.parse(localStorage.getItem(memoryDataKey)||"[]");return Array.isArray(value)?value.filter(x=>x&&typeof x.query==="string").slice(0,6):[];}catch(_){return[];}};
- let memoryConsent=memoryUserId?(localStorage.getItem(memoryConsentKey)||"unset"):"session";
+ let memoryConsent="session";try{memoryConsent=memoryUserId?(localStorage.getItem(memoryConsentKey)||"unset"):"session";}catch(_){memoryConsent=memoryUserId?"unset":"session";}
  let contextMemory=memoryConsent==="granted"?readMemory():[];
  let lastContextQuery=contextMemory[0]?.query||"";
  let lastKnowledgeTopic=contextMemory[0]?.topic||null;
@@ -223,7 +223,7 @@ export async function openZuneAssistant({
  });
  memoryRoot?.querySelector("[data-assistant-memory-decline]")?.addEventListener("click",()=>{
   memoryConsent="denied";
-  try{localStorage.setItem(memoryConsentKey,"denied");}catch(_){}
+  try{localStorage.removeItem(memoryDataKey);localStorage.setItem(memoryConsentKey,"denied");}catch(_){}
   renderMemoryState();
   setVoiceStatus(sw?"Sawa. Mazungumzo yatakumbukwa kwenye kipindi hiki tu.":"Okay. Context will stay in this session only.");
  });
@@ -278,15 +278,16 @@ export async function openZuneAssistant({
  const ask=async raw=>{
   const q=String(raw||"").trim();if(!q)return;
   const previousContextQuery=lastContextQuery;
-  say(safe(q),true);field.value="";remember(q);
+  say(safe(q),true);field.value="";
   const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
   const followUp=/^(?:bei yake|bei gani|na nyingine|na hii|hiyo|hiyo je|vipi kuhusu|na kuhusu|what about|its price|how much is it|and this|that one|another one|more like this)(?:\s|$)/i.test(n);
   const activeSearchText=followUp&&previousContextQuery?previousContextQuery+" "+q:q;
-  saveContextMemory(followUp&&previousContextQuery?previousContextQuery:q);
   const chatReply=smallTalkReply(q);
   if(chatReply){say(chatReply);return;}
+  remember(q);
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
-  if(knowledge){lastKnowledgeTopic=knowledge.topic;if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
+  if(knowledge){lastKnowledgeTopic=knowledge.topic;saveContextMemory(q);if(memoryConsent==="granted"&&contextMemory[0]){contextMemory[0].topic=knowledge.topic;try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){}}const needsSupport=["support","support-tickets","disputes"].includes(knowledge.topic);say(safe(knowledge.answer).replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>")+(needsSupport?"<br>"+supportLinks():""));return;}
+  saveContextMemory(followUp&&previousContextQuery?previousContextQuery:q);
   if(has("track","fuatilia","hali ya oda","order status")){say(sw?"Fungua Akaunti/Oda Zangu ili kuona hatua ya oda zako. Taarifa binafsi zinaonekana kwa akaunti husika tu.":"Open Account/My Orders to view your order status. Private order details are only available to the signed-in account.");return;}
   if(has("oda","order","nunua","buy","agiz","cart","kikapu")){say(sw?"Fungua bidhaa, chagua variant na idadi, kisha bonyeza Weka Kikapuni. Fungua Kikapu kuendelea na checkout.":"Open a product, choose a variant and quantity, then tap Add to Cart. Open your Cart to continue checkout.");return;}
   if(has("delivery","usafiri","dereva","driver","kusafir","fikisha")){say(sw?"Delivery hutegemea duka, bidhaa na eneo lako. Thibitisha upatikanaji, gharama na muda wa kufikishiwa na duka kabla ya kulipa.":"Delivery depends on the store, product and your location. Confirm availability, cost and timing with the store before payment.");return;}
