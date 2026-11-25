@@ -243,3 +243,67 @@
 #app .z-home .z-search-store-fallback{display:grid;place-items:center;width:100%;height:100%;color:#087a55;font-size:15px;font-weight:900}
 #app .z-home .z-search-store-suggestion>span:last-child{min-width:0}
 #app .z-home .z-search-store-suggestion small{font-size:11px}
+
+
+/* ZUNE PRODUCT EXPERIENCE — SOFT 3D DETAILS + VERIFIED REVIEWS */
+#z-product-detail-overlay .z-product-detail-sheet{
+  perspective:1200px;
+  transform-style:preserve-3d;
+  border:1px solid rgba(210,235,220,.9);
+  box-shadow:0 28px 75px rgba(4,38,25,.28),0 8px 20px rgba(4,38,25,.12),inset 0 1px 0 rgba(255,255,255,.9);
+  animation:zuneDetailEnter .32s cubic-bezier(.2,.75,.25,1) both;
+}
+#z-product-detail-overlay .z-detail-image-wrap{
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 25%,#fff 0%,#edf6f0 75%);
+  transform:translateZ(12px);
+}
+#z-product-detail-overlay .z-detail-image-wrap img{
+  transition:transform .45s ease,filter .45s ease;
+  filter:drop-shadow(0 14px 15px rgba(14,55,34,.12));
+}
+#z-product-detail-overlay .z-detail-content{
+  position:relative;
+  transform-style:preserve-3d;
+}
+#z-product-detail-overlay .z-detail-price{
+  text-shadow:0 3px 10px rgba(8,122,85,.13);
+}
+#z-product-detail-overlay .z-detail-rating{
+  display:inline-flex;align-items:center;gap:6px;margin:-3px 0 12px;
+  padding:7px 11px;border:1px solid #f1dfb7;border-radius:999px;
+  background:linear-gradient(145deg,#fffdf6,#f8efd9);color:#8b641a;
+  box-shadow:3px 4px 9px rgba(93,67,20,.08),inset 0 1px 0 #fff;
+  font-size:11px;font-weight:850;
+}
+#z-product-detail-overlay .z-detail-actions{display:grid;grid-template-columns:1.2fr 1fr;gap:9px;margin-top:14px}
+#z-product-detail-overlay .z-detail-actions .z-detail-add{margin-top:0;min-width:0}
+#z-product-detail-overlay .z-detail-compare{
+  min-height:46px;padding:10px 12px;border:1px solid #cfe5d7;border-radius:13px;
+  background:linear-gradient(145deg,#fff,#eaf5ee);color:#087a55;font-weight:850;
+  box-shadow:5px 6px 12px rgba(25,74,48,.09),-3px -3px 8px #fff;
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+#z-product-detail-overlay .z-detail-compare:active{transform:translateY(2px);box-shadow:inset 2px 2px 5px rgba(26,68,47,.1)}
+#z-product-detail-overlay .z-detail-reviews{
+  margin-top:18px;padding:15px;border:1px solid #dcebe1;border-radius:17px;
+  background:linear-gradient(145deg,#fff,#f2f8f4);
+  box-shadow:7px 8px 17px rgba(25,74,48,.075),inset 0 1px 0 #fff;
+}
+#z-product-detail-overlay .z-detail-reviews-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+#z-product-detail-overlay .z-detail-reviews-heading h3{font-size:14px;color:#183b2b}
+#z-product-detail-overlay .z-detail-reviews-heading button{border:0;background:transparent;color:#087a55;font-size:11px;font-weight:850}
+#z-product-detail-overlay .z-detail-review{padding:10px 0;border-top:1px solid #e6eee8}
+#z-product-detail-overlay .z-detail-review-stars{color:#d69b24;letter-spacing:2px;font-size:13px}
+#z-product-detail-overlay .z-detail-review p{margin:5px 0;color:#344c3e;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+#z-product-detail-overlay .z-detail-review small,#z-product-detail-overlay .z-detail-reviews-empty{color:#829187;font-size:10px}
+@keyframes zuneDetailEnter{from{opacity:0;transform:translateY(18px) rotateX(3deg) scale(.985)}to{opacity:1;transform:translateY(0) rotateX(0) scale(1)}}
+@media(hover:hover) and (pointer:fine){
+ #z-product-detail-overlay .z-detail-image-wrap:hover img{transform:scale(1.035) translateZ(8px)}
+ #z-product-detail-overlay .z-detail-compare:hover{transform:translateY(-2px);box-shadow:0 10px 18px rgba(25,74,48,.13)}
+}
+@media(max-width:360px){#z-product-detail-overlay .z-detail-actions{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){
+ #z-product-detail-overlay .z-product-detail-sheet{animation:none}
+ #z-product-detail-overlay .z-detail-image-wrap img,#z-product-detail-overlay .z-detail-compare{transition:none}
+}
