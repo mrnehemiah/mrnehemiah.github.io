@@ -360,7 +360,7 @@
 }
 #z-product-detail-overlay .z-detail-quantity-control input{
   width:48px;height:34px;border:1px solid #d8e8dd;border-radius:9px;
-  background:#fff;color:#173b2a;text-align:center;font:800 13px inherit;
+  background:#fff;color:#173b2a;text-align:center;font-family:inherit;font-size:13px;font-weight:800;
 }
 #z-product-detail-overlay .z-detail-quantity>small{width:100%;text-align:right;color:#087a55;font-size:13px;font-weight:900}
 @media(hover:hover) and (pointer:fine){
