@@ -1751,7 +1751,7 @@ async function openStoreDetails(ownerId, product = null) {
     sheet.setAttribute("data-zune-store-template",template);
     overlay.querySelector("#z-store-detail-name").textContent=store?.store_name||fallback;
     const logoHolder=overlay.querySelector("#z-store-detail-logo");
-    if(logoHolder){const logo=store?.logo_url||store?.store_logo_url||store?.logo||"";const initials=String(store?.store_name||fallback).trim().split(/\\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"Z";logoHolder.innerHTML=logo?`<img src="${safe(logo)}" alt="${safe(store?.store_name||fallback)} logo">`:safe(initials);}
+    if(logoHolder){const logo=store?.logo_url||store?.store_logo_url||store?.logo||"";const initials=String(store?.store_name||fallback).trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join("").toUpperCase()||"Z";logoHolder.innerHTML=logo?`<img src="${safe(logo)}" alt="${safe(store?.store_name||fallback)} logo">`:safe(initials);}
     overlay.querySelector("#z-store-detail-location").textContent=[store?.district,store?.region,store?.address].filter(Boolean).join(", ");
     overlay.querySelector("#z-store-detail-status").innerHTML=badgeMarkup(store,profile);
     overlay.querySelector("#z-storefront-count").textContent=products.length+" "+(language()==="sw"?"bidhaa":"products");
@@ -2986,7 +2986,7 @@ function renderBottomNavigation() {
       ${items.map(item => `
         <button type="button"
           class="z-nav-item ${(homeState.activeTab === item.id || (item.id === "explore" && homeState.activeTab === "categories")) ? "active" : ""}"
-          data-nav="${item.id}" aria-current="${homeState.activeTab === item.id ? "page" : "false"}">
+          data-nav="${item.id}" aria-current="${(homeState.activeTab === item.id || (item.id === "explore" && homeState.activeTab === "categories")) ? "page" : "false"}">
           <span class="z-nav-icon">${zIcon(item.icon)}</span>
           <span>${item.label}</span>
         </button>
@@ -3296,7 +3296,7 @@ function bindExploreEvents() {
           <div class="z-explore-block-head"><h2>${language()==="sw"?"Maduka yanayolingana":"Matching stores"}</h2></div>
           <div class="z-explore-store-grid">${matches.map(store => {
             const name = store.store_name || (language()==="sw"?"Duka la ZUNE":"ZUNE Store");
-            const initials = String(name).trim().split(/\\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase() || "Z";
+            const initials = String(name).trim().split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase() || "Z";
             const logo = store.logo_url || "";
             return `<button type="button" class="z-explore-store-card" data-explore-store="${safe(store.owner_id)}">
               <span class="z-explore-store-logo">${logo ? `<img src="${safe(logo)}" alt="" loading="lazy" onerror="this.remove()">` : safe(initials)}</span>
@@ -3320,6 +3320,7 @@ function bindExploreEvents() {
       homeState.page = 0;
       homeState.hasMore = true;
       revealResults();
+      if (storeResults) storeResults.innerHTML = "";
       const input = document.getElementById("z-explore-search");
       if (input) input.value = "";
       await loadProducts(true);
@@ -3337,6 +3338,7 @@ function bindExploreEvents() {
       homeState.page = 0;
       homeState.hasMore = true;
       revealResults();
+      if (storeResults) storeResults.innerHTML = "";
       const input = document.getElementById("z-explore-search");
       if (input) input.value = "";
       await loadProducts(true);
