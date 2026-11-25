@@ -1,5 +1,5 @@
 const BUCKET = 'zune-reels';
-const state = { reels: [], products: new Map(), liked: new Set(), following: new Set(), saved: new Set(), tab: 'for-you', search: '', observer: null, loading: false, root: null, context: null };
+const state = { reels: [], products: new Map(), liked: new Set(), following: new Set(), saved: new Set(), cloudSaves: false, viewed: new Set(), audioPlayer: null, sessionKey: '', tab: 'for-you', search: '', observer: null, loading: false, root: null, context: null };
 
 function esc(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -59,6 +59,7 @@ function cardHTML(reel) {
   const verified = official || (role === 'vendor' && creator.is_verified === true);
   const creatorName = official ? 'ZUNE Official' : (creator.full_name || reel.creator_display_name || 'ZUNE Seller');
   const product = reel.product || null;
+  const sound = reel.sound || null;
   const video = publicUrl(state.context.db, reel.video_path);
   const thumb = reel.thumbnail_path ? publicUrl(state.context.db, reel.thumbnail_path) : '';
   const liked = state.liked.has(reel.id);
@@ -75,7 +76,7 @@ function cardHTML(reel) {
     '<div class="z-reel-actions">' +
     '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">' + icon('heart') + '</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span>Share</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span>' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
     '</div><div class="z-reel-copy"><div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ Original audio · Video sound</div>' + productHtml + '</div></article>';
@@ -113,7 +114,9 @@ function observeVideos() {
       const video = entry.target;
       if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
         videos.forEach(other => { if (other !== video) other.pause(); });
+        if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
         video.play().catch(() => {});
+        recordView(video.dataset.reelVideo);
       } else video.pause();
     });
   }, {threshold:[0,0.65,1]});
@@ -126,7 +129,7 @@ async function loadFeed() {
   host.innerHTML = '<div class="z-reels-empty"><div class="mark">◌</div><h2>Inapakia Reels...</h2><p>Tunasoma video zilizochapishwa.</p></div>';
   try {
     const {data,error} = await ctx.db.from('zune_reels')
-      .select('id,creator_id,video_path,thumbnail_path,caption,hashtags,product_id,status,views_count,created_at,creator_display_name,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)')
+      .select('*,creator:profiles!zune_reels_creator_id_fkey(id,full_name,role,is_verified,avatar_path)')
       .eq('status','published').order('created_at',{ascending:false}).limit(40);
     if (error) throw error;
     const reels = data || [];
@@ -150,9 +153,29 @@ async function loadFeed() {
     state.liked = new Set((userLikesRes.data || []).map(x => x.reel_id));
     state.following = new Set((userFollowsRes.data || []).map(x => x.creator_id));
     const savedKey = 'zune_reel_saves:' + (ctx.user?.id || 'guest');
-    try { state.saved = new Set(JSON.parse(localStorage.getItem(savedKey) || '[]')); } catch (_) { state.saved = new Set(); }
+    state.cloudSaves = false;
+    if (ctx.user?.id && ids.length) {
+      const cloud = await ctx.db.from('zune_reel_saves').select('reel_id').eq('user_id',ctx.user.id).in('reel_id',ids);
+      if (!cloud.error) { state.saved = new Set((cloud.data || []).map(x => x.reel_id)); state.cloudSaves = true; }
+      else { try { state.saved = new Set(JSON.parse(localStorage.getItem(savedKey) || '[]')); } catch (_) { state.saved = new Set(); } }
+    } else { try { state.saved = new Set(JSON.parse(localStorage.getItem(savedKey) || '[]')); } catch (_) { state.saved = new Set(); } }
+    const soundIds = [...new Set(reels.map(x => x.sound_id).filter(Boolean))];
+    let soundMap = new Map();
+    if (soundIds.length) {
+      const sounds = await ctx.db.from('zune_reel_sounds').select('id,title,artist,audio_path,is_active,commercial_use_allowed').in('id',soundIds);
+      if (!sounds.error) {
+        for (const sound of (sounds.data || [])) {
+          if (!sound.is_active || !sound.commercial_use_allowed) continue;
+          const signed = await ctx.db.storage.from('zune-reel-audio').createSignedUrl(sound.audio_path,3600);
+          soundMap.set(sound.id,Object.assign({},sound,{url:signed.error ? '' : signed.data?.signedUrl || ''}));
+        }
+      }
+    }
+    state.viewed = new Set();
+    try { state.sessionKey = localStorage.getItem('zune_reel_view_session') || ''; if (!state.sessionKey) { state.sessionKey = crypto.randomUUID(); localStorage.setItem('zune_reel_view_session',state.sessionKey); } } catch (_) { state.sessionKey = crypto.randomUUID(); }
     state.reels = reels.map(r => Object.assign({},r,{
       product: state.products.get(r.product_id) || null,
+      sound: soundMap.get(r.sound_id) || null,
       likes_count: likeCounts[r.id] || 0,
       comments_count: commentCounts[r.id] || 0,
       followers_count: followCounts[r.creator_id] || 0
@@ -162,6 +185,16 @@ async function loadFeed() {
     console.error('ZUNE Reels feed:',error);
     host.innerHTML = '<section class="z-reels-empty"><div class="mark">!</div><h2>Reels hazijapakia</h2><p>' + esc(error.message || 'Jaribu tena.') + '</p><button type="button" data-reels-retry>Jaribu tena</button></section>';
   } finally { state.loading = false; }
+}
+async function recordView(reelId) {
+  if (!reelId || state.viewed.has(reelId)) return;
+  state.viewed.add(reelId);
+  try {
+    const {data,error} = await state.context.db.rpc('zune_reel_record_view',{p_reel_id:reelId,p_session_key:state.sessionKey || crypto.randomUUID()});
+    if (error || data !== true) return;
+    const reel = state.reels.find(x => x.id === reelId);
+    if (reel) { reel.views_count = Number(reel.views_count || 0)+1; const label = state.root.querySelector('[data-view-count="' + CSS.escape(reelId) + '"]'); if (label) label.textContent = reel.views_count.toLocaleString() + ' views'; }
+  } catch (_) {}
 }
 function requireUser() {
   if (state.context.user?.id) return true;
@@ -209,20 +242,34 @@ async function toggleFollow(reelId, button) {
   } catch (error) { toast(error.message || 'Imeshindikana kufuatilia akaunti.'); }
   finally { button.disabled = false; }
 }
-function saveReel(reelId, button) {
+async function saveReel(reelId, button) {
   const key = 'zune_reel_saves:' + (state.context.user?.id || 'guest');
-  if (state.saved.has(reelId)) state.saved.delete(reelId); else state.saved.add(reelId);
-  try { localStorage.setItem(key,JSON.stringify([...state.saved])); } catch (_) {}
+  const wasSaved = state.saved.has(reelId);
+  if (state.context.user?.id && state.cloudSaves) {
+    const result = wasSaved
+      ? await state.context.db.from('zune_reel_saves').delete().eq('reel_id',reelId).eq('user_id',state.context.user.id)
+      : await state.context.db.from('zune_reel_saves').insert({reel_id:reelId,user_id:state.context.user.id});
+    if (result.error) { toast(result.error.message || 'Save haijahifadhiwa.'); return; }
+  } else {
+    if (wasSaved) state.saved.delete(reelId); else state.saved.add(reelId);
+    try { localStorage.setItem(key,JSON.stringify([...state.saved])); } catch (_) {}
+  }
+  if (wasSaved) state.saved.delete(reelId); else state.saved.add(reelId);
   button.classList.toggle('saved',state.saved.has(reelId));
   button.querySelector('span:last-child').textContent = state.saved.has(reelId) ? 'Saved' : 'Save';
-  toast(state.saved.has(reelId) ? 'Reel imehifadhiwa kwenye kifaa hiki.' : 'Reel imeondolewa kwenye Saved.');
+  toast(state.cloudSaves ? (state.saved.has(reelId) ? 'Reel imehifadhiwa kwenye akaunti yako.' : 'Reel imeondolewa kwenye Saved.') : (state.saved.has(reelId) ? 'Reel imehifadhiwa kwenye kifaa hiki.' : 'Reel imeondolewa kwenye Saved.'));
 }
 async function shareReel(reelId) {
   const url = new URL('./index.html?tab=reels&reel=' + encodeURIComponent(reelId),location.href).href;
+  let channel = 'native',shared = false;
   try {
-    if (navigator.share) await navigator.share({title:'ZUNE Reel',text:'Tazama Reel hii kwenye ZUNE Marketplace',url});
-    else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url); toast('Kiungo cha Reel kimenakiliwa.'); }
-    else window.prompt('Nakili kiungo hiki:',url);
+    if (navigator.share) { await navigator.share({title:'ZUNE Reel',text:'Tazama Reel hii kwenye ZUNE Marketplace',url}); shared = true; }
+    else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url); channel = 'copy'; shared = true; toast('Kiungo cha Reel kimenakiliwa.'); }
+    else { window.prompt('Nakili kiungo hiki:',url); channel = 'copy'; shared = true; }
+    if (shared && state.context.user?.id) {
+      const {error} = await state.context.db.rpc('zune_reel_record_share',{p_reel_id:reelId,p_channel:channel});
+      if (!error) { const reel=state.reels.find(x=>x.id===reelId); if(reel)reel.shares_count=Number(reel.shares_count||0)+1; }
+    }
   } catch (error) { if (error.name !== 'AbortError') toast('Imeshindikana kushare Reel.'); }
 }
 async function openComments(reelId) {
@@ -285,8 +332,13 @@ function bindEvents() {
     if (share) return shareReel(share.dataset.reelShare);
     if (save) return saveReel(save.dataset.reelSave,save);
     if (audio) {
+      const reel = state.reels.find(x => x.id === audio.dataset.reelAudio);
       const video = root.querySelector('[data-reel-video="' + CSS.escape(audio.dataset.reelAudio) + '"]');
-      if (video) { video.muted = !video.muted; audio.querySelector('.glyph').textContent = video.muted ? '♫' : '🔊'; audio.querySelector('span:last-child').textContent = video.muted ? 'Sound' : 'Mute'; }
+      if (reel?.sound?.url) {
+        if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
+        state.audioPlayer = new Audio(reel.sound.url); if (video) video.muted = true;
+        state.audioPlayer.play().then(() => { audio.querySelector('.glyph').textContent = '🔊'; audio.querySelector('span:last-child').textContent = 'Music'; }).catch(() => toast('Gusa tena ili kuruhusu music kucheza.'));
+      } else if (video) { video.muted = !video.muted; audio.querySelector('.glyph').textContent = video.muted ? '♫' : '🔊'; audio.querySelector('span:last-child').textContent = video.muted ? 'Sound' : 'Mute'; }
       return;
     }
     if (product) {
