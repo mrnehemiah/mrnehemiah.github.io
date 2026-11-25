@@ -34,3 +34,17 @@
 .z-assistant-memory-actions button{padding:7px 10px;border:1px solid #b8d2c1;border-radius:9px;background:#fff;color:#17623e;font-size:10px;font-weight:600}
 .z-assistant-memory-actions button:first-child{background:#087b50;border-color:#087b50;color:#fff}
 .z-assistant-memory [hidden]{display:none!important}
+
+/* Enterprise assistant action cards, recommendations, orders and ticket form */
+.z-assistant-action-grid,.z-assistant-report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.z-assistant-action-grid button{display:flex;justify-content:space-between;align-items:center;min-width:0;padding:11px;border:1px solid #dce9e1;border-radius:12px;background:#f5faf7;color:#14583a;font-size:12px;font-weight:750;text-align:left}
+.z-assistant-action-grid button span{font-size:18px}
+.z-assistant-report-grid>div{display:grid;gap:4px;padding:12px;border:1px solid #e1ebe4;border-radius:12px;background:#fff}
+.z-assistant-report-grid b{font-size:19px;color:#087b50}.z-assistant-report-grid small,.z-assistant-recommendations small,.z-assistant-order small{display:block;color:#63746a;font-size:10px}
+.z-assistant-recommendations{display:grid;gap:8px;margin-top:10px}
+.z-assistant-recommendations>div,.z-assistant-order{display:grid;gap:5px;padding:10px;border:1px solid #e1ebe4;border-radius:12px;background:#fff}
+.z-assistant-ticket-form{display:grid;gap:9px;margin:10px 0;padding:12px;border:1px solid #dce9e1;border-radius:13px;background:#fff}
+.z-assistant-ticket-form select,.z-assistant-ticket-form textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #dce7df;border-radius:9px;background:#fff;color:#17251c;font:inherit;font-size:12px}
+.z-assistant-ticket-form button{justify-self:start}.z-assistant-ticket-form small{color:#63746a;font-size:10px}
+.z-assistant-ticket-form button:disabled{opacity:.6}
+@media(max-width:340px){.z-assistant-action-grid,.z-assistant-report-grid{grid-template-columns:1fr}}
