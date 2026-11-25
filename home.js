@@ -2718,8 +2718,10 @@ function openZuneAssistant(){
   if(has("refund","rejesh","return","rudish","cancel","futa oda")){say(sw?"Kughairi oda, kurudisha bidhaa au kurejeshewa fedha hutegemea hatua ya oda na masharti ya duka. Kagua Oda Zangu au wasiliana na msaada rasmi wa ZUNE.":"Cancellations, returns and refunds depend on the order stage and store terms. Check My Orders or contact official ZUNE support.");return;}
   if(has("akaunti","account","login","ingia","jisajili","signup","password","nenosiri")){say(sw?"Tumia sehemu ya Akaunti kwenye menyu ya Marketplace kuingia, kujisajili na kusimamia taarifa zako. Usishiriki nenosiri au OTP.":"Use Account in Marketplace navigation to sign in, register and manage your details. Never share your password or OTP.");return;}
   if(has("help","msaada","support","wasilian","contact","huduma")){say(sw?"Kwa msaada wa akaunti au oda, tumia njia rasmi za mawasiliano zilizoonyeshwa ndani ya Marketplace.":"For account or order support, use the official contact options displayed in Marketplace.");return;}
-  const stop=new Set(["nataka","tafuta","naomba","onyesha","nipatie","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","in","dar","es","salaam"]);
-  const query=n.split(/[^a-z0-9]+/).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
+  const wantsDeals=has("punguzo","discount","sale","oferta","deals");
+  const stop=new Set(["nataka","tafuta","naomba","onyesha","nipatie","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in"]);
+  let query=n.split(/[^a-z0-9]+/).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
+  if(!query&&wantsDeals)query="__deals__";
   if(query.length<2){say(sw?"Uliza kuhusu bidhaa, maduka, categories, chapa, ofa, oda, malipo au delivery.":"Ask about products, stores, categories, brands, deals, orders, payments or delivery.");return;}
   say(sw?"Natafuta kwenye Marketplace...":"Searching Marketplace...");
   try{
