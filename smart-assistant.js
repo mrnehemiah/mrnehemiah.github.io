@@ -165,7 +165,77 @@ export async function openZuneAssistant({
  };
  const supportLinks=()=>`<div class="z-assistant-support-links"><a href="https://wa.me/255691067855?text=Habari%20ZUNE%20Market%20Support" target="_blank" rel="noopener noreferrer">Chat na Support kupitia WhatsApp</a><a href="https://whatsapp.com/channel/0029Vb98cx12v1J0skZQ5K36" target="_blank" rel="noopener noreferrer">ZUNE Market WhatsApp Channel</a></div>`;
   const remember=q=>{const key="zune_search_history:"+(homeState.user?.id||"guest");try{const old=JSON.parse(localStorage.getItem(key)||"[]");localStorage.setItem(key,JSON.stringify([q,...old.filter(x=>String(x).toLowerCase()!==q.toLowerCase())].slice(0,6)));}catch(_){}};
- let lastKnowledgeTopic=null;
+ const memoryRoot=overlay.querySelector("[data-assistant-memory]");
+ const memoryPrompt=overlay.querySelector("[data-assistant-memory-prompt]");
+ const memoryStatus=overlay.querySelector("[data-assistant-memory-status]");
+ const memoryTitle=overlay.querySelector("[data-assistant-memory-title]");
+ const memoryCopy=overlay.querySelector("[data-assistant-memory-copy]");
+ const memoryLabel=overlay.querySelector("[data-assistant-memory-label]");
+ const memoryUserId=homeState.user?.id?String(homeState.user.id):"";
+ const memoryConsentKey=memoryUserId?"zune_assistant_memory_consent:"+memoryUserId:"";
+ const memoryDataKey=memoryUserId?"zune_assistant_context_memory:"+memoryUserId:"";
+ const readMemory=()=>{try{const value=JSON.parse(localStorage.getItem(memoryDataKey)||"[]");return Array.isArray(value)?value.filter(x=>x&&typeof x.query==="string").slice(0,6):[];}catch(_){return[];}};
+ let memoryConsent=memoryUserId?(localStorage.getItem(memoryConsentKey)||"unset"):"session";
+ let contextMemory=memoryConsent==="granted"?readMemory():[];
+ let lastContextQuery=contextMemory[0]?.query||"";
+ let lastKnowledgeTopic=contextMemory[0]?.topic||null;
+ const sensitiveMemoryQuery=q=>/(\\b(pin|otp|password|nenosiri|nywila|passcode|verification code|card number|cvv|security code)\\b|\\b(?:+?255|0)\\d{9}\\b|[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}|medical|diagnos|dawa zangu|ugonjwa|hospitali|bank account)/i.test(q);
+ const renderMemoryState=()=>{
+  if(!memoryRoot)return;
+  const granted=memoryConsent==="granted"&&!!memoryUserId;
+  if(memoryPrompt)memoryPrompt.hidden=granted;
+  if(memoryStatus)memoryStatus.hidden=!granted;
+  if(!memoryUserId){
+   if(memoryTitle)memoryTitle.textContent=sw?"Kumbukumbu za muda mrefu":"Long-term memory";
+   if(memoryCopy)memoryCopy.textContent=sw?"Ingia kwenye akaunti yako ili uweze kuwasha kumbukumbu. Bila ruhusa, mazungumzo yatabaki kwenye kipindi hiki tu.":"Sign in to enable memory. Without consent, conversation context stays in this session only.";
+   memoryRoot.querySelector("[data-assistant-memory-allow]")?.setAttribute("hidden","true");
+   memoryRoot.querySelector("[data-assistant-memory-decline]")?.setAttribute("hidden","true");
+  }else if(!granted){
+   if(memoryTitle)memoryTitle.textContent=sw?"Ruhusu kumbukumbu?":"Allow memory?";
+   if(memoryCopy)memoryCopy.textContent=sw?"ZUNE inaweza kukumbuka mada za mazungumzo ili kuelewa maswali ya ufuatiliaji. Kumbukumbu huhifadhiwa kwenye kifaa hiki tu, chini ya akaunti yako. Unaweza kuziona au kuzifuta wakati wowote. Taarifa nyeti hazihifadhiwi.":"ZUNE can remember conversation topics to understand follow-up questions. Memory stays on this device, scoped to your account. You can review or erase it anytime. Sensitive information is not saved.";
+   const allow=memoryRoot.querySelector("[data-assistant-memory-allow]");
+   if(allow)allow.textContent=sw?"Ruhusu kumbukumbu":"Allow memory";
+   const decline=memoryRoot.querySelector("[data-assistant-memory-decline]");
+   if(decline)decline.textContent=sw?"Sio sasa":"Not now";
+  }else if(memoryLabel){
+   memoryLabel.textContent=sw?"Kumbukumbu imewashwa · "+contextMemory.length+" mada":"Memory on · "+contextMemory.length+" topics";
+   memoryRoot.querySelector("[data-assistant-memory-view]")&&(memoryRoot.querySelector("[data-assistant-memory-view]").textContent=sw?"Angalia kumbukumbu":"Review memory");
+   memoryRoot.querySelector("[data-assistant-memory-disable]")&&(memoryRoot.querySelector("[data-assistant-memory-disable]").textContent=sw?"Zima na futa":"Turn off & erase");
+  }
+ };
+ const saveContextMemory=q=>{
+  const clean=String(q||"").trim().slice(0,180);
+  if(!clean||sensitiveMemoryQuery(clean))return;
+  lastContextQuery=clean;
+  if(memoryConsent!=="granted"||!memoryUserId)return;
+  contextMemory=[{query:clean,topic:lastKnowledgeTopic,at:Date.now()},...contextMemory.filter(x=>x.query.toLowerCase()!==clean.toLowerCase())].slice(0,6);
+  try{localStorage.setItem(memoryDataKey,JSON.stringify(contextMemory));}catch(_){setVoiceStatus(sw?"Kumbukumbu hazikuweza kuhifadhiwa kwenye kifaa hiki.":"Memory could not be saved on this device.");}
+  renderMemoryState();
+ };
+ memoryRoot?.querySelector("[data-assistant-memory-allow]")?.addEventListener("click",()=>{
+  if(!memoryUserId)return;
+  memoryConsent="granted";
+  try{localStorage.setItem(memoryConsentKey,"granted");}catch(_){}
+  renderMemoryState();
+  setVoiceStatus(sw?"Kumbukumbu zimewashwa. Unaweza kuzifuta wakati wowote.":"Memory is on. You can erase it anytime.");
+ });
+ memoryRoot?.querySelector("[data-assistant-memory-decline]")?.addEventListener("click",()=>{
+  memoryConsent="denied";
+  try{localStorage.setItem(memoryConsentKey,"denied");}catch(_){}
+  renderMemoryState();
+  setVoiceStatus(sw?"Sawa. Mazungumzo yatakumbukwa kwenye kipindi hiki tu.":"Okay. Context will stay in this session only.");
+ });
+ memoryRoot?.querySelector("[data-assistant-memory-view]")?.addEventListener("click",()=>{
+  const items=contextMemory.map((item,index)=>(index+1)+". "+safe(item.query)).join("<br>");
+  say(items?(sw?"Mada zilizohifadhiwa:<br>":"Saved topics:<br>")+items:(sw?"Bado hakuna mada zilizohifadhiwa.":"No topics have been saved yet."));
+ });
+ memoryRoot?.querySelector("[data-assistant-memory-disable]")?.addEventListener("click",()=>{
+  memoryConsent="denied";contextMemory=[];lastContextQuery="";lastKnowledgeTopic=null;
+  try{localStorage.removeItem(memoryDataKey);localStorage.setItem(memoryConsentKey,"denied");}catch(_){}
+  renderMemoryState();
+  setVoiceStatus(sw?"Kumbukumbu zimezimwa na kufutwa kwenye kifaa hiki.":"Memory is off and has been erased from this device.");
+ });
+ renderMemoryState();
  let smallTalkTurn=0;
  const smallTalkReply=input=>{
   const text=normalizeSwahiliQuery(input).trim();
@@ -203,8 +273,13 @@ export async function openZuneAssistant({
   return null;
  };
  const ask=async raw=>{
-  const q=String(raw||"").trim();if(!q)return;say(safe(q),true);field.value="";remember(q);
+  const q=String(raw||"").trim();if(!q)return;
+  const previousContextQuery=lastContextQuery;
+  say(safe(q),true);field.value="";remember(q);
   const n=normalizeSwahiliQuery(q),has=(...a)=>a.some(x=>n.includes(x));
+  const followUp=/^(bei yake|bei gani|na nyingine|na hii|hiyo|hiyo je|vipi kuhusu|na kuhusu|what about|its price|how much is it|and this|that one|another one|more like this)\\b?/i.test(n);
+  const activeSearchText=followUp&&previousContextQuery?previousContextQuery+" "+q:q;
+  saveContextMemory(q);
   const chatReply=smallTalkReply(q);
   if(chatReply){say(chatReply);return;}
   const knowledge=answerZuneKnowledge(q,language(),lastKnowledgeTopic);
@@ -218,7 +293,7 @@ export async function openZuneAssistant({
   if(has("help","msaada","support","wasilian","contact","huduma","whatsapp")){say((sw?"Kwa msaada wa ZUNE Market, wasiliana nasi kupitia WhatsApp au jiunge na Channel kwa matangazo. Usitume PIN, OTP au nenosiri.":"For ZUNE Market help, contact us on WhatsApp or join the Channel for announcements. Never share your PIN, OTP or password.")+"<br>"+supportLinks());return;}
   const wantsDeals=has("punguzo","discount","sale","oferta","deals");
   const stop=new Set(["nataka","tafuta","kutafuta","nunua","kununua","agiza","kuagiza","naomba","onyesha","nionyeshe","nipatie","tafadhali","bidhaa","duka","maduka","please","find","show","search","the","for","with","za","zaidi","ya","wa","wao","ni","na","je","gani","kwenye","marketplace","under","below","chini","above","over","bei","price","punguzo","discount","sale","oferta","deals","in"]);
-  let query=getSwahiliSearchTokens(q).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
+  let query=getSwahiliSearchTokens(activeSearchText).filter(x=>x.length>1&&!stop.has(x)).slice(0,6).join(" ").trim();
   if(!query&&wantsDeals)query="__deals__";
   if(query.length<2){say(sw?"Uliza kuhusu bidhaa, maduka, categories, chapa, ofa, oda, malipo au delivery.":"Ask about products, stores, categories, brands, deals, orders, payments or delivery.");return;}
   say(sw?"Natafuta kwenye Marketplace...":"Searching Marketplace...");
