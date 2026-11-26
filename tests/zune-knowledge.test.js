@@ -7,7 +7,7 @@ import { expandSwahiliTokens, getSwahiliSearchTokens, normalizeSwahiliQuery } fr
 test("the knowledge catalogue includes the core Marketplace workflows", () => {
   const topics = new Set(getZuneKnowledgeTopics("sw").map(item => item.topic));
   for (const topic of [
-    "marketplace", "products", "categories", "brands", "orders", "payments", "google-auth",
+    "marketplace", "products", "categories", "brands", "orders", "payments", "google-auth", "password-recovery",
     "delivery", "wallet", "withdrawals", "returns", "support-tickets", "reels"
   ]) {
     assert.ok(topics.has(topic), `missing knowledge topic: ${topic}`);
@@ -48,7 +48,8 @@ test("Google authentication guidance matches Marketplace login and signup questi
   assert.equal(answerZuneKnowledge("How do I sign up with Google?", "en")?.topic, "google-auth");
 });
 
-test("Google authentication guidance stays separate from generic account recovery", () => {
-  assert.equal(answerZuneKnowledge("How do I reset my password?", "en")?.topic, "account");
+test("Google authentication and password recovery route to separate intents", () => {
+  assert.equal(answerZuneKnowledge("How do I reset my password?", "en")?.topic, "password-recovery");
+  assert.equal(answerZuneKnowledge("Nimesahau nenosiri", "sw")?.topic, "password-recovery");
   assert.equal(answerZuneKnowledge("Nataka kuingia kwa Google", "sw")?.topic, "google-auth");
 });
