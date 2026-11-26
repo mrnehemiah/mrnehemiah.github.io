@@ -1,6 +1,7 @@
 import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-7";
 import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
 import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261126-chatgpt-composer-1";
+import { createSmallTalkResponder } from "./small-talk.js?v=20261126-smalltalk-1";
 
 /**
  * Opens the Marketplace assistant from the existing Search Bar.
@@ -341,42 +342,7 @@ export async function openZuneAssistant({
   setVoiceStatus(sw?"Kumbukumbu zimezimwa na kufutwa kwenye kifaa hiki.":"Memory is off and has been erased from this device.");
  });
  renderMemoryState();
- let smallTalkTurn=0;
- const smallTalkReply=input=>{
-  const text=normalizeSwahiliQuery(input).trim();
-  const replies=sw?{
-   greeting:["Poa kabisa! 😄 Wewe vipi? Nikusaidie nini leo?","Salama kabisa! 😊 Karibu ZUNE Market. Kuna jambo nikusaidie?","Niko fresh! 😃 Tuambie, leo tunatafuta nini?"],
-   wellbeing:["Niko vizuri, asante kwa kuuliza! 😊 Wewe unaendeleaje?","Niko tayari kukusaidia muda wowote! 😄 Habari zako?"],
-   morning:["Habari za asubuhi! ☀️ Nakutakia siku njema. Nikusaidie nini leo?"],
-   evening:["Habari za jioni! 🌆 Karibu, nikusaidie nini?"],
-   night:["Usiku mwema! 🌙 Kama una swali lolote, niko hapa kukusaidia."],
-   thanks:["Karibu sana! 😊 Nimefurahi kusaidia.","Usijali kabisa! ❤️ Ukiwa na swali lingine niambie."],
-   apology:["Hakuna shida kabisa. 😊 Tuendelee, ungependa nikusaidie nini?"],
-   goodbye:["Kwaheri! 👋 Asante kwa kutumia ZUNE Market. Karibu tena!","Tutaonana tena! 😊 Nakutakia siku njema."],
-   praise:["Asante sana! 🥰 Tunajitahidi kufanya ZUNE Market iwe rahisi na bora zaidi."]
-  }:{
-   greeting:["Doing great! 😄 How are you? What can I help you with today?","All good here! 😊 Welcome to ZUNE Market. What can I help you find?"],
-   wellbeing:["I’m doing well, thanks for asking! 😊 How are you?","Ready to help! 😃 What would you like to do today?"],
-   morning:["Good morning! ☀️ Hope you have a great day. How can I help?"],
-   evening:["Good evening! 🌆 Welcome. What can I help you with?"],
-   night:["Good night! 🌙 I’m here if you need help with anything."],
-   thanks:["You’re very welcome! 😊 Happy to help.","Anytime! ❤️ Let me know if you need anything else."],
-   apology:["No worries at all. 😊 What would you like help with?"],
-   goodbye:["Goodbye! 👋 Thanks for using ZUNE Market. See you again!","Take care! 😊 You’re always welcome back."],
-   praise:["Thank you! 🥰 We’re working to make ZUNE Market better and easier to use."]
-  };
-  const pick=key=>{const list=replies[key];return list[smallTalkTurn++%list.length];};
-  if(/^(mambo|vipi|poa|niaje|sasa|habari|hujambo|salama|shikamoo|marahaba|hello|hi|hey|heya|yo)( kabisa)?$/.test(text))return pick("greeting");
-  if(/^(ukoje|unaendeleaje|habari yako|habari za kwako|how are you|how are you doing|how do you do|are you okay|are you good)$/.test(text))return pick("wellbeing");
-  if(/^(habari za asubuhi|asubuhi njema|good morning)$/.test(text))return pick("morning");
-  if(/^(habari za jioni|jioni njema|good evening)$/.test(text))return pick("evening");
-  if(/^(habari za usiku|usiku mwema|good night|goodnight)$/.test(text))return pick("night");
-  if(/^(asante|asanteni|shukrani|ahsante|thanks|thank you|thankyou|thx|cheers)$/.test(text))return pick("thanks");
-  if(/^(samahani|nisamehe|pole|sorry|my apologies)$/.test(text))return pick("apology");
-  if(/^(kwaheri|tutaonana|baadaye|bye|goodbye|see you|see you later|see ya)$/.test(text))return pick("goodbye");
-  if(/^(hongera|vizuri sana|umesaidia|you are great|you are helpful|well done|nice work)$/.test(text))return pick("praise");
-  return null;
- };
+ const smallTalkReply=createSmallTalkResponder(()=>language());
  const ask=async raw=>{
   const q=String(raw||"").trim();if(!q)return;
   if(activeTyping)activeTyping.cancelled=true;
