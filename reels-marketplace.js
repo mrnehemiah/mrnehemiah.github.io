@@ -69,7 +69,12 @@ function installStyles() {
     .z-reel-action.active .glyph{color:#fff;border-color:#fb7185;background:linear-gradient(145deg,#ff8aa5,#e11d48 48%,#831843);box-shadow:inset 1px 1px 2px #ffffff90,inset -2px -3px 5px #680d2b,0 7px 17px #e11d4866}
     .z-reel-action.saved .glyph{color:#fff;border-color:#c4b5fd;background:linear-gradient(145deg,#ddd6fe,#8b5cf6 50%,#4c1d95);box-shadow:inset 1px 1px 2px #ffffff90,inset -2px -3px 5px #32106e,0 7px 17px #8b5cf666}
     .z-reel-copy{position:absolute;left:14px;right:64px;bottom:14px;z-index:3;color:#fff;text-shadow:0 2px 8px #000}
-    .z-reel-caption{margin:7px 0;color:#fff;font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .z-reel-creator-row{display:flex;align-items:center;gap:9px;min-width:0;margin-bottom:7px}
+    .z-reel-creator-row .z-reel-avatar{width:36px;height:36px;flex:0 0 36px;border-color:#fff;background:#24213a}
+    .z-reel-creator-row .z-reel-creator{min-width:0;flex:1}
+    .z-reel-creator-row .z-reel-creator strong{flex-wrap:wrap;font-size:13px}
+    .z-reel-creator-row .z-reel-follow{flex:0 0 auto}
+    .z-reel-caption{margin:5px 0;color:#fff;font-size:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
     .z-reel-tags{color:#ddd6fe;font-size:10px;font-weight:700}
     .z-reel-challenge{display:inline-block;margin:0 0 6px;padding:5px 8px;border:1px solid #A78BFA88;border-radius:999px;background:#A78BFA25;color:#fff;font-size:10px;font-weight:800}
     .z-reel-audio{display:flex;align-items:center;gap:6px;margin-top:7px;color:#e5e7eb;font-size:10px}
@@ -144,9 +149,7 @@ function cardHTML(reel) {
     return '<div class="z-reel-product"><img src="' + esc(product.image_url || '') + '" alt="" loading="lazy"><span><strong>' + esc(product.title) + '</strong><small>TSh ' + Number(product.price || 0).toLocaleString('en-TZ') + (inStock ? ' · Inapatikana' : ' · Imeisha') + '</small><div class="z-reel-product-actions"><button type="button" class="secondary" data-reel-product="' + esc(reel.id) + '" data-product-id="' + esc(product.id) + '">Tazama</button><button type="button" data-reel-cart="' + esc(product.id) + '"' + (inStock ? '' : ' disabled') + '>Ongeza Cart</button></div></span></div>';
   }).join('');
   return '<article class="z-reel-card" data-reel-card="' + esc(reel.id) + '">' +
-    '<video class="z-reel-video" data-reel-video="' + esc(reel.id) + '" src="' + esc(video) + '" poster="' + esc(thumb) + '" playsinline autoplay loop muted preload="metadata"></video><div class="z-reel-watermark" aria-hidden="true"><b>ZUNE</b><span>' + esc(creatorName) + '</span></div><div class="z-reel-shade"></div>' +
-    '<div class="z-reel-top"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong><small>' + (official ? 'Akaunti rasmi ya ZUNE' : 'ZUNE Seller') + '</small></div>' +
-    (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' +
+    '<video class="z-reel-video" data-reel-video="' + esc(reel.id) + '" src="' + esc(video) + '" poster="' + esc(thumb) + '" playsinline autoplay loop muted preload="metadata"></video><div class="z-reel-shade"></div>' +
     '<div class="z-reel-actions">' +
     '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">' + icon('heart') + '</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
@@ -154,7 +157,7 @@ function cardHTML(reel) {
     '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">' + icon('report') + '</span><span>Report</span></button>' +
-    '</div><div class="z-reel-copy">' + challengeHtml + '<div class="z-reel-tags">' + esc(tags) + '</div><p class="z-reel-caption">' + esc(reel.caption || '') + '</p><div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
+    '</div><div class="z-reel-copy"><div class="z-reel-creator-row"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong></div>' + (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' + (reel.caption ? '<p class="z-reel-caption">' + esc(reel.caption) + '</p>' : '') + (tags ? '<div class="z-reel-tags">' + esc(tags) + '</div>' : '') + challengeHtml + '<div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
 }
 function visibleReels() {
   let list = state.reels.slice();
