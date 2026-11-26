@@ -1,6 +1,6 @@
 import { registerWalletBiometrics, authenticateWalletBiometrics } from "./wallet-passkeys.js?v=20261126-wallet-passkeys-1";
 if (!document.querySelector("link[data-zune-wallet-css]")) {
- const link=document.createElement("link");link.rel="stylesheet";link.href="./wallet.css?v=20261126-wallet-2";link.dataset.zuneWalletCss="true";document.head.appendChild(link);
+ const link=document.createElement("link");link.rel="stylesheet";link.href="./wallet.css?v=20261126-wallet-3";link.dataset.zuneWalletCss="true";document.head.appendChild(link);
 }
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>new Intl.NumberFormat("sw-TZ",{style:"currency",currency:"TZS",maximumFractionDigits:0}).format(Number(v||0));
@@ -77,7 +77,7 @@ export async function mountWallet({root,supabase,user,language="sw"}){
   }else if(action==="biometric"){
    if(state.settings.biometric_enabled){show(t("Biometric imewashwa","Biometrics enabled"),"<p class='zw-modal-copy'>"+t("Passkey imesajiliwa. Withdraw na malipo yatahitaji uthibitisho wa kifaa pamoja na PIN.","A passkey is registered. Withdrawals and payments require device verification as well as your PIN.")+"</p><p class='zw-form-hint'>"+t("Tumia kifaa hiki au sajili kifaa kingine chenye akaunti yako.","Use this device or register another supported device with your account.")+"</p>");}
    else show(t("Washa fingerprint / Face ID","Enable fingerprint / Face ID"),"<p class='zw-modal-copy'>"+t("Tumia biometrics ya kifaa chako kusaini passkey salama ya ZUNE Wallet. Baada ya kuwasha, uthibitisho utahitajika pamoja na PIN kwa Withdraw na malipo.","Use your device biometrics to register a secure ZUNE Wallet passkey. Once enabled, it will be required alongside your PIN for withdrawals and payments.")+"</p><button class='zw-submit' data-enable-biometric>"+t("Sajili biometrics","Register biometrics")+"</button>");
-   root.querySelector("[data-enable-biometric]")?.addEventListener("click",async b=>{b.currentTarget.disabled=true;try{await registerWalletBiometrics(supabase);await load();show(t("Biometric imewashwa","Biometrics enabled"),msg(t("Passkey imesajiliwa kwa mafanikio.","Passkey registered successfully."),true));}catch(e){b.currentTarget.disabled=false;show(t("Imeshindikana","Failed"),msg(e.message));}});
+   root.querySelector("[data-enable-biometric]")?.addEventListener("click",async b=>{const button=b.currentTarget;button.disabled=true;try{await registerWalletBiometrics(supabase);await load();show(t("Biometric imewashwa","Biometrics enabled"),msg(t("Passkey imesajiliwa kwa mafanikio.","Passkey registered successfully."),true));}catch(e){button.disabled=false;show(t("Imeshindikana","Failed"),msg(e.message));}});
   }else if(action==="pay"){
    show(t("Lipa oda kwa Wallet","Pay orders with Wallet"),"<p class='zw-modal-copy'>"+t("Chaguo la Wallet litaonekana kwenye Checkout ya oda. PIN itahitajika na malipo yatathibitishwa na seva kabla oda haijathibitishwa.","Wallet will appear as a payment option in order Checkout. A PIN is required and the server confirms payment before the order is marked paid.")+"</p><p class='zw-form-hint'>"+t("Hakikisha una salio la kutosha na PIN imewekwa.","Make sure you have sufficient balance and a PIN set.")+"</p>");
   }else if(action==="refunds"){
