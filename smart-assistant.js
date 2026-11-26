@@ -51,6 +51,7 @@ export async function openZuneAssistant({
  let speechQueueToken=0,speechQueue=[],speechPlaying=false;
  let recognition=null,recognitionActive=false,recognitionText="";
  const setVoiceStatus=message=>{if(speechStatus)speechStatus.textContent=message||"";};
+  const updateOrb=(state,transcript)=>{const stage=overlay.querySelector(".z-premium-orb-stage");if(!stage||stage.hidden||!overlay.classList.contains("z-premium-voice-mode"))return;const label=stage.querySelector("[data-orb-state]"),text=stage.querySelector("[data-orb-transcript]");if(state&&label)label.textContent=state;if(transcript!==undefined&&text)text.textContent=transcript;};
  const loadVoices=()=>{if(!speechSupported)return[];voiceList=window.speechSynthesis.getVoices()||[];return voiceList;};
  if(speechSupported){loadVoices();window.speechSynthesis.addEventListener?.("voiceschanged",loadVoices);}
  const stopSpeaking=()=>{
@@ -119,20 +120,22 @@ export async function openZuneAssistant({
   recognition=new SpeechRecognition();
   recognition.lang=sw?"sw-TZ":"en-US";
   recognition.interimResults=true;recognition.continuous=false;
-  recognition.onstart=()=>{recognitionActive=true;recognitionText="";micButton?.classList.add("is-listening");micButton?.setAttribute("aria-pressed","true");setVoiceStatus(sw?"Ninakusikiliza...":"Listening...");};
+  recognition.onstart=()=>{recognitionActive=true;recognitionText="";micButton?.classList.add("is-listening");micButton?.setAttribute("aria-pressed","true");setVoiceStatus(sw?"Ninakusikiliza...":"Listening...");updateOrb(sw?"Ninakusikiliza...":"Listening...","");};
   recognition.onresult=event=>{
    recognitionText=Array.from(event.results).map(result=>result[0]?.transcript||"").join(" ").trim();
    if(field&&recognitionText)field.value=recognitionText;
+   updateOrb(sw?"Nimekusikia...":"I heard you...",recognitionText);
   };
   recognition.onerror=event=>{
-   const message=event.error==="not-allowed"?(sw?"Ruhusu matumizi ya kipaza sauti kwenye browser.":"Allow microphone access in your browser."):(sw?"Sauti haikutambulika. Jaribu tena.":"Could not recognize speech. Please try again.");
-   setVoiceStatus(message);
+   const message=event.error==="not-allowed"?(sw?"Ruhusu matumizi ya kipaza sauti kwenye browser.":"Allow microphone access in your browser."):(event.error==="no-speech"?(sw?"Sijasikia sauti. Bonyeza kipaza sauti ujaribu tena.":"I did not hear anything. Tap the microphone and try again."):(sw?"Sauti haikutambulika. Jaribu tena.":"Could not recognize speech. Please try again."));
+   setVoiceStatus(message);updateOrb(message,message);
   };
+  recognition.onnomatch=()=>{const message=sw?"Sijaelewa ulichosema. Jaribu tena.":"I could not understand that. Please try again.";setVoiceStatus(message);updateOrb(message,message);};
   recognition.onend=()=>{
    recognitionActive=false;micButton?.classList.remove("is-listening");micButton?.setAttribute("aria-pressed","false");
    const transcript=recognitionText.trim();recognitionText="";
-   if(transcript){setVoiceStatus(sw?"Swali limepokelewa.":"Voice question received.");ask(transcript);}
-   else if(!speechStatus?.textContent)setVoiceStatus("");
+   if(transcript){setVoiceStatus(sw?"Swali limepokelewa.":"Voice question received.");updateOrb(sw?"Ninaandaa jibu...":"Preparing your answer...","");Promise.resolve(ask(transcript)).catch(error=>{console.error("ZUNE voice question:",error);const message=sw?"Samahani, swali halikuweza kuchakatwa. Jaribu tena.":"Sorry, I could not process that question. Please try again.";setVoiceStatus(message);updateOrb(message,message);});}
+   else if(!speechStatus?.textContent){const message=sw?"Sijasikia swali. Bonyeza kipaza sauti ujaribu tena.":"I did not hear a question. Tap the microphone to try again.";setVoiceStatus(message);updateOrb(message,message);}
   };
   micButton?.addEventListener("click",()=>{
    if(recognitionActive){recognition.stop();return;}
@@ -177,6 +180,7 @@ export async function openZuneAssistant({
     for(const token of tokens){
      if(stream.cancelled||!overlay.isConnected)break;
      part.node.nodeValue+=token;
+     if(overlay.classList.contains("z-premium-voice-mode"))updateOrb(sw?"ZUNE inajibu...":"ZUNE is answering...",textNodes.map(item=>item.node.nodeValue||"").join(""));
      if(speechEnabled)stream.speechBuffer+=token;
      box.scrollTop=box.scrollHeight;
      if(/^\s+$/.test(token)){
@@ -194,6 +198,7 @@ export async function openZuneAssistant({
     if(stream.cancelled||!overlay.isConnected)break;
    }
    if(stream.speechBuffer.trim())enqueueSpeech(stream.speechBuffer,stream.speechToken);
+   if(overlay.classList.contains("z-premium-voice-mode")){const answer=textNodes.map(item=>item.node.nodeValue||"").join("").trim();updateOrb(sw?"Nimejibu. Unaweza kuuliza tena.":"I have answered. You can ask again.",answer);}
    typing.remove();stop.remove();
    if(activeTyping===stream)activeTyping=null;
   })();
