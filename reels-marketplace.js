@@ -60,14 +60,15 @@ function installStyles() {
     .z-reel-badge{color:#A78BFA;font-size:10px;font-weight:900}
     .z-reel-follow{border:1px solid #A78BFA;border-radius:999px;background:#A78BFA20;color:#fff;padding:8px 13px;font-size:10px;font-weight:900;backdrop-filter:blur(10px)}
     .z-reel-follow.following{background:#A78BFA;color:#090D16}
-    .z-reel-actions{position:absolute;right:10px;bottom:142px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:12px}
-    .z-reel-action{min-width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:transparent;color:#fff;padding:0;text-shadow:0 2px 8px #000;font-size:10px;font-weight:800}
-    .z-reel-action .glyph{position:relative;width:46px;height:46px;display:grid;place-items:center;overflow:hidden;border:1px solid #ffffff75;border-radius:16px;background:linear-gradient(145deg,#ffffff38 0%,#ffffff0b 38%,#050812d9 100%);color:#fff;box-shadow:inset 1px 1px 2px #ffffff70,inset -2px -3px 5px #0009,0 7px 15px #0009,0 2px 4px #ffffff20;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:perspective(160px) rotateX(3deg);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-    .z-reel-action .glyph:before{content:"";position:absolute;inset:1px 1px auto;height:44%;border-radius:14px 14px 55% 55%;background:linear-gradient(180deg,#ffffff42,transparent);pointer-events:none}
-    .z-reel-action .glyph svg{position:relative;z-index:1;width:23px;height:23px;filter:drop-shadow(0 2px 2px #0009)}
-    .z-reel-action:active .glyph{transform:perspective(160px) rotateX(0) translateY(2px) scale(.94);box-shadow:inset 2px 3px 5px #0009,0 2px 5px #0008}
-    .z-reel-action.active .glyph{color:#fff;border-color:#fb7185;background:linear-gradient(145deg,#ff8aa5,#e11d48 48%,#831843);box-shadow:inset 1px 1px 2px #ffffff90,inset -2px -3px 5px #680d2b,0 7px 17px #e11d4866}
-    .z-reel-action.saved .glyph{color:#fff;border-color:#c4b5fd;background:linear-gradient(145deg,#ddd6fe,#8b5cf6 50%,#4c1d95);box-shadow:inset 1px 1px 2px #ffffff90,inset -2px -3px 5px #32106e,0 7px 17px #8b5cf666}
+    .z-reel-actions{position:absolute;right:10px;bottom:136px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:9px}
+    .z-reel-action{min-width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;color:#fff;padding:2px;text-shadow:0 2px 7px #000;font-size:10px;font-weight:800;line-height:1.1;-webkit-tap-highlight-color:transparent}
+    .z-reel-action .glyph{position:relative;width:34px;height:34px;display:grid;place-items:center;overflow:visible;border:0;border-radius:0;background:transparent;color:#fff;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;transform:none;transition:transform .16s ease,color .16s ease}
+    .z-reel-action .glyph:before{content:none}
+    .z-reel-action .glyph svg{position:relative;z-index:1;width:23px;height:23px;filter:drop-shadow(0 2px 3px #000b)}
+    .z-reel-action:active .glyph{transform:scale(.88)}
+    .z-reel-action.active .glyph{color:#fb7185}
+    .z-reel-action.saved .glyph{color:#c4b5fd}
+    .z-reel-action>span:not(.glyph){min-height:10px;color:#fff;font-size:9px;font-weight:800;text-shadow:0 1px 5px #000}
     .z-reel-copy{position:absolute;left:14px;right:64px;bottom:14px;z-index:3;color:#fff;text-shadow:0 2px 8px #000}
     .z-reel-creator-row{display:flex;align-items:center;gap:9px;min-width:0;margin-bottom:7px}
     .z-reel-creator-row .z-reel-avatar{width:36px;height:36px;flex:0 0 36px;border-color:#fff;background:#24213a}
@@ -154,9 +155,9 @@ function cardHTML(reel) {
     '<button type="button" class="z-reel-action ' + (liked ? 'active' : '') + '" data-reel-like="' + esc(reel.id) + '"><span class="glyph">' + icon('heart') + '</span><span data-like-count="' + esc(reel.id) + '">' + Number(reel.likes_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
-    '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '"><span class="glyph">' + icon('save') + '</span><span>' + (saved ? 'Saved' : 'Save') + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '"><span class="glyph">' + icon('sound') + '</span><span>Sound</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel"><span class="glyph">' + icon('report') + '</span><span>Report</span></button>' +
+    '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '" aria-label="' + (saved ? 'Ondoa kwenye zilizohifadhiwa' : 'Hifadhi Reel') + '" title="' + (saved ? 'Saved' : 'Save') + '"><span class="glyph">' + icon('save') + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '" aria-label="Sauti" title="Sound"><span class="glyph">' + icon('sound') + '</span></button>' +
+    '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel" title="Report"><span class="glyph">' + icon('report') + '</span></button>' +
     '</div><div class="z-reel-copy"><div class="z-reel-creator-row"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong></div>' + (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' + (reel.caption ? '<p class="z-reel-caption">' + esc(reel.caption) + '</p>' : '') + (tags ? '<div class="z-reel-tags">' + esc(tags) + '</div>' : '') + challengeHtml + '<div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
 }
 function visibleReels() {
