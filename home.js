@@ -2918,6 +2918,7 @@ function ensureMarketplaceNavigationStyles() {
 }
 
 function renderBottomNavigation() {
+  if (homeState.activeTab === "reels") return "";
   ensureMarketplaceNavigationStyles();
   const items = [
     { id: "home", label: tx("home"), icon: "home" },
