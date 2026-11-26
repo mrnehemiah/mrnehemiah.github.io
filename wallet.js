@@ -1,4 +1,4 @@
-import "./wallet.css";
+if (!document.querySelector("link[data-zune-wallet-css]")) { const link=document.createElement("link"); link.rel="stylesheet"; link.href="./wallet.css?v=20261126-wallet-1"; link.dataset.zuneWalletCss="true"; document.head.appendChild(link); }
 
 const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money = value => new Intl.NumberFormat("sw-TZ",{style:"currency",currency:"TZS",maximumFractionDigits:0}).format(Number(value||0));
