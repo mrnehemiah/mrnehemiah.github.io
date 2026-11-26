@@ -66,11 +66,11 @@ function installStyles() {
     .z-reel-follow.following{background:#A78BFA;color:#090D16}
     .z-reel-actions{position:absolute;right:10px;bottom:136px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:9px}
     .z-reel-action{min-width:32px;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:transparent;color:#fff;padding:2px;text-shadow:0 2px 7px #000;font-size:10px;font-weight:800;line-height:1.1;-webkit-tap-highlight-color:transparent}
-    .z-reel-action .glyph{position:relative;width:34px;height:34px;display:grid;place-items:center;overflow:visible;border:0;border-radius:0;background:transparent;color:#fff;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;transform:none;transition:transform .16s ease,color .16s ease}
+    .z-reel-action .glyph{position:relative;width:38px;height:38px;display:grid;place-items:center;overflow:visible;border:0;border-radius:0;background:transparent;color:#fff;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;transform:none;transition:transform .18s cubic-bezier(.2,.8,.2,1),filter .18s ease}
     .z-reel-action .glyph:before{content:none}
-    .z-reel-action .glyph svg{position:relative;z-index:1;width:23px;height:23px;filter:drop-shadow(0 2px 3px #000b)}
-    .z-reel-action:active .glyph{transform:scale(.88)}
-    .z-reel-action.active .glyph{color:#fb7185}
+    .z-reel-action .glyph svg{position:relative;z-index:1;width:29px;height:29px;filter:drop-shadow(0 1px 0 #ffffff70) drop-shadow(0 2px 1px #0009) drop-shadow(0 4px 4px #000b)}
+    .z-reel-action:active .glyph{transform:translateY(1px) scale(.9);filter:brightness(1.15)}
+    .z-reel-action.active .glyph svg{filter:drop-shadow(0 1px 0 #fff9) drop-shadow(0 2px 1px #7f1d1d) drop-shadow(0 5px 5px #000c)}
     .z-reel-action.saved .glyph{color:#c4b5fd}
     .z-reel-action>span:not(.glyph){min-height:10px;color:#fff;font-size:9px;font-weight:800;text-shadow:0 1px 5px #000}
     .z-reel-copy{position:absolute;left:14px;right:64px;bottom:14px;z-index:3;color:#fff;text-shadow:0 2px 8px #000}
@@ -125,15 +125,18 @@ function installStyles() {
 }
 function icon(name) {
   const paths = {
-    heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/>',
-    comment:'<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/>',
-    share:'<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/>',
+    heart:'<path d="M12 21s-8.2-5.1-9.8-10.1C.6 5.8 6.7 1.7 12 7c5.3-5.3 11.4-1.2 9.8 3.9C20.2 15.9 12 21 12 21Z" fill="currentColor" stroke="#fff" stroke-opacity=".82" stroke-width=".9" stroke-linejoin="round"/><path d="M6.2 7.1c1.2-1.2 2.8-1.2 4-.2" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="1.5" stroke-linecap="round"/>',
+    comment:'<path d="M4.1 3.8h15.8a2.2 2.2 0 0 1 2.2 2.2v9.1a2.2 2.2 0 0 1-2.2 2.2h-8.1L5 21v-3.7H4.1a2.2 2.2 0 0 1-2.2-2.2V6a2.2 2.2 0 0 1 2.2-2.2Z" fill="currentColor" stroke="#fff" stroke-opacity=".82" stroke-width=".9" stroke-linejoin="round"/><path d="M6.5 8.2h11M6.5 11.8h8" fill="none" stroke="#fff" stroke-opacity=".88" stroke-width="1.35" stroke-linecap="round"/>',
+    share:'<path d="M14.2 3.2 22 2l-1.2 7.8-2.3-2.3-6.1 6.1a1.2 1.2 0 0 1-1.7-1.7l6.1-6.1-2.6-2.6Z" fill="currentColor" stroke="#fff" stroke-opacity=".85" stroke-width=".85" stroke-linejoin="round"/><path d="M18.2 13.2v5.1a2 2 0 0 1-2 2H5.4a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2h5.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
     save:'<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/>',
     sound:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
     soundOff:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
     report:'<path d="M4 22V4"/><path d="M4 4c6-4 10 4 16 0v11c-6 4-10-4-16 0"/>'
   };
-  return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (paths[name] || paths.heart) + '</g></svg>';
+  const colored = name === 'heart' || name === 'comment' || name === 'share';
+  const color = name === 'heart' ? '#ff6b91' : name === 'comment' ? '#59d9ff' : '#a8f0d0';
+  const svg = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (paths[name] || paths.heart) + '</g></svg>';
+  return colored ? svg.replace('<g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">','<g style="color:' + color + '">') : svg;
 }
 function cardHTML(reel) {
   const creator = reel.creator || {};
