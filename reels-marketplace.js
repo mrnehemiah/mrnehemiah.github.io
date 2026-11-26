@@ -30,7 +30,7 @@ function installStyles() {
   style.id = 'zuneReelsStyles';
   style.textContent = `
     :root{--zr-bg:#090D16;--zr-nav:#111827;--zr-purple:#A78BFA;--zr-white:#FFFFFF;--zr-muted:#9CA3AF}
-    .z-reels-shell{position:fixed;inset:0 0 74px;z-index:20;min-height:0;overflow:hidden;overscroll-behavior:none;background:var(--zr-bg);color:var(--zr-white);padding:0}
+    .z-reels-shell{position:fixed;inset:0;z-index:20;min-height:0;overflow:hidden;overscroll-behavior:none;background:var(--zr-bg);color:var(--zr-white);padding:0}
     .z-reels-page{width:100%;height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden;background:var(--zr-bg);color:var(--zr-white);padding:0}
     .z-reels-head{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px 10px;background:#090D16f5;border-bottom:1px solid #ffffff12;backdrop-filter:blur(18px)}
     .z-reels-brand{font:900 19px/1.1 Manrope,Arial,sans-serif;letter-spacing:1.1px;color:#fff}
