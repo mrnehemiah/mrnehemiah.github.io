@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { authenticateWalletBiometrics } from "./wallet-passkeys.js?v=20261126-wallet-passkeys-1";
 import { readCart, loadCartProducts, writeCart, syncCartCountBadges } from "./cart.js";
 
 const root=document.getElementById("checkout-app");
@@ -8,7 +9,7 @@ const en={loading:"Loading checkout...",title:"Review your order",subtitle:"Ente
 const t=k=>(lang==="en"?en:sw)[k]||k;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>new Intl.NumberFormat(lang==="en"?"en-TZ":"sw-TZ",{maximumFractionDigits:0}).format(Number(v)||0)+" TSh";
-let user=null,cart=[],products=[],addresses=[],quote=null,busy=false,walletBalance=0,walletPinConfigured=false;
+let user=null,cart=[],products=[],addresses=[],quote=null,busy=false,walletBalance=0,walletPinConfigured=false,walletBiometricEnabled=false;
 let key="",signature="";
 const fields=["recipient_name","phone","country","region","district","ward","street","landmark","delivery_notes","latitude","longitude"];
 function addressValues(a={}){return {recipient_name:a.recipient_name||"",phone:a.phone||"",country:a.country||"Tanzania",region:a.region||"",district:a.district||"",ward:a.ward||"",street:a.street||a.delivery_address||"",landmark:a.landmark||"",delivery_notes:a.delivery_notes||"",latitude:a.latitude??"",longitude:a.longitude??""};}
@@ -89,7 +90,8 @@ async function placeOrder(){
   if(selectedPayment==="wallet"){
    const walletPin=String(root.querySelector("#zc-wallet-pin")?.value||"");
    if(!/^[0-9]{6}$/.test(walletPin))throw new Error(t("walletPin"));
-   const {data:walletResult,error:walletError}=await supabase.rpc("wallet_pay_checkout",{p_checkout_id:data.checkout_id,p_pin:walletPin,p_idempotency_key:key});
+   const passkey=walletBiometricEnabled?await authenticateWalletBiometrics(supabase,"payment"):null;
+   const {data:walletResult,error:walletError}=await supabase.rpc("wallet_pay_checkout",{p_checkout_id:data.checkout_id,p_pin:walletPin,p_idempotency_key:key,p_passkey_challenge_id:passkey?.challenge_id||null});
    if(walletError)throw walletError;
    if(walletResult?.success===false)throw new Error(walletResult.code==="INVALID_PIN"?"PIN si sahihi.":walletResult.code==="PIN_LOCKED"?"PIN imefungwa kwa muda.":"Malipo ya Wallet hayajakamilika.");
   }
@@ -106,7 +108,7 @@ async function start(){
  cart=readCart(user.id);if(!cart.length){render();return;}
  const [p,a,wallet,walletSettings]=await Promise.all([loadCartProducts(cart),supabase.from("delivery_addresses").select("*").eq("user_id",user.id).order("is_default",{ascending:false}).order("created_at",{ascending:false}),supabase.from("wallets").select("balance").eq("user_id",user.id).maybeSingle(),supabase.rpc("wallet_get_settings")]);
  if(wallet.error)throw wallet.error;if(walletSettings.error)throw walletSettings.error;
- walletBalance=Number(wallet.data?.balance||0);walletPinConfigured=!!walletSettings.data?.pin_configured;
+ walletBalance=Number(wallet.data?.balance||0);walletPinConfigured=!!walletSettings.data?.pin_configured;walletBiometricEnabled=!!walletSettings.data?.biometric_enabled;
  products=p.filter(x=>x.moderation_status==="approved"&&!x.removed_at);addresses=a.data||[];
  if(a.error)throw a.error;
  if(products.length!==new Set(cart.map(x=>String(x.productId))).size||cart.some(x=>!products.some(p=>String(p.id)===String(x.productId))))throw new Error("Baadhi ya bidhaa hazipatikani tena. Rudi kikapuni uondoe bidhaa hizo.");
