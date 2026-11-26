@@ -66,10 +66,13 @@ export function initializePremiumAssistant({overlay,sw,ask,close,stopSpeaking,se
  const applyTheme=()=>{overlay.dataset.assistantTheme=prefs.theme||"adaptive";};
  applyTheme();
  drawer.querySelectorAll("[data-nav]").forEach(b=>b.addEventListener("click",()=>{const n=b.dataset.nav;if(n==="new")newChat();else if(n==="history")historyNav();else if(n==="privacy")privacyPage();else if(n==="settings")settingsPage();else{showPage(t("Help & Support","Help & Support"),Object.assign(document.createElement("div"),{textContent:t("Uliza ZUNE Assistant au wasiliana na Support kupitia Marketplace.","Ask ZUNE Assistant or contact Marketplace Support.")}));}closeDrawer();}));
- const addComposerTools=()=>{const form=overlay.querySelector("#z-assistant-form");if(!form||form.querySelector(".z-premium-tools"))return;const tools=makeButton("＋","z-premium-tools",t("Marketplace tools","Marketplace tools"));form.prepend(tools);tools.onclick=()=>{const menu=document.createElement("div");menu.className="z-premium-tool-menu";[["Bidhaa","Tafuta bidhaa"],["Maduka","Tafuta maduka"],["Picha","Tafuta kwa picha"],["Oda","Oda zangu"],["Reels","ZUNE Reels"]].forEach(([label,q])=>{const b=makeButton(label,"");b.onclick=()=>{menu.remove();ask(q);};menu.append(b);});form.append(menu);};};
+ const addComposerTools=()=>{const form=overlay.querySelector("#z-assistant-form"),shell=form?.querySelector(".z-assistant-composer-shell");if(!form||!shell||shell.querySelector(".z-premium-tools"))return;const tools=makeButton("＋","z-premium-tools",t("Fungua zana za Marketplace","Open Marketplace tools"));shell.prepend(tools);tools.onclick=()=>{form.querySelector(".z-premium-tool-menu")?.remove();const menu=document.createElement("div");menu.className="z-premium-tool-menu";[["Bidhaa","Tafuta bidhaa"],["Maduka","Tafuta maduka"],["Picha","Tafuta kwa picha"],["Oda","Oda zangu"],["Reels","ZUNE Reels"]].forEach(([label,q])=>{const b=makeButton(label,"");b.onclick=()=>{menu.remove();ask(q);};menu.append(b);});form.append(menu);};};
  addComposerTools();
- const inputResize=()=>{if(field){field.rows=1;field.addEventListener("input",()=>{field.style.height="auto";field.style.height=Math.min(field.scrollHeight,120)+"px";});}};
- inputResize();
+ const sendButton=overlay.querySelector('#z-assistant-form button[type="submit"]');
+ const syncComposer=()=>{const hasText=!!field?.value.trim();if(micButton)micButton.hidden=hasText;if(sendButton)sendButton.hidden=!hasText;};
+ const inputResize=()=>{if(field){field.rows=1;field.addEventListener("input",()=>{field.style.height="auto";field.style.height=Math.min(field.scrollHeight,144)+"px";syncComposer();});field.addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){event.preventDefault();if(field.value.trim())formSubmit();}});}};
+ const formSubmit=()=>{if(!field?.value.trim())return;overlay.querySelector("#z-assistant-form")?.requestSubmit();};
+ inputResize();syncComposer();
  const originalAsk=ask;
  // Keep the latest user prompt for the Regenerate action and update orb transcript.
  const originalForm=overlay.querySelector("#z-assistant-form");

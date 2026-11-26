@@ -106,3 +106,20 @@
 .z-assistant-form .z-assistant-mic{flex:0 0 44px;width:44px;height:44px;border-radius:50%;font-size:19px}
 .z-assistant-tool-menu{bottom:calc(100% + 8px)}
 @media(max-width:640px){.z-assistant-form{gap:7px;padding:10px 11px max(12px,env(safe-area-inset-bottom))}.z-assistant-form textarea{min-height:46px;padding:12px 13px;font-size:14px}.z-assistant-form>button[type=submit],.z-assistant-form .z-assistant-mic,.z-assistant-form .z-premium-tools{flex-basis:42px;width:42px;height:42px}}
+
+/* ChatGPT-inspired single-surface composer for ZUNE */
+.z-assistant-form{position:sticky;bottom:0;z-index:6;display:block;flex:0 0 auto;padding:12px 16px max(14px,env(safe-area-inset-bottom));border:0;background:var(--za-bg,#f7fbf8);box-shadow:none}
+.z-assistant-composer-shell{position:relative;display:flex;align-items:flex-end;gap:9px;width:min(100%,860px);margin:0 auto;padding:9px 10px;border:1px solid #d7e5dc;border-radius:27px;background:var(--za-surface,#fff);box-shadow:0 3px 16px rgba(10,58,32,.08);transition:border-color .18s,box-shadow .18s}
+.z-assistant-composer-shell:focus-within{border-color:#0b8a59;box-shadow:0 0 0 3px #0b8a5914,0 4px 18px rgba(10,58,32,.08)}
+.z-assistant-composer-shell textarea{display:block;flex:1 1 auto;min-width:0;min-height:28px;max-height:144px;resize:none;overflow-y:auto;box-sizing:border-box;padding:9px 5px;border:0!important;border-radius:0!important;background:transparent!important;color:var(--za-text,#173b29);font:inherit;font-size:15px;line-height:1.5;outline:none!important;box-shadow:none!important}
+.z-assistant-composer-shell textarea::placeholder{color:#819188}
+.z-assistant-composer-shell>button{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border:0;border-radius:50%;cursor:pointer}
+.z-assistant-composer-shell .z-premium-tools{order:-1;background:transparent;border:0;color:#52665a;font-size:25px}
+.z-assistant-composer-shell .z-assistant-mic{background:#edf5ef;color:#176640;font-size:18px}
+.z-assistant-composer-shell>button[type=submit]{background:#087b50;color:#fff;font-size:24px;font-weight:700;box-shadow:0 3px 10px #087b5028}
+.z-assistant-composer-shell>button[hidden]{display:none!important}
+.z-premium-tool-menu{bottom:calc(100% + 12px);left:8px}
+@media(max-width:640px){.z-assistant-form{padding:9px 10px max(12px,env(safe-area-inset-bottom))}.z-assistant-composer-shell{gap:6px;padding:7px 8px;border-radius:26px}.z-assistant-composer-shell textarea{font-size:15px;min-height:28px}.z-assistant-composer-shell>button{flex-basis:38px;width:38px;height:38px}}
+.z-assistant-overlay[data-assistant-theme=dark] .z-assistant-composer-shell{border-color:#344b3b;background:#1a2a20}
+.z-assistant-overlay[data-assistant-theme=dark] .z-assistant-composer-shell textarea{color:#edf7ef}
+@media(prefers-color-scheme:dark){.z-assistant-overlay[data-assistant-theme=adaptive] .z-assistant-composer-shell{border-color:#344b3b;background:#1a2a20}.z-assistant-overlay[data-assistant-theme=adaptive] .z-assistant-composer-shell textarea{color:#edf7ef}}
