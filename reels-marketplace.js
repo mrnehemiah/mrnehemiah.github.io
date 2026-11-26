@@ -598,7 +598,7 @@ root.addEventListener('click',async e => {
       if (reel?.sound?.url) {
         if (state.audioPlayer && state.audioPlayer._zuneReelId === reel.id && !state.audioPlayer.paused) {
           state.audioPlayer.pause(); state.audioPlayer = null;
-          if (video) video.muted = false;
+          if (video) video.muted = true;
           setAudioButtonState(audio,'muted');
           return;
         }
@@ -612,6 +612,9 @@ root.addEventListener('click',async e => {
         state.audioPlayer._zuneReelId = reel.id;
         if (video) video.muted = true;
         const player = state.audioPlayer;
+        player.addEventListener('ended',() => {
+          if (state.audioPlayer === player) { state.audioPlayer = null; setAudioButtonState(audio,'muted'); }
+        },{once:true});
         player.play().then(() => { if (state.audioPlayer === player) setAudioButtonState(audio,'active'); }).catch(() => {
           if (state.audioPlayer === player) { state.audioPlayer = null; setAudioButtonState(audio,'muted'); }
           toast('Gusa tena ili kuruhusu music kucheza.');
