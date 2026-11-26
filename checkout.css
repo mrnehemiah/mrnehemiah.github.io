@@ -2,3 +2,9 @@
 .zc-address-manage{display:inline-flex;margin:0 0 14px;color:#087a55;font-size:12px;font-weight:800;text-decoration:none}.zc-address-manage:hover{text-decoration:underline}
 
 .zc-payment-coming{margin:14px 0 0;padding:14px;border:1px solid #e2e9e5;border-radius:12px;background:#f8faf9}.zc-payment-coming>strong{display:block;font-size:12px;color:#53665c}.zc-payment-networks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}.zc-payment-networks label{display:flex;align-items:center;gap:7px;padding:10px;border:1px solid #e2e9e5;border-radius:9px;background:#fff;font-size:12px;font-weight:700;color:#7b8982}.zc-payment-networks input{accent-color:#087a55}.zc-payment-coming>small{font-size:11px;color:#718078;line-height:1.5;display:block}@media(max-width:420px){.zc-payment-networks{grid-template-columns:1fr}}
+
+
+.zc-wallet-pin-wrap{margin:10px 0;padding:12px;border:1px solid #dce9e1;border-radius:12px;background:#f7fbf8}
+.zc-wallet-pin-wrap .zc-field{display:grid;gap:6px;font-size:12px;font-weight:700}
+.zc-wallet-pin-wrap input{min-height:42px;padding:10px 12px;border:1px solid #d6e3db;border-radius:10px;font:inherit;letter-spacing:3px}
+.zc-payment-choice input:disabled+span{opacity:.5}
