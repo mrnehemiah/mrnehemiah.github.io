@@ -12,6 +12,7 @@ import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v
 // --------------------------------------------
 
 let cartModule = null;
+let walletModule = null;
 
 const PAGE_SIZE = 12;
 
@@ -331,7 +332,9 @@ function zIcon(name) {
 
     minus: '<path d="M5 12h14"/>',
 
-    trash: '<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m4 4v7m6-7v7"/>'
+    trash: '<path d="M3 6h18M8 6V4h8v2m3 0-1 15H6L5 6m4 4v7m6-7v7"/>',
+
+    wallet: '<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M16 14h.01M7 5V3h10v2"/>'
   };
 
   return `
@@ -2924,7 +2927,7 @@ function renderBottomNavigation() {
     { id: "home", label: tx("home"), icon: "home" },
     { id: "explore", label: tx("explore"), icon: "explore" },
     { id: "reels", label: language()==="sw" ? "Reels" : "Reels", icon: "reels" },
-    { id: "saved", label: tx("saved"), icon: "saved" },
+    { id: "wallet", label: "Wallet", icon: "wallet" },
     { id: "me", label: tx("me"), icon: "account" }
   ];
   return `
@@ -4359,6 +4362,10 @@ async function renderMarketplacePage(page) {
       content = renderCartPage();
       break;
 
+    case "wallet":
+      content = '<section class="z-home z-wallet-host"><main class="z-home-content"><div id="z-wallet-root"></div></main></section>';
+      break;
+
     case "saved":
       content = renderSavedPage();
       break;
@@ -4420,6 +4427,18 @@ async function renderMarketplacePage(page) {
 
     case "cart":
       bindCartEvents();
+      break;
+
+    case "wallet":
+      try {
+        if (!walletModule) walletModule = await import("./wallet.js?v=20261126-wallet-1");
+        if (homeState.activeTab !== "wallet") return;
+        await walletModule.mountWallet({ root: app.querySelector("#z-wallet-root"), supabase, user: homeState.user, language: language() });
+      } catch (error) {
+        console.error("ZUNE Wallet could not initialize:", error);
+        const host = app.querySelector("#z-wallet-root");
+        if (host) host.innerHTML = '<section class="z-empty-state"><h2>Wallet haijafunguka</h2><p>Tafadhali jaribu tena.</p></section>';
+      }
       break;
 
     case "saved":
@@ -4522,7 +4541,7 @@ export async function renderMarketplaceHome({
 
   // Fungua tab iliyoombwa na kiungo cha Account, kama ipo.
   const requestedTab = new URLSearchParams(window.location.search).get("tab");
-  const allowedTabs = new Set(["home", "live", "reels", "explore", "categories", "cart", "saved", "me", "features"]);
+  const allowedTabs = new Set(["home", "live", "reels", "explore", "categories", "cart", "saved", "wallet", "me", "features"]);
   const initialTab = allowedTabs.has(requestedTab) ? requestedTab : "home";
 
   // Onyesha ukurasa ulioombwa mara moja.
