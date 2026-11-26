@@ -211,11 +211,11 @@ export async function openZuneAssistant({
  const bindActionCards=root=>root?.querySelectorAll("[data-assistant-action]")?.forEach(button=>button.addEventListener("click",()=>{
   const action=button.dataset.assistantAction;
   if(action==="orders"){close();renderMarketplacePage("me").then(()=>document.querySelector("[data-account-orders]")?.click());return;}
-  const page={explore:"explore",cart:"cart",saved:"saved",account:"me",features:"features",reels:"reels",live:"live"}[action];
+  const page={explore:"explore",cart:"cart",wallet:"wallet",saved:"saved",account:"me",features:"features",reels:"reels",live:"live"}[action];
   if(page)openAssistantPage(page);
  }));
  const showActionCards=()=>{
-  const labels=sw?[["explore","Tafuta bidhaa"],["cart","Kikapu"],["saved","Wishlist"],["orders","Oda zangu"],["features","Shopping Tools"],["reels","ZUNE Reels"],["account","Akaunti"],["live","Live"]]:[["explore","Explore products"],["cart","Cart"],["saved","Wishlist"],["orders","My orders"],["features","Shopping Tools"],["reels","ZUNE Reels"],["account","Account"],["live","Live"]];
+  const labels=sw?[["explore","Tafuta bidhaa"],["cart","Kikapu"],["wallet","ZUNE Wallet"],["saved","Wishlist"],["orders","Oda zangu"],["features","Shopping Tools"],["reels","ZUNE Reels"],["account","Akaunti"],["live","Live"]]:[["explore","Explore products"],["cart","Cart"],["wallet","ZUNE Wallet"],["saved","Wishlist"],["orders","My orders"],["features","Shopping Tools"],["reels","ZUNE Reels"],["account","Account"],["live","Live"]];
   const node=say((sw?"Chagua hatua unayotaka:":"Choose an action:")+'<div class="z-assistant-action-grid">'+labels.map(([key,label])=>'<button type="button" data-assistant-action="'+key+'">'+safe(label)+' <span>›</span></button>').join("")+'</div>');
   Promise.resolve(node).then(bindActionCards);
  };
