@@ -1,6 +1,6 @@
 import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-7";
 import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
-import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261125-composer-cache-3";
+import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261126-chatgpt-composer-1";
 
 /**
  * Opens the Marketplace assistant from the existing Search Bar.
@@ -23,7 +23,7 @@ export async function openZuneAssistant({
  overlay.id="zune-assistant-overlay";
  overlay.className="z-assistant-overlay";
  try {
-  const response=await fetch(new URL("./smart-assistant.html?v=20261125-composer-cache-3",import.meta.url),{cache:"no-cache"});
+  const response=await fetch(new URL("./smart-assistant.html?v=20261126-chatgpt-composer-1",import.meta.url),{cache:"no-cache"});
   if(!response.ok) throw new Error("Assistant template request failed: "+response.status);
   const markup=await response.text();
   const templateDocument=new DOMParser().parseFromString(markup,"text/html");
