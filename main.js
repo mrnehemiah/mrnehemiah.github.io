@@ -117,6 +117,8 @@ const translations = {
     passwordRequired: "Tafadhali jaza barua pepe na nenosiri.",
     emailOnly: "Kwa sasa tumia barua pepe kuingia. Kuingia kwa namba ya simu bado hakujawashwa.",
     loginTitle: "Ingia kwenye akaunti yako",
+    continueWithGoogle: "Endelea na Google",
+    orContinueWith: "AU ENDELEA KWA BARUA PEPE",
 
     show: "Onyesha",
     hide: "Ficha",
@@ -194,6 +196,8 @@ const translations = {
     passwordRequired: "Please enter your email and password.",
     emailOnly: "For now, use your email address to log in. Phone login is not enabled yet.",
     loginTitle: "Log in to your account",
+    continueWithGoogle: "Continue with Google",
+    orContinueWith: "OR CONTINUE WITH EMAIL",
 
     show: "Show",
     hide: "Hide",
@@ -403,6 +407,50 @@ extraStyles.textContent = `
   min-width: 0;
 }
 
+.google-auth-button {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: #202124;
+  font-weight: 700;
+  cursor: pointer;
+}
+.google-auth-button:hover { background: #f8faf9; border-color: #aab8b0; }
+.google-auth-button:disabled { opacity: .65; cursor: wait; }
+.google-g-mark {
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  background: conic-gradient(from -45deg, #4285F4 0 25%, #34A853 25% 50%, #FBBC05 50% 75%, #EA4335 75% 100%);
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 18px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .09em;
+}
+.auth-divider::before, .auth-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+}
+
 .password-toggle {
   border: 1px solid var(--border);
   background: var(--background);
@@ -588,6 +636,33 @@ function renderWelcome() {
    LOGIN SCREEN
 ========================================= */
 
+function googleButtonMarkup() {
+  return `<button class="google-auth-button" id="googleAuthBtn" type="button">
+    <span class="google-g-mark" aria-hidden="true">G</span>
+    <span>${t("continueWithGoogle")}</span>
+  </button><div class="auth-divider">${t("orContinueWith")}</div>`;
+}
+
+async function handleGoogleAuth(button) {
+  if (state.loading) return;
+  state.loading = true;
+  if (button) { button.disabled = true; const label = button.querySelector("span:last-child"); if (label) label.textContent = t("processing"); }
+  try {
+    const redirectTo = new URL("./", window.location.href).href;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo, queryParams: { prompt: "select_account" } }
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.error("ZUNE Google authentication error:", error);
+    state.loading = false;
+    const message = error?.message || (state.language === "sw" ? "Imeshindikana kuendelea na Google. Hakikisha Google provider imewezeshwa." : "Unable to continue with Google. Check that Google sign-in is enabled.");
+    if (state.screen === "login") renderLogin(message);
+    else if (state.screen === "signup") renderSignup(message);
+  }
+}
+
 function renderLogin(error = "") {
   state.screen = "login";
 
@@ -601,6 +676,8 @@ function renderLogin(error = "") {
             ${t("loginTitle")}
           </h1>
         </div>
+
+        ${googleButtonMarkup()}
 
         <form id="loginForm">
           <div class="form-group">
@@ -672,6 +749,8 @@ function renderLogin(error = "") {
       </div>
     </section>
   `;
+
+  document.getElementById("googleAuthBtn").onclick = event => handleGoogleAuth(event.currentTarget);
 
   document.getElementById("toggleLoginPassword").onclick = () => {
     const passwordInput = document.getElementById("loginPassword");
@@ -1013,6 +1092,8 @@ function renderSignup(error = "") {
           </h1>
         </div>
 
+        ${step === 1 ? googleButtonMarkup() : ""}
+
         <p class="step-label">
           ${t("step")} ${step} ${t("of")}
         </p>
@@ -1080,6 +1161,10 @@ function renderSignup(error = "") {
       </div>
     </section>
   `;
+
+  if (step === 1) {
+    document.getElementById("googleAuthBtn").onclick = event => handleGoogleAuth(event.currentTarget);
+  }
 
   document.getElementById("signupForm").onsubmit = handleSignup;
 
@@ -1349,6 +1434,12 @@ async function startApp() {
     const session = await getCustomerSession();
 
     if (session) {
+      // New Google Marketplace accounts default to buyer; preserve existing account types.
+      const authUser = await getCurrentCustomer();
+      if (authUser && !authUser.user_metadata?.account_type) {
+        const { error: metadataError } = await supabase.auth.updateUser({ data: { account_type: "buyer" } });
+        if (metadataError) throw metadataError;
+      }
       // Password-recovery sessions must reach the reset form before the normal
       // sign-in MFA gate; otherwise an enrolled factor can trap the recovery flow.
       if (passwordRecoveryActive || location.hash.includes("type=recovery")) { passwordRecoveryActive = true; await renderPasswordReset(); return; }
