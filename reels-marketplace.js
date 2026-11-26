@@ -54,6 +54,10 @@ function installStyles() {
     .z-reel-shade{position:absolute;inset:0;background:linear-gradient(180deg,#090D1670 0%,transparent 23%,transparent 48%,#090D16ed 100%);pointer-events:none}
     .z-reel-top{position:absolute;top:14px;left:14px;right:14px;z-index:3;display:flex;align-items:center;gap:9px}
     .z-reel-avatar{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;overflow:hidden;border:2px solid #A78BFA;border-radius:50%;background:#24213a;color:#fff;font-size:12px;font-weight:900}
+    .z-reel-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:inherit}
+    .z-reel-avatar.has-image{background:#111827}
+    .z-reel-action.audio-active .glyph{color:#86efac}
+    .z-reel-action.audio-muted .glyph{color:#fff}
     .z-reel-creator{min-width:0;flex:1;text-shadow:0 2px 8px #000}
     .z-reel-creator strong{display:flex;align-items:center;gap:5px;font-size:12px;color:#fff}
     .z-reel-creator small{display:block;margin-top:3px;color:#e5e7eb;font-size:10px}
@@ -126,6 +130,7 @@ function icon(name) {
     share:'<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/>',
     save:'<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z"/>',
     sound:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>',
+    soundOff:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/>',
     report:'<path d="M4 22V4"/><path d="M4 4c6-4 10 4 16 0v11c-6 4-10-4-16 0"/>'
   };
   return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + (paths[name] || paths.heart) + '</g></svg>';
@@ -134,8 +139,9 @@ function cardHTML(reel) {
   const creator = reel.creator || {};
   const role = String(creator.role || '').toLowerCase();
   const official = role === 'admin';
-  const verified = official || (role === 'vendor' && creator.is_verified === true);
-  const creatorName = official ? 'ZUNE Official' : (creator.full_name || reel.creator_display_name || 'ZUNE Seller');
+  const verified = official || creator.is_verified === true || creator.verification_status === 'verified' || creator.verification_status === 'approved';
+  const creatorName = official ? 'ZUNE Official' : (creator.store_name || creator.full_name || reel.creator_display_name || 'ZUNE Seller');
+  const avatarMarkup = creator.avatar_url ? '<img src="' + esc(creator.avatar_url) + '" alt="' + esc(creatorName) + '" loading="lazy" referrerpolicy="no-referrer">' : esc(initials(creatorName));
   const products = Array.isArray(reel.products) && reel.products.length ? reel.products : (reel.product ? [reel.product] : []);
   const sound = reel.sound || null;
   const video = publicUrl(state.context.db, reel.video_path);
@@ -156,9 +162,9 @@ function cardHTML(reel) {
     '<button type="button" class="z-reel-action" data-reel-comments="' + esc(reel.id) + '"><span class="glyph">' + icon('comment') + '</span><span>' + Number(reel.comments_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-share="' + esc(reel.id) + '"><span class="glyph">' + icon('share') + '</span><span data-share-count="' + esc(reel.id) + '">' + Number(reel.shares_count || 0).toLocaleString() + '</span></button>' +
     '<button type="button" class="z-reel-action ' + (saved ? 'saved' : '') + '" data-reel-save="' + esc(reel.id) + '" aria-label="' + (saved ? 'Ondoa kwenye zilizohifadhiwa' : 'Hifadhi Reel') + '" title="' + (saved ? 'Saved' : 'Save') + '"><span class="glyph">' + icon('save') + '</span></button>' +
-    '<button type="button" class="z-reel-action" data-reel-audio="' + esc(reel.id) + '" aria-label="Sauti" title="Sound"><span class="glyph">' + icon('sound') + '</span></button>' +
+    '<button type="button" class="z-reel-action audio-muted" data-reel-audio="' + esc(reel.id) + '" aria-label="Washa sauti" title="Washa sauti"><span class="glyph">' + icon('soundOff') + '</span></button>' +
     '<button type="button" class="z-reel-action" data-reel-report="' + esc(reel.id) + '" aria-label="Ripoti Reel" title="Report"><span class="glyph">' + icon('report') + '</span></button>' +
-    '</div><div class="z-reel-copy"><div class="z-reel-creator-row"><div class="z-reel-avatar">' + esc(initials(creatorName)) + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge">✦ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong></div>' + (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' + (reel.caption ? '<p class="z-reel-caption">' + esc(reel.caption) + '</p>' : '') + (tags ? '<div class="z-reel-tags">' + esc(tags) + '</div>' : '') + challengeHtml + '<div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
+    '</div><div class="z-reel-copy"><div class="z-reel-creator-row"><div class="z-reel-avatar' + (creator.avatar_url ? ' has-image' : '') + '">' + avatarMarkup + '</div><div class="z-reel-creator"><strong>' + esc(creatorName) + (verified ? '<span class="z-reel-badge" aria-label="Akaunti imethibitishwa" title="Verified">✓ ' + (official ? 'OFFICIAL' : 'VERIFIED') + '</span>' : '') + '</strong></div>' + (state.context.user && !official && creator.id !== state.context.user.id ? '<button type="button" class="z-reel-follow ' + (following ? 'following' : '') + '" data-reel-follow="' + esc(reel.id) + '">' + (following ? 'Following' : 'Follow') + '</button>' : '') + '</div>' + (reel.caption ? '<p class="z-reel-caption">' + esc(reel.caption) + '</p>' : '') + (tags ? '<div class="z-reel-tags">' + esc(tags) + '</div>' : '') + challengeHtml + '<div class="z-reel-audio">♫ ' + esc(sound?.title || 'Original audio') + (sound?.artist ? ' · ' + esc(sound.artist) : '') + '</div>' + (productHtml ? '<div class="z-reel-product-list">' + productHtml + '</div>' : '') + '</div></article>';
 }
 function visibleReels() {
   let list = state.reels.slice();
@@ -212,7 +218,12 @@ function observeVideos() {
       const video = entry.target;
       if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
         videos.forEach(other => { if (other !== video) other.pause(); });
-        if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
+        if (state.audioPlayer) {
+          const previousId = state.audioPlayer._zuneReelId;
+          state.audioPlayer.pause(); state.audioPlayer = null;
+          const previousButton = state.root.querySelector('[data-reel-audio="' + CSS.escape(previousId) + '"]');
+          if (previousButton) setAudioButtonState(previousButton,'muted');
+        }
         startReelVideo(video);
         recordView(video.dataset.reelVideo);
       } else video.pause();
@@ -249,6 +260,9 @@ async function loadFeed() {
     }
     const ids = reels.map(x => x.id);
     const creators = [...new Set(reels.map(x => x.creator_id))];
+    const storesResult = creators.length ? await ctx.db.from('stores').select('owner_id,store_name,verification_status').in('owner_id',creators) : {data:[],error:null};
+    if (storesResult.error) console.warn('ZUNE Reels store names unavailable:',storesResult.error.message || storesResult.error);
+    const storesByOwner = new Map((storesResult.data || []).map(store => [store.owner_id,store]));
     const optionalResults = await Promise.all([
       ids.length ? ctx.db.from('zune_reel_likes').select('reel_id').in('reel_id',ids) : Promise.resolve({data:[]}),
       ids.length ? ctx.db.from('zune_reel_comments').select('reel_id').in('reel_id',ids) : Promise.resolve({data:[]}),
@@ -297,10 +311,22 @@ async function loadFeed() {
     }
     state.viewed = new Set();
     try { state.sessionKey = sessionStorage.getItem('zune_reel_view_session') || ''; if (!state.sessionKey) { state.sessionKey = crypto.randomUUID(); sessionStorage.setItem('zune_reel_view_session',state.sessionKey); } } catch (_) { state.sessionKey = crypto.randomUUID(); }
+    const avatarUrls = new Map();
+    await Promise.all(reels.map(async reel => {
+      const path = reel.creator?.avatar_path;
+      if (!path) return;
+      if (/^https?:\/\//i.test(path)) { avatarUrls.set(reel.creator_id,path); return; }
+      try {
+        const signed = await ctx.db.storage.from('zune-avatars').createSignedUrl(path,3600);
+        if (!signed.error && signed.data?.signedUrl) avatarUrls.set(reel.creator_id,signed.data.signedUrl);
+      } catch (avatarError) { console.warn('ZUNE Reels avatar unavailable:',avatarError?.message || avatarError); }
+    }));
     state.reels = reels.map(r => {
       const taggedIds = tagsByReel[r.id]?.length ? tagsByReel[r.id] : (r.product_id ? [r.product_id] : []);
       const taggedProducts = taggedIds.slice(0,10).map(id => state.products.get(id)).filter(p => p && p.moderation_status === 'approved' && !p.removed_at && !p.seller_archived_at);
-      return Object.assign({},r,{
+      const store = storesByOwner.get(r.creator_id);
+      const creator = Object.assign({},r.creator || {},{store_name:store?.store_name || null,verification_status:store?.verification_status || null,avatar_url:avatarUrls.get(r.creator_id) || ''});
+      return Object.assign({},r,{creator,
       products: taggedProducts,
       product: taggedProducts[0] || null,
       sound: soundMap.get(r.sound_id) || null,
@@ -326,6 +352,16 @@ async function recordView(reelId) {
     const reel = state.reels.find(x => x.id === reelId);
     if (reel) { reel.views_count = Number(reel.views_count || 0)+1; const label = state.root.querySelector('[data-view-count="' + CSS.escape(reelId) + '"]'); if (label) label.textContent = reel.views_count.toLocaleString() + ' views'; }
   } catch (_) { state.viewed.delete(reelId); }
+}
+function setAudioButtonState(button, mode) {
+  if (!button) return;
+  const active = mode === 'active';
+  button.classList.toggle('audio-active',active);
+  button.classList.toggle('audio-muted',!active);
+  const glyph = button.querySelector('.glyph');
+  if (glyph) glyph.innerHTML = icon(active ? 'sound' : 'soundOff');
+  button.setAttribute('aria-label',active ? 'Nyamazisha sauti' : 'Washa sauti');
+  button.title = active ? 'Mute' : 'Sound';
 }
 function requireUser() {
   if (state.context.user?.id) return true;
@@ -387,7 +423,8 @@ async function saveReel(reelId, button) {
   }
   if (wasSaved) state.saved.delete(reelId); else state.saved.add(reelId);
   button.classList.toggle('saved',state.saved.has(reelId));
-  button.querySelector('span:last-child').textContent = state.saved.has(reelId) ? 'Saved' : 'Save';
+  button.setAttribute('aria-label',state.saved.has(reelId) ? 'Ondoa kwenye zilizohifadhiwa' : 'Hifadhi Reel');
+  button.title = state.saved.has(reelId) ? 'Saved' : 'Save';
   toast(state.cloudSaves ? (state.saved.has(reelId) ? 'Reel imehifadhiwa kwenye akaunti yako.' : 'Reel imeondolewa kwenye Saved.') : (state.saved.has(reelId) ? 'Reel imehifadhiwa kwenye kifaa hiki.' : 'Reel imeondolewa kwenye Saved.'));
 }
 async function shareReel(reelId) {
@@ -559,11 +596,33 @@ root.addEventListener('click',async e => {
       const reel = state.reels.find(x => x.id === audio.dataset.reelAudio);
       const video = root.querySelector('[data-reel-video="' + CSS.escape(audio.dataset.reelAudio) + '"]');
       if (reel?.sound?.url) {
-        if (state.audioPlayer && state.audioPlayer._zuneReelId === reel.id && !state.audioPlayer.paused) { state.audioPlayer.pause(); state.audioPlayer = null; if(video)video.muted=false; audio.querySelector('.glyph').textContent = '♫'; audio.querySelector('span:last-child').textContent = 'Music'; return; }
-        if (state.audioPlayer) { state.audioPlayer.pause(); state.audioPlayer = null; }
-        state.audioPlayer = new Audio(reel.sound.url); state.audioPlayer._zuneReelId = reel.id; if (video) video.muted = true;
-        state.audioPlayer.play().then(() => { audio.querySelector('.glyph').textContent = '🔊'; audio.querySelector('span:last-child').textContent = 'Mute music'; }).catch(() => toast('Gusa tena ili kuruhusu music kucheza.'));
-      } else if (video) { video.muted = !video.muted; audio.querySelector('.glyph').textContent = video.muted ? '♫' : '🔊'; audio.querySelector('span:last-child').textContent = video.muted ? 'Sound' : 'Mute'; }
+        if (state.audioPlayer && state.audioPlayer._zuneReelId === reel.id && !state.audioPlayer.paused) {
+          state.audioPlayer.pause(); state.audioPlayer = null;
+          if (video) video.muted = true;
+          setAudioButtonState(audio,'muted');
+          return;
+        }
+        if (state.audioPlayer) {
+          const previousId = state.audioPlayer._zuneReelId;
+          state.audioPlayer.pause(); state.audioPlayer = null;
+          const previousButton = root.querySelector('[data-reel-audio="' + CSS.escape(previousId) + '"]');
+          if (previousButton) setAudioButtonState(previousButton,'muted');
+        }
+        state.audioPlayer = new Audio(reel.sound.url);
+        state.audioPlayer._zuneReelId = reel.id;
+        if (video) video.muted = true;
+        const player = state.audioPlayer;
+        player.addEventListener('ended',() => {
+          if (state.audioPlayer === player) { state.audioPlayer = null; setAudioButtonState(audio,'muted'); }
+        },{once:true});
+        player.play().then(() => { if (state.audioPlayer === player) setAudioButtonState(audio,'active'); }).catch(() => {
+          if (state.audioPlayer === player) { state.audioPlayer = null; setAudioButtonState(audio,'muted'); }
+          toast('Gusa tena ili kuruhusu music kucheza.');
+        });
+      } else if (video) {
+        video.muted = !video.muted;
+        setAudioButtonState(audio,video.muted ? 'muted' : 'active');
+      }
       return;
     }
     if (product) {
