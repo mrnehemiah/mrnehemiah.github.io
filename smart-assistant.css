@@ -123,3 +123,34 @@
 .z-assistant-overlay[data-assistant-theme=dark] .z-assistant-composer-shell{border-color:#344b3b;background:#1a2a20}
 .z-assistant-overlay[data-assistant-theme=dark] .z-assistant-composer-shell textarea{color:#edf7ef}
 @media(prefers-color-scheme:dark){.z-assistant-overlay[data-assistant-theme=adaptive] .z-assistant-composer-shell{border-color:#344b3b;background:#1a2a20}.z-assistant-overlay[data-assistant-theme=adaptive] .z-assistant-composer-shell textarea{color:#edf7ef}}
+
+/* Mobile layout corrections identified from the real-device screenshot */
+.z-assistant-head{width:100%;min-width:0;box-sizing:border-box;gap:8px}
+.z-assistant-head>strong{min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.z-assistant-head-actions{flex:0 0 auto;min-width:0;gap:6px}
+.z-assistant-head-actions>button{flex:0 0 auto}
+.z-assistant-memory-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.z-assistant-memory-actions button{min-height:34px;padding:7px 12px;border:1px solid #cfe2d5;border-radius:10px;background:#fff;color:#15583b;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.z-assistant-memory-actions button:active{transform:scale(.98)}
+.z-assistant-chips{max-height:116px;overflow-y:auto;overscroll-behavior:contain;gap:7px;padding:0 14px 9px}
+.z-assistant-chip{min-height:34px;padding:8px 12px;font-size:12px;white-space:nowrap}
+.z-assistant-composer-shell{min-width:0}
+.z-assistant-composer-shell .z-premium-tools{flex:0 0 38px;width:38px;height:38px;order:0}
+.z-assistant-composer-shell textarea{min-width:0}
+@media(max-width:640px){
+ .z-assistant-head{padding:9px 10px;gap:6px}
+ .z-assistant-head>strong{font-size:13px;letter-spacing:-.35px}
+ .z-premium-brand-mark{width:29px;height:29px;flex:0 0 29px;font-size:17px}
+ .z-assistant-head-actions{gap:5px}
+ .z-premium-menu-trigger,.z-premium-new-trigger,.z-premium-voice-trigger,.z-assistant-close{width:34px;height:34px;flex:0 0 34px;border-radius:10px;font-size:17px}
+ .z-assistant-close{font-size:23px}
+ .z-assistant-speech-toggle{height:34px;min-width:0;width:42px;flex:0 0 42px;overflow:hidden;padding:0;font-size:0}
+ .z-assistant-speech-toggle::first-letter{font-size:17px}
+ .z-assistant-memory{margin:9px 12px 0;padding:10px 11px;font-size:12px}
+ .z-assistant-memory-actions button{min-height:36px;padding:7px 10px;font-size:12px}
+ .z-assistant-chips{max-height:104px;gap:6px;padding:0 11px 8px}
+ .z-assistant-chip{padding:7px 10px;font-size:11px}
+ .z-assistant-form{padding:9px 11px max(12px,env(safe-area-inset-bottom))}
+ .z-assistant-composer-shell{gap:5px;padding:6px 7px;border-radius:28px}
+ .z-assistant-composer-shell>button{flex-basis:38px;width:38px;height:38px}
+}
