@@ -4,7 +4,7 @@ export function resolveRecommendationQuery(currentMessage, previousQuery, market
     : value => String(value || "").toLowerCase();
 
   const explicit = normalize(currentMessage)
-    .replace(/\b(?:please|can you|could you|show me|give me|recommendations?|recommend|mapendekezo|nipendekee|pendekeza|nipe|nionyeshe|bidhaa|products?)\b/g, " ")
+    .replace(/\b(?:please|can you|could you|show me|give me|recommendations?|recommend|mapendekezo|nipendekee|nipendekezee|pendekeza|nipe|nionyeshe|bidhaa|products?)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
