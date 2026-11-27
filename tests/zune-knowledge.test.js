@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { answerZuneKnowledge, getZuneKnowledgeTopics } from "../zune-knowledge.js";
 import { expandSwahiliTokens, getSwahiliSearchTokens, normalizeSwahiliQuery } from "../swahili-language.js";
-import { countLoadedBrands, getRecommendationTokens, rankRecommendationProducts, resolveRecommendationQuery } from "../assistant-recommendations.js";
+import { countLoadedBrands, getLoadedBrandNames, getRecommendationTokens, rankRecommendationProducts, resolveRecommendationQuery } from "../assistant-recommendations.js";
 
 test("the knowledge catalogue includes the core Marketplace workflows", () => {
   const topics = new Set(getZuneKnowledgeTopics("sw").map(item => item.topic));
@@ -77,11 +77,13 @@ test("recommendations do not show unrelated stock-only products or default to an
   ], [], normalizeSwahiliQuery), []);
 });
 
-test("loaded brand count is distinct and supports both product field names", () => {
-  assert.equal(countLoadedBrands([
+test("loaded brand names and counts are distinct and support both product field names", () => {
+  const products = [
     { brand: "Apple" },
     { brand_name: "apple" },
     { brand_name: "Nike" },
     { title: "Unbranded item" }
-  ]), 2);
+  ];
+  assert.equal(countLoadedBrands(products), 2);
+  assert.deepEqual(getLoadedBrandNames(products), ["Apple", "Nike"]);
 });
