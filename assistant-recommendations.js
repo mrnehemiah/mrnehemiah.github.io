@@ -48,12 +48,17 @@ export function rankRecommendationProducts(products, tokens, normalizeQuery) {
     .map(row => row.product);
 }
 
-export function countLoadedBrands(products) {
-  if (!Array.isArray(products)) return 0;
-  const brands = new Set();
+export function getLoadedBrandNames(products) {
+  if (!Array.isArray(products)) return [];
+  const brands = new Map();
   for (const product of products) {
-    const name = String(product?.brand || product?.brand_name || "").trim().toLowerCase();
-    if (name) brands.add(name);
+    const name = String(product?.brand || product?.brand_name || "").trim();
+    const key = name.toLowerCase();
+    if (key && !brands.has(key)) brands.set(key, name);
   }
-  return brands.size;
+  return [...brands.values()];
+}
+
+export function countLoadedBrands(products) {
+  return getLoadedBrandNames(products).length;
 }
