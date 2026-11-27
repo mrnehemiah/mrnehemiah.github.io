@@ -47,6 +47,7 @@ test("recommendation requests prefer an explicit product subject and otherwise u
   assert.equal(resolveRecommendationQuery("Nipe mapendekezo ya simu", "viatu", "", normalizeSwahiliQuery), "ya simu");
   assert.equal(resolveRecommendationQuery("Nipe mapendekezo", "simu", "", normalizeSwahiliQuery), "simu");
   assert.equal(resolveRecommendationQuery("Nipe mapendekezo", "", "", normalizeSwahiliQuery), "");
+  assert.equal(resolveRecommendationQuery("Nipendekezee", "", "", normalizeSwahiliQuery), "");
 });
 
 test("recommendations expand Kiswahili synonyms and include brand fields", () => {
