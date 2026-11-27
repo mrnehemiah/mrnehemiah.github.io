@@ -395,7 +395,7 @@ export async function openZuneAssistant({
   if(/(?:support ticket|ticket ya msaada|fungua tiketi|fungua ticket|create ticket)/i.test(n)){showSupportTicketForm();return;}
   if(/(?:ripoti ya assistant|assistant report|usage report|ripoti ya matumizi)/i.test(n)){showAssistantReport();return;}
   if(/(?:search by image|visual search|tafuta kwa picha|kutafuta kwa picha|picha ya bidhaa)/i.test(n)){openImageSearch();return;}
-  if(/(?:recommend|mapendekezo|nipendekee|nipendekee|pendekeza bidhaa)/i.test(n)){const recommendationQuery=resolveRecommendationQuery(q,lastContextQuery,homeState.search||"",normalizeSwahiliQuery);showRecommendations(recommendationQuery);return;}
+  if(/(?:recommend|mapendekezo|nipendekee|nipendekezee|pendekeza bidhaa)/i.test(n)){const recommendationQuery=resolveRecommendationQuery(q,lastContextQuery,homeState.search||"",normalizeSwahiliQuery);showRecommendations(recommendationQuery);return;}
   if(/(?:marketplace overview|marketplace intelligence|muhtasari wa marketplace|takwimu za marketplace|hali ya marketplace)/i.test(n)){showMarketplaceIntelligence();return;}
   if(/(?:show actions|action cards|quick actions|vitendo vya haraka|menu ya assistant)/i.test(n)){showActionCards();return;}
   if(/(?:^reels?$|open reels|zune reels|angalia reels|video fupi)/i.test(n)){openAssistantPage("reels");return;}
