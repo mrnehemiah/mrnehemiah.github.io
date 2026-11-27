@@ -1,5 +1,6 @@
 import { answerZuneKnowledge } from "./zune-knowledge.js?v=20261125-knowledge-7";
-import { normalizeSwahiliQuery, getSwahiliSearchTokens } from "./swahili-language.js?v=20261125-sw2";
+import { normalizeSwahiliQuery, getSwahiliSearchTokens, expandSwahiliTokens } from "./swahili-language.js?v=20261125-sw2";
+import { countLoadedBrands, getRecommendationTokens, rankRecommendationProducts, resolveRecommendationQuery } from "./assistant-recommendations.js?v=20261127-recommendations-1";
 import { initializePremiumAssistant } from "./smart-assistant-premium.js?v=20261126-chatgpt-composer-1";
 
 /**
@@ -252,17 +253,18 @@ export async function openZuneAssistant({
    supabase.from("zune_reels").select("id",{count:"exact",head:true}).eq("status","published")
   ]);
   const fmt=x=>x.error?"—":String(x.count??0);
-  say((sw?"Muhtasari wa Marketplace:":"Marketplace overview:")+'<div class="z-assistant-report-grid"><div><b>'+fmt(p)+'</b><small>Products</small></div><div><b>'+fmt(s)+'</b><small>Stores</small></div><div><b>'+fmt(c)+'</b><small>Categories</small></div><div><b>'+fmt(r)+'</b><small>Published Reels</small></div></div><small>'+(sw?"— inaonyesha sehemu ambayo data haikupatikana. Brand haihesabiwi kwa sababu products haina safu ya brand.":"— means data was unavailable. Brand is not counted because products has no brand column.")+'</small>');
+  const brandCount=countLoadedBrands(homeState.products||[]);
+  say((sw?"Muhtasari wa Marketplace:":"Marketplace overview:")+'<div class="z-assistant-report-grid"><div><b>'+fmt(p)+'</b><small>Products</small></div><div><b>'+fmt(s)+'</b><small>Stores</small></div><div><b>'+fmt(c)+'</b><small>Categories</small></div><div><b>'+fmt(r)+'</b><small>Published Reels</small></div><div><b>'+brandCount+'</b><small>'+(sw?"Chapa (zilizopakiwa)":"Brands (loaded)")+'</small></div></div><small>'+(sw?"— inaonyesha sehemu ambayo data haikupatikana. Hesabu ya chapa inatumia bidhaa zilizopakiwa kwenye ukurasa huu tu, si jumla ya Marketplace.":"— means data was unavailable. Brand count uses only products currently loaded on this page, not the full Marketplace catalog.")+'</small>');
  };
- const showRecommendations=async()=>{
-  const tokens=getSwahiliSearchTokens(lastContextQuery||homeState.search||"").filter(x=>x.length>2);
+ const showRecommendations=async query=>{
+  const tokens=getRecommendationTokens(query,expandSwahiliTokens);
+  if(!tokens.length){say(sw?"Niambie unapenda bidhaa za aina gani, kwa mfano simu, viatu au nguo, ili nikupatie mapendekezo yanayolingana.":"Tell me what kind of products you like, such as phones, shoes or clothing, so I can make relevant recommendations.");return;}
   const result=await supabase.from("products").select("*").is("removed_at",null).is("seller_archived_at",null).order("created_at",{ascending:false}).limit(40);
   if(result.error){say(sw?"Mapendekezo hayapatikani kwa sasa.":"Recommendations are unavailable right now.");return;}
-  const rows=(result.data||[]).map(p=>{const text=normalizeSwahiliQuery([p.title,p.description,p.category].filter(Boolean).join(" "));const score=tokens.reduce((sum,t)=>sum+(text.includes(t)?1:0),0)+(Number(p.stock_quantity)>0?.25:0);return{p,score};}).sort((a,b)=>b.score-a.score);
-  const selected=rows.slice(0,6).map(x=>x.p);
-  if(!selected.length){say(sw?"Hakuna bidhaa za kupendekeza kwa sasa.":"No products are currently available to recommend.");return;}
+  const selected=rankRecommendationProducts(result.data||[],tokens,normalizeSwahiliQuery);
+  if(!selected.length){say(sw?"Sijaona bidhaa zilizoorodheshwa zinazolingana na mada hiyo kwa sasa. Jaribu maneno mengine.":"I couldn't find listed products matching that topic. Try different search words.");return;}
   assistantStats.productsShown+=selected.length;
-  const node=say((sw?"Mapendekezo kutoka bidhaa zilizopo":"Recommendations from listed Marketplace products")+'<div class="z-assistant-recommendations">'+selected.map(p=>'<div><b>'+safe(p.title||"Product")+'</b><small>'+safe(money(Number(p.price||0)))+' · '+(Number(p.stock_quantity)>0?(sw?"Inapatikana":"In stock"):(sw?"Stock haijathibitishwa":"Stock not confirmed"))+'</small><button type="button" data-assistant-product="'+safe(p.id)+'">'+(sw?"Angalia bidhaa":"View product")+'</button></div>').join("")+'</div><small>'+(sw?"Yamepangwa kwa ulinganifu wa mada na stock inayoonekana.":"Ranked by topic overlap and visible stock.")+'</small>');
+  const node=say((sw?"Mapendekezo kutoka bidhaa zilizopo":"Recommendations from listed Marketplace products")+'<div class="z-assistant-recommendations">'+selected.map(p=>'<div><b>'+safe(p.title||"Product")+'</b><small>'+safe(money(Number(p.price||0)))+' · '+(Number(p.stock_quantity)>0?(sw?"Inapatikana":"In stock"):(sw?"Stock haijathibitishwa":"Stock not confirmed"))+'</small><button type="button" data-assistant-product="'+safe(p.id)+'">'+(sw?"Angalia bidhaa":"View product")+'</button></div>').join("")+'</div><small>'+(sw?"Yamepangwa kwa ulinganifu wa maneno ya utafutaji, ikijumuisha chapa inapopatikana, na stock inayoonekana.":"Ranked by search-term overlap, including brand when available, and visible stock.")+'</small>');
   Promise.resolve(node).then(root=>root.querySelectorAll("[data-assistant-product]").forEach(button=>button.addEventListener("click",()=>{const p=selected.find(x=>String(x.id)===button.dataset.assistantProduct);if(p){close();openProductDetails(p);}})));
  };
 
@@ -393,7 +395,7 @@ export async function openZuneAssistant({
   if(/(?:support ticket|ticket ya msaada|fungua tiketi|fungua ticket|create ticket)/i.test(n)){showSupportTicketForm();return;}
   if(/(?:ripoti ya assistant|assistant report|usage report|ripoti ya matumizi)/i.test(n)){showAssistantReport();return;}
   if(/(?:search by image|visual search|tafuta kwa picha|kutafuta kwa picha|picha ya bidhaa)/i.test(n)){openImageSearch();return;}
-  if(/(?:recommend|mapendekezo|nipendekezee|pendekeza bidhaa)/i.test(n)){showRecommendations();return;}
+  if(/(?:recommend|mapendekezo|nipendekee|nipendekee|pendekeza bidhaa)/i.test(n)){const recommendationQuery=resolveRecommendationQuery(q,lastContextQuery,homeState.search||"",normalizeSwahiliQuery);showRecommendations(recommendationQuery);return;}
   if(/(?:marketplace overview|marketplace intelligence|muhtasari wa marketplace|takwimu za marketplace|hali ya marketplace)/i.test(n)){showMarketplaceIntelligence();return;}
   if(/(?:show actions|action cards|quick actions|vitendo vya haraka|menu ya assistant)/i.test(n)){showActionCards();return;}
   if(/(?:^reels?$|open reels|zune reels|angalia reels|video fupi)/i.test(n)){openAssistantPage("reels");return;}
