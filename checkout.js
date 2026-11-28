@@ -8,7 +8,7 @@ const en={loading:"Loading checkout...",title:"Review your order",subtitle:"Ente
 const t=k=>(lang==="en"?en:sw)[k]||k;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>new Intl.NumberFormat(lang==="en"?"en-TZ":"sw-TZ",{maximumFractionDigits:0}).format(Number(v)||0)+" TSh";
-let user=null,cart=[],products=[],addresses=[],quote=null,busy=false,buyNowMode=false;
+let user=null,cart=[],fullCart=[],products=[],addresses=[],quote=null,busy=false,buyNowMode=false;
 let key="",signature="";
 const fields=["recipient_name","phone","country","region","district","ward","street","landmark","delivery_notes","latitude","longitude"];
 function addressValues(a={}){return {recipient_name:a.recipient_name||"",phone:a.phone||"",country:a.country||"Tanzania",region:a.region||"",district:a.district||"",ward:a.ward||"",street:a.street||a.delivery_address||"",landmark:a.landmark||"",delivery_notes:a.delivery_notes||"",latitude:a.latitude??"",longitude:a.longitude??""};}
@@ -54,7 +54,7 @@ async function placeOrder(){
   const {data,error}=await supabase.rpc("zune_create_checkout",{p_items:cart.map(x=>({product_id:x.productId,variant_id:x.variantId||null,quantity:x.quantity})),p_address:address,p_idempotency_key:key,p_coupon_code:couponCode});
   if(error)throw error;
   if(address.save_address){const {error:saveError}=await supabase.from("delivery_addresses").insert({user_id:user.id,recipient_name:address.recipient_name,phone:address.phone,country:address.country,region:address.region,district:address.district,ward:address.ward||'',street:address.street,landmark:address.landmark||null,delivery_notes:address.delivery_notes||null,latitude:address.latitude?Number(address.latitude):null,longitude:address.longitude?Number(address.longitude):null,is_default:addresses.length===0});if(saveError)console.warn("Address was not saved:",saveError.message);}
-  if(buyNowMode){sessionStorage.removeItem("zune_buy_now:"+user.id);}else{writeCart([],user.id);syncCartCountBadges([]);}
+  if(buyNowMode){sessionStorage.removeItem("zune_buy_now:"+user.id);}else{const done=new Set(cart.map(x=>String(x.productId)+"::"+String(x.variantId||"")));const remaining=fullCart.filter(x=>!done.has(String(x.productId)+"::"+String(x.variantId||"")));writeCart(remaining,user.id);syncCartCountBadges(remaining);sessionStorage.removeItem("zune_checkout_selected_items:"+user.id);}
   sessionStorage.removeItem(checkoutKeyStorageKey());
   const {data:createdOrderRefs}=await supabase.from("orders").select("public_order_id,order_number").eq("checkout_id",data.checkout_id);
   const visibleOrderRefs=[...new Set((createdOrderRefs||[]).map(x=>x.public_order_id||x.order_number).filter(Boolean))];
@@ -69,7 +69,7 @@ async function start(){
   let intent=null;try{intent=JSON.parse(sessionStorage.getItem("zune_buy_now:"+user.id)||"null");}catch{}
   if(!intent||!intent.productId||!Number.isFinite(Number(intent.quantity))||Number(intent.quantity)<1||Number(intent.quantity)>99||!intent.createdAt||Date.now()-Number(intent.createdAt)>30*60*1000){sessionStorage.removeItem("zune_buy_now:"+user.id);throw new Error("Ombi la Nunua Sasa limeisha muda. Rudi kwenye bidhaa na ujaribu tena.");}
   cart=[{productId:String(intent.productId),variantId:intent.variantId||null,quantity:Math.floor(Number(intent.quantity))}];
- }else{cart=readCart(user.id);}
+ }else{fullCart=readCart(user.id);let selected=[];try{selected=JSON.parse(sessionStorage.getItem("zune_checkout_selected_items:"+user.id)||"[]");}catch{}const selectedSet=new Set(Array.isArray(selected)?selected:[]);cart=selectedSet.size?fullCart.filter(x=>selectedSet.has(String(x.productId)+"::"+String(x.variantId||""))):fullCart.slice();}
  if(!cart.length){render();return;}
  const [p,a]=await Promise.all([loadCartProducts(cart),supabase.from("delivery_addresses").select("*").eq("user_id",user.id).order("is_default",{ascending:false}).order("created_at",{ascending:false})]);
  products=p.filter(x=>x.moderation_status==="approved"&&!x.removed_at);addresses=a.data||[];
