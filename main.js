@@ -6,7 +6,7 @@
    SUPABASE + VANILLA JAVASCRIPT
 ========================================= */
 
-import { supabase } from "./supabase.js";
+import { supabase, unregisterZunePushToken } from "./supabase.js";
 
 import {
   registerCustomer,
@@ -826,7 +826,7 @@ async function handleLogin(event) {
 async function renderMfaLoginChallenge(errorText = "") {
  const sw=state.language==="sw";
  app.innerHTML='<section class="page"><div class="panel"><div class="brand-area">'+logo()+'<h1 class="page-title">'+(sw?"Thibitisha kuingia":"Verify your sign-in")+'</h1><p class="page-description">'+(sw?"Ingiza msimbo wa tarakimu 6 kutoka kwenye Authenticator.":"Enter the 6-digit code from your authenticator app.")+'</p></div><form id="mfa-login"><div class="form-group"><label>'+(sw?"Msimbo wa uthibitisho":"Authentication code")+'</label><input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required></div><p class="form-error" role="alert">'+escapeHTML(errorText)+'</p><button class="btn btn-primary full-button" id="mfa-submit" type="submit">'+(sw?"Thibitisha":"Verify")+'</button></form><p class="form-footer"><button id="mfa-exit" type="button">'+(sw?"Toka na urudi kuingia":"Sign out and return to login")+'</button></p></div></section>';
- document.getElementById("mfa-exit").onclick=async()=>{const {error}=await supabase.auth.signOut({scope:"local"});if(error){renderMfaLoginChallenge(error.message);return;}state.loginPassword="";renderLogin();};
+ document.getElementById("mfa-exit").onclick=async()=>{try{await unregisterZunePushToken();}catch(error){console.warn("ZUNE push token cleanup:",error);}const {error}=await supabase.auth.signOut({scope:"local"});if(error){renderMfaLoginChallenge(error.message);return;}state.loginPassword="";renderLogin();};
  document.getElementById("mfa-login").onsubmit=async e=>{e.preventDefault();const code=String(new FormData(e.currentTarget).get("code")||"").trim();if(!/^\d{6}$/.test(code)){renderMfaLoginChallenge(sw?"Weka msimbo sahihi wa tarakimu 6.":"Enter a valid 6-digit code.");return;}const submit=document.getElementById("mfa-submit");if(submit){submit.disabled=true;submit.textContent=sw?"Inathibitisha...":"Verifying...";}try{const {data,error}=await supabase.auth.mfa.listFactors();if(error)throw error;const fs=(data?.totp||[]).filter(f=>f.status==="verified");if(!fs.length)throw new Error(sw?"Hakuna Authenticator iliyosajiliwa.":"No verified authenticator found.");let ok=false,last=null;for(const f of fs){const challenge=await supabase.auth.mfa.challenge({factorId:f.id});if(challenge.error){last=challenge.error;continue;}const verified=await supabase.auth.mfa.verify({factorId:f.id,challengeId:challenge.data.id,code});if(!verified.error){ok=true;break;}last=verified.error;}if(!ok)throw last||new Error(sw?"Msimbo si sahihi.":"Incorrect code.");await renderAccount();}catch(err){renderMfaLoginChallenge(err.message||"Verification failed.");}};
 }
 
@@ -856,6 +856,7 @@ async function renderPasswordReset(errorText = "") {
    alert(sw
     ?"Nenosiri limebadilishwa. Ingia tena kwa nenosiri jipya."
     :"Password updated. Please sign in again with your new password.");
+   try{await unregisterZunePushToken();}catch(cleanupError){console.warn("ZUNE push token cleanup:",cleanupError);}
    await supabase.auth.signOut();
    renderLogin();
   }catch(err){
