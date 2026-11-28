@@ -8,7 +8,7 @@ const en={loading:"Loading checkout...",title:"Review your order",subtitle:"Ente
 const t=k=>(lang==="en"?en:sw)[k]||k;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=v=>new Intl.NumberFormat(lang==="en"?"en-TZ":"sw-TZ",{maximumFractionDigits:0}).format(Number(v)||0)+" TSh";
-let user=null,cart=[],products=[],addresses=[],quote=null,busy=false;
+let user=null,cart=[],products=[],addresses=[],quote=null,busy=false,buyNowMode=false;
 let key="",signature="";
 const fields=["recipient_name","phone","country","region","district","ward","street","landmark","delivery_notes","latitude","longitude"];
 function addressValues(a={}){return {recipient_name:a.recipient_name||"",phone:a.phone||"",country:a.country||"Tanzania",region:a.region||"",district:a.district||"",ward:a.ward||"",street:a.street||a.delivery_address||"",landmark:a.landmark||"",delivery_notes:a.delivery_notes||"",latitude:a.latitude??"",longitude:a.longitude??""};}
@@ -85,7 +85,8 @@ async function placeOrder(){
   const {data,error}=await supabase.rpc("zune_create_checkout",{p_items:cart.map(x=>({product_id:x.productId,variant_id:x.variantId||null,quantity:x.quantity})),p_address:address,p_idempotency_key:key,p_coupon_code:couponCode});
   if(error)throw error;
   if(address.save_address){const {error:saveError}=await supabase.from("delivery_addresses").insert({user_id:user.id,recipient_name:address.recipient_name,phone:address.phone,country:address.country,region:address.region,district:address.district,ward:address.ward||'',street:address.street,landmark:address.landmark||null,delivery_notes:address.delivery_notes||null,latitude:address.latitude?Number(address.latitude):null,longitude:address.longitude?Number(address.longitude):null,is_default:addresses.length===0});if(saveError)console.warn("Address was not saved:",saveError.message);}
-  writeCart([],user.id);syncCartCountBadges([]);sessionStorage.removeItem("zune_checkout_key:"+user.id);
+  if(buyNowMode){sessionStorage.removeItem("zune_buy_now:"+user.id);}else{writeCart([],user.id);syncCartCountBadges([]);}
+  sessionStorage.removeItem("zune_checkout_key:"+user.id);
   const {data:createdOrderRefs}=await supabase.from("orders").select("public_order_id,order_number").eq("checkout_id",data.checkout_id);
   const visibleOrderRefs=[...new Set((createdOrderRefs||[]).map(x=>x.public_order_id||x.order_number).filter(Boolean))];
   const orderReferenceText=visibleOrderRefs.length?visibleOrderRefs.join(" · "):data.checkout_id;
