@@ -79,12 +79,16 @@ function styles(){
  document.head.appendChild(s);
 }
 
+function discountedProductPrice(p){
+ const raw=Number(p?.price||0),discount=Math.min(100,Math.max(0,Number(p?.discount_percent||0)));
+ return Math.round(raw*(1-discount/100)*100)/100;
+}
 function productCard(p,actions=""){
  const image=p.image_url || (Array.isArray(p.image_urls)?p.image_urls[0]:"") || "";
- return `<article class="z-feature-product" data-tilt-card><img loading="lazy" src="${esc(image)}" alt="${esc(p.title)}" onerror="this.style.display='none'"><strong>${esc(p.title)}</strong><small>${money(p.price)}</small><div class="z-feature-row"><button class="z-feature-secondary" data-feature-open-product="${esc(p.id)}">${tr("Angalia","View",ctx.language)}</button>${actions}</div></article>`;
+ return `<article class="z-feature-product" data-tilt-card><img loading="lazy" src="${esc(image)}" alt="${esc(p.title)}" onerror="this.style.display='none'"><strong>${esc(p.title)}</strong><small>${money(discountedProductPrice(p))}</small><div class="z-feature-row"><button class="z-feature-secondary" data-feature-open-product="${esc(p.id)}">${tr("Angalia","View",ctx.language)}</button>${actions}</div></article>`;
 }
 function productOptions(){
- return '<option value="">'+tr("Chagua bidhaa","Choose a product",ctx.language)+'</option>'+catalog.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title)+' — '+money(p.price)+'</option>').join("");
+ return '<option value="">'+tr("Chagua bidhaa","Choose a product",ctx.language)+'</option>'+catalog.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.title)+' — '+money(discountedProductPrice(p))+'</option>').join("");
 }
 function section(id,title,desc,body){
  return '<section class="z-feature-section" id="z-feature-'+id+'"><h2>'+title+'</h2><p class="z-feature-muted">'+desc+'</p>'+body+'</section>';
@@ -106,7 +110,7 @@ function render(){
  const cards=tiles.map(t=>'<button type="button" class="z-feature-tile" data-jump="'+t[2]+'" data-tilt-card><span class="z-feature-icon">'+t[0]+'</span><strong>'+t[1]+'</strong><small>'+t[3]+'</small></button>').join("");
  const wishlist=ctx.wishlist.length?'<div class="z-feature-product-grid">'+ctx.wishlist.map(p=>productCard(p,'<button class="z-feature-secondary" data-compare="'+esc(p.id)+'">'+tr("Linganisha","Compare",lang)+'</button>')).join("")+'</div>':empty(tr("Hujahifadhi bidhaa bado. Bonyeza alama ya moyo kwenye bidhaa.","No saved products yet. Tap the heart on a product to save it.",lang));
  const compare=compareRows.length?'<div class="z-feature-table-wrap"><table class="z-feature-compare"><thead><tr><th>'+tr("Kipengele","Feature",lang)+'</th>'+compareRows.map(p=>'<th>'+esc(p.title)+'<button class="z-feature-secondary" data-remove-compare="'+esc(p.id)+'">×</button></th>').join("")+'</tr></thead><tbody>'+[
-  [tr("Bei","Price",lang),p=>money(p.price)],
+  [tr("Bei","Price",lang),p=>money(discountedProductPrice(p))],
   [tr("Aina","Category",lang),p=>p.category||"—"],
   [tr("Stock","Stock",lang),p=>Number(p.stock_quantity||0)],
   [tr("Muuzaji","Seller",lang),p=>p.vendor_id||"—"]
