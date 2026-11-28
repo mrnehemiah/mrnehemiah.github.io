@@ -81,6 +81,14 @@
         node.remove();
       }, { once: true });
     })();
+    // Notifications are an enhancement, not part of the critical startup path.
+    // Load their module only after the first screen is ready.
+    window.addEventListener("zune:app-ready", function () {
+      import("./notification-bell.js?v=20261128-splash-startup-fix-2")
+        .catch(function (error) {
+          console.warn("ZUNE notification module could not be loaded:", error);
+        });
+    }, { once: true });
   </script>
 
   <script>
@@ -130,7 +138,7 @@
     })();
   </script>
   <script type="module" src="./main.js?v=20261128-splash-startup-fix-2"></script>
-  <script type="module" src="./notification-bell.js"></script>
+
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
 </html>
