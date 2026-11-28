@@ -367,3 +367,25 @@
  #app .z-home .z-product-card:hover{transform:translateY(-4px);box-shadow:0 16px 30px rgba(20,65,43,.14),0 4px 9px rgba(20,65,43,.06)}
  #app .z-home .z-product-card:hover .z-product-card-footer{background:linear-gradient(145deg,#eaf7ef,#dff1e6)}
 }
+
+
+/* Phase 2: product Q&A and recently viewed */
+.z-detail-questions { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border, #e5ece8); }
+.z-detail-questions .z-detail-reviews-heading { margin-bottom: 10px; }
+.z-product-question { padding: 12px 0; border-bottom: 1px solid var(--border, #e5ece8); }
+.z-product-question > p { margin: 0 0 7px; color: var(--text, #1d2b25); font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
+.z-question-pending { display: inline-block; margin: 0 0 7px; color: #946200; font-size: 11px; font-weight: 750; }
+.z-question-answer { margin: 8px 0 0 10px; padding: 10px 12px; border-left: 3px solid var(--primary, #087a55); border-radius: 0 10px 10px 0; background: color-mix(in srgb, var(--primary, #087a55) 6%, var(--surface, #fff)); }
+.z-question-answer strong { font-size: 11px; color: var(--primary, #087a55); }
+.z-question-answer p { margin: 5px 0 0; font-size: 12px; line-height: 1.5; white-space: pre-wrap; }
+.z-product-question-form, .z-question-answer-form { display: grid; gap: 8px; margin-top: 12px; }
+.z-product-question-form label { font-size: 12px; font-weight: 800; }
+.z-product-question-form textarea, .z-question-answer-form textarea { width: 100%; min-height: 76px; padding: 11px 12px; resize: vertical; border: 1px solid var(--border, #dfe8e2); border-radius: 12px; background: var(--surface, #fff); color: var(--text, #1d2b25); font: inherit; font-size: 13px; }
+.z-product-question-form small { color: var(--text-muted, #718078); font-size: 11px; }
+.z-question-answer-form { margin: 10px 0 2px; }
+.z-question-answer-form .z-primary-button, .z-product-question-form .z-primary-button { min-height: 40px; width: fit-content; padding: 9px 14px; }
+.z-category-group { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.z-category-subcategory-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 2px 4px; }
+.z-category-subcategory { border: 1px solid var(--border, #e2eae5); border-radius: 999px; background: var(--surface, #fff); color: var(--text, #25342c); padding: 7px 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.z-category-subcategory:active { border-color: var(--primary, #087a55); background: color-mix(in srgb, var(--primary, #087a55) 8%, var(--surface, #fff)); }
+#z-recently-viewed-section[hidden] { display: none !important; }
