@@ -79,13 +79,13 @@
       }
       window.addEventListener("zune:app-ready", function () { ready = true; hideWhenReady(); }, { once: true });
       // Splash is a timed intro, never a permanent page-covering layer.
-      // Hide it after the selected 6 seconds even if app-ready is delayed;
+      // Hide it after the selected 4 seconds even if app-ready is delayed;
       // the separate startup watchdog will show an error if the app truly failed.
       window.setTimeout(function () {
         minimumTimePassed = true;
         ready = true;
         hideWhenReady();
-      }, 6000);
+      }, 4000);
     })();
   </script>
 
@@ -139,7 +139,7 @@
       }, 15000);
     })();
   </script>
-  <script type="module" src="./main.js?v=20261128-splash-fallback-3"></script>
+  <script type="module" src="./main.js?v=20261128-splash-4sec"></script>
   <script type="module" src="./notification-bell.js"></script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
