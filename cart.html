@@ -15,7 +15,7 @@
     <div class="z3-login"><div class="z3-empty-orb">Ⓩ</div><p>Inafungua kikapu...</p></div>
   </main>
   <script type="module">
-    import { mountStandaloneCart } from "./cart.js?v=20261128-smart-3d";
+    import { mountStandaloneCart } from "./cart.js?v=20261128-smart-3d-fix1";
     const app=document.getElementById("cart-app");
     try { await mountStandaloneCart(app); }
     catch(error) { console.error("ZUNE Cart:",error); app.innerHTML='<div class="z3-login"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><a class="z3-primary" href="./index.html">Rudi sokoni</a></div>'; }
