@@ -88,6 +88,15 @@
         minimumTimePassed = true;
         ready = true;
         hideWhenReady();
+        // Hard stop: remove the splash node itself; do not rely on CSS classes,
+        // app-ready events, transitions, or the startup module.
+        if (splash) {
+          splash.style.setProperty("display", "none", "important");
+          splash.style.setProperty("visibility", "hidden", "important");
+          splash.style.setProperty("pointer-events", "none", "important");
+          if (splash.parentNode) splash.parentNode.removeChild(splash);
+          splash = null;
+        }
       }, 4000);
     })();
   </script>
@@ -142,7 +151,7 @@
       }, 15000);
     })();
   </script>
-  <script type="module" src="./main.js?v=20261128-splash-hard-stop-1"></script>
+  <script type="module" src="./main.js?v=20261128-splash-node-remove-2"></script>
   <script type="module" src="./notification-bell.js"></script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
