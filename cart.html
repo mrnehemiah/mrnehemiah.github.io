@@ -4,28 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#087A55">
-  <meta name="description" content="ZUNE Marketplace Cart">
-  <title>Cart | ZUNE</title>
+  <meta name="description" content="Kikapu cha ununuzi cha ZUNE Marketplace">
+  <title>Kikapu Changu | ZUNE</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./cart.css?v=20261128-cart-reset">
+  <link rel="stylesheet" href="./cart.css?v=20261128-premium-3d">
 </head>
 <body>
   <main id="cart-app" aria-busy="true">
-    <section class="z-cart-reset">
-      <div class="z-cart-reset-mark" aria-hidden="true">Ⓩ</div>
-      <p>Muundo wa zamani wa Cart umeondolewa. Cart mpya kabisa inajengwa.</p>
-      <a href="./index.html">Rudi sokoni</a>
-    </section>
+    <div class="z3-login"><div class="z3-empty-orb">Ⓩ</div><p>Inafungua kikapu...</p></div>
   </main>
   <script type="module">
-    import { mountStandaloneCart } from "./cart.js?v=20261128-cart-reset";
-    const app = document.getElementById("cart-app");
+    import { mountStandaloneCart } from "./cart.js?v=20261128-premium-3d";
+    const app=document.getElementById("cart-app");
     try { await mountStandaloneCart(app); }
-    catch (error) {
-      console.error("Cart reset shell:", error);
-      app.setAttribute("aria-busy", "false");
-    }
+    catch(error) { console.error("ZUNE Cart:",error); app.innerHTML='<div class="z3-login"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><a class="z3-primary" href="./index.html">Rudi sokoni</a></div>'; }
+    finally { app.setAttribute("aria-busy","false"); }
   </script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
