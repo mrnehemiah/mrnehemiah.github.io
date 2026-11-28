@@ -572,3 +572,49 @@
 @media(prefers-reduced-motion:reduce){
  #app .z-nav-icon,#app .z-quick-access-icon,#app .z-icon-button,#app .z-quick-access-item{transition:none}
 }
+
+
+/* 3D category emblems: visual category recognition without changing category photos or links */
+#app .z-home-category-icon,
+#app .z-explore-category-icon,
+#app .z-category-image-icon{
+  position:absolute;
+  z-index:2;
+  top:13px;
+  left:50%;
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:15px;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(229,247,236,.91) 58%,rgba(195,229,207,.94));
+  box-shadow:0 5px 0 rgba(4,68,42,.18),0 9px 17px rgba(0,0,0,.22),inset 0 1px 0 #fff,inset 0 -2px 4px rgba(9,100,58,.10);
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  font-size:26px;
+  line-height:1;
+  transform:translateX(-50%) translateZ(18px);
+  filter:saturate(1.08);
+  transition:transform .22s ease,box-shadow .22s ease;
+}
+#app .z-home-category-icon{top:10px;width:37px;height:37px;border-radius:13px;font-size:22px}
+#app .z-explore-category-icon{top:12px;width:40px;height:40px;border-radius:14px;font-size:24px}
+#app .z-category-image-icon{top:16px;width:54px;height:54px;border-radius:18px;font-size:31px}
+#app .z-home-category-card:active .z-home-category-icon,
+#app .z-explore-category-card:active .z-explore-category-icon,
+#app .z-category-image-card:active .z-category-image-icon{transform:translateX(-50%) translateY(2px) scale(.96)}
+@media(hover:hover) and (pointer:fine){
+ #app .z-home-category-card:hover .z-home-category-icon,
+ #app .z-explore-category-card:hover .z-explore-category-icon,
+ #app .z-category-image-card:hover .z-category-image-icon{
+   transform:translateX(-50%) translateY(-3px) rotate(-4deg);
+   box-shadow:0 7px 0 rgba(4,68,42,.18),0 13px 20px rgba(0,0,0,.24),inset 0 1px 0 #fff;
+ }
+}
+@media(max-width:380px){
+ #app .z-home-category-icon{width:33px;height:33px;font-size:20px;border-radius:11px}
+ #app .z-explore-category-icon{width:36px;height:36px;font-size:22px;border-radius:12px}
+}
+@media(prefers-reduced-motion:reduce){
+ #app .z-home-category-icon,#app .z-explore-category-icon,#app .z-category-image-icon{transition:none}
+}
