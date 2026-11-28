@@ -14,7 +14,7 @@ const fields=["recipient_name","phone","country","region","district","ward","str
 function addressValues(a={}){return {recipient_name:a.recipient_name||"",phone:a.phone||"",country:a.country||"Tanzania",region:a.region||"",district:a.district||"",ward:a.ward||"",street:a.street||a.delivery_address||"",landmark:a.landmark||"",delivery_notes:a.delivery_notes||"",latitude:a.latitude??"",longitude:a.longitude??""};}
 function formData(){const form=root.querySelector("#zc-form");const fd=new FormData(form);return Object.fromEntries(fields.map(k=>[k,String(fd.get(k)||"").trim()]));}
 function validAddress(a){return ["recipient_name","phone","country","region","district","street"].every(k=>a[k]);}
-function unitPrice(item){const p=products.find(x=>String(x.id)===String(item.productId));const v=item.variantId?(p?.__zuneVariants||[]).find(x=>String(x.id)===String(item.variantId)):null;return Number(v?.price??p?.price??0);}
+function unitPrice(item){const p=products.find(x=>String(x.id)===String(item.productId));const v=item.variantId?(p?.__zuneVariants||[]).find(x=>String(x.id)===String(item.variantId)):null;const raw=Number(v?.price??p?.price??0);const discount=Math.min(100,Math.max(0,Number(p?.discount_percent||0)));return Math.round(raw*(1-discount/100)*100)/100;}
 function subtotal(){return cart.reduce((sum,item)=>sum+unitPrice(item)*item.quantity,0);}
 function render(){
  root.setAttribute("aria-busy","false");
