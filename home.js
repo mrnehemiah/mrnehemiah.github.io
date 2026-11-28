@@ -320,7 +320,7 @@ function zIcon(name) {
 
     cart: '<path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>',
 
-    notification: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+    notification: '<path d="M18 8a6 6 0 0 0-12 0c0 4.8-1.6 6.5-2.7 7.8A1 1 0 0 0 4 17.5h16a1 1 0 0 0 .7-1.7C19.6 14.5 18 12.8 18 8Z"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0"/><path d="M19.5 5.5 21 4M4.5 5.5 3 4"/>',
 
     saved: '<path d="M20.8 8.6c0 5.1-8.8 11-8.8 11s-8.8-5.9-8.8-11a4.8 4.8 0 0 1 8.8-2.5 4.8 4.8 0 0 1 8.8 2.5z"/>',
 
@@ -418,8 +418,16 @@ function addHomeStyles() {
       gap: 9px;
     }
 
-    .z-home-notification-link { position: relative; text-decoration: none; }
-    .z-home-notification-link svg { width: 20px; height: 20px; }
+    .z-home-notification-link {
+      position: relative; text-decoration: none;
+      color: #087a55; background: #edf7f1; border-color: #d7ebe0;
+      box-shadow: 0 3px 10px rgba(8,122,85,.07);
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .z-home-notification-link svg { width: 22px; height: 22px; stroke-width: 1.9; }
+    .z-home-notification-link:hover { background: #dff1e7; box-shadow: 0 6px 16px rgba(8,122,85,.14); transform: translateY(-1px); }
+    .z-home-notification-link:active { transform: scale(.94); }
+    .z-home-notification-link:focus-visible { outline: 3px solid rgba(8,122,85,.25); outline-offset: 2px; }
     .z-home-notification-link .zune-bell-count {
       position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px;
       padding: 0 4px; display: flex; align-items: center; justify-content: center;
