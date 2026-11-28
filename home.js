@@ -2645,7 +2645,10 @@ function renderHomePage() {
 
         ${renderHomeCarousel()}
 
-
+        <section id="z-home-categories-section">
+          <div class="z-section-heading"><h2>${language()==="sw"?"Makundi ya Bidhaa":"Shop by Category"}</h2><button type="button" class="z-all-categories" data-open-categories>${language()==="sw"?"Yote":"View All"} →</button></div>
+          <div id="z-category-area">${renderCategories()}</div>
+        </section>
 
         <section id="z-featured-stores-section">
           <div class="z-section-heading"><h2>${language()==="sw"?"Maduka Maarufu":"Featured Stores"}</h2></div>
