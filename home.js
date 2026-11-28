@@ -3630,8 +3630,21 @@ function bindCartEvents() {
       removeCartItem(productId);
       renderMarketplacePage("cart");
     },
+    onRemoveSelected: selectedKeys => {
+      const selected = new Set(selectedKeys || []);
+      homeState.cart = homeState.cart.filter(item => !selected.has(homeCartItemKey(item)));
+      saveCart();
+      homeState.cartProductsKey = "";
+      renderMarketplacePage("cart");
+    },
+    onSelectionChange: () => {},
     onContinueShopping: () => renderMarketplacePage("home"),
-    onCheckout: () => window.location.assign("./checkout.html"),
+    onCheckout: selectedKeys => {
+      const selected = Array.isArray(selectedKeys) ? selectedKeys : [];
+      if (!selected.length) { window.alert(language() === "en" ? "Select at least one item to continue." : "Chagua angalau bidhaa moja kuendelea."); return; }
+      sessionStorage.setItem("zune_checkout_selected_items:" + homeState.user.id, JSON.stringify(selected));
+      window.location.assign("./checkout.html");
+    },
     onRetry: () => {
       homeState.cartProductsKey = "";
       homeState.cartProductsLoading = false;
