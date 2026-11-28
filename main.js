@@ -1469,4 +1469,6 @@ supabase.auth.onAuthStateChange((event) => {
   }
 });
 
-startApp();
+startApp().finally(() => {
+  window.dispatchEvent(new Event("zune:app-ready"));
+});
