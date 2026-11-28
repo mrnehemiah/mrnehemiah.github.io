@@ -2,12 +2,12 @@
 <html lang="sw">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#087A55">
   <meta name="description" content="Simamia akaunti yako ya ZUNE Marketplace.">
   <title>Akaunti yangu · ZUNE</title>
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./account.css?v=hybrid-2">
+  <link rel="stylesheet" href="./account.css?v=premium-hybrid-2">
 </head>
 <body class="z-account-body">
   <main class="account-shell">
@@ -15,7 +15,7 @@
       <a class="account-brand" href="./index.html" aria-label="Rudi sokoni">ⓏⓊⓃⒺ</a>
       <div class="account-top-actions">
         <a class="account-market-link" href="./index.html">Sokoni</a>
-        <button class="account-icon-button" id="account-logout" type="button" aria-label="Toka" title="Toka">↗</button>
+        <a class="account-icon-button" href="./notifications.html" aria-label="Notifications" title="Notifications">♧</a>
       </div>
     </header>
     <section id="account-root" class="account-root" aria-live="polite">
@@ -23,6 +23,13 @@
     </section>
     <footer class="account-footer">ZUNE MARKETPLACE · 2.0</footer>
   </main>
-  <script type="module" src="./account.js?v=hybrid-2"></script>
+  <nav class="account-bottom-nav" aria-label="Marketplace navigation">
+    <a href="./index.html" data-account-tab="home"><span>⌂</span><small data-i18n="home">Home</small></a>
+    <a href="./index.html?tab=explore" data-account-tab="categories"><span>▦</span><small data-i18n="categories">Categories</small></a>
+    <a href="./cart.html" data-account-tab="cart"><span>🛒</span><small data-i18n="cart">Cart</small></a>
+    <a href="./orders.html" data-account-tab="orders"><span>▤</span><small data-i18n="orders">Orders</small></a>
+    <a href="./account.html" class="active" aria-current="page" data-account-tab="account"><span>♙</span><small data-i18n="account">Account</small></a>
+  </nav>
+  <script type="module" src="./account.js?v=premium-hybrid-2"></script>
 </body>
 </html>
