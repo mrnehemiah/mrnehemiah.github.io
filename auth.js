@@ -1,5 +1,5 @@
 
-import { supabase, unregisterZunePushToken } from "./supabase.js?v=phase6-push-token-ownership-20261128";
+import { supabase, unregisterZunePushToken } from "./supabase.js?v=jsdelivr-sdk-20261128";
 
 /* =================================
    ZUNE AUTHENTICATION
