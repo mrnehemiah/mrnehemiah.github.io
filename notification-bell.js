@@ -1,5 +1,5 @@
 
-import { supabase } from "./supabase.js?v=phase6-push-token-ownership-20261128";
+import { supabase } from "./supabase.js?v=jsdelivr-sdk-20261128";
 
 /* =====================================
    ZUNE NOTIFICATION BELL
@@ -266,35 +266,18 @@ function watchHomeHeader() {
    INITIALIZE
 ===================================== */
 
-async function initialize() {
+function initialize() {
+  // Start only after the main application has rendered its first screen.
+  // Supabase emits INITIAL_SESSION with the locally persisted session, so
+  // this module does not need a second getUser() request during startup.
   watchHomeHeader();
 
-  const { data, error } = await supabase.auth.getUser();
-
-  if (error) {
-    console.error("ZUNE authentication:", error);
-    return;
-  }
-
-  await setUser(data.user);
-
   if (!authListener) {
-    authListener = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === "SIGNED_OUT") {
-          setUser(null);
-          return;
-        }
-
-        if (
-          event === "SIGNED_IN" ||
-          event === "TOKEN_REFRESHED" ||
-          event === "USER_UPDATED"
-        ) {
-          setUser(session?.user || null);
-        }
-      }
-    );
+    authListener = supabase.auth.onAuthStateChange((_event, session) => {
+      void setUser(session?.user || null).catch(error => {
+        console.warn("ZUNE notification session update:", error);
+      });
+    });
   }
 }
 
@@ -315,4 +298,4 @@ window.addEventListener("pagehide", () => {
    START
 ===================================== */
 
-initialize();
+window.addEventListener("zune:app-ready", initialize, { once: true });
