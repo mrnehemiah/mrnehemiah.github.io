@@ -1,8 +1,9 @@
-
 import { createClient } from
-  "https://esm.sh/@supabase/supabase-js@2.119.0";
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm";
 
 // ZUNE SUPABASE CONNECTION
+// Use jsDelivr's ESM endpoint (documented by Supabase) instead of esm.sh,
+// which was a single external point of failure during application startup.
 
 const SUPABASE_URL =
   "https://rpkogiieegqgxqbzwxwo.supabase.co";
@@ -11,7 +12,6 @@ const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_2TEqZv-NBM9n5knU46ngqA_wqO3V1uf";
 
 // Create Supabase client
-
 export const supabase = createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY,
