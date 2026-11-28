@@ -25,16 +25,32 @@ export const supabase = createClient(
 );
 
 
-// Native Android FCM bridge: syncs this installation token only for the
-// currently authenticated Supabase user. RLS remains the authority.
+// Native Android FCM bridge. The database RPC derives user_id from auth.uid(),
+// refreshes last_seen_at, and reassigns this installation to the active account.
+export async function unregisterZunePushToken() {
+  if (typeof window === "undefined" || !window.AndroidZunePush) return false;
+  const token = window.AndroidZunePush.getFcmToken();
+  if (!token) return false;
+  const { error } = await supabase.rpc("zune_unregister_push_token", {
+    p_fcm_token: token
+  });
+  if (error) throw error;
+  return true;
+}
+
 if (typeof window !== "undefined" && window.AndroidZunePush) {
   window.zuneSyncNativePush = async function () {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id || !session?.access_token) return;
+      if (!session?.user?.id) return;
       const token = window.AndroidZunePush.getFcmToken();
       if (!token) return;
-      window.AndroidZunePush.registerToken(session.user.id, session.access_token);
+      const { error } = await supabase.rpc("zune_register_push_token", {
+        p_fcm_token: token,
+        p_platform: "android",
+        p_user_agent: navigator.userAgent || "ZUNE Android"
+      });
+      if (error) throw error;
     } catch (error) {
       console.warn("ZUNE native push sync:", error);
     }
