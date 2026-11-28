@@ -2981,7 +2981,25 @@ function bindSearchEvents() {
 // 21. HOME EVENTS
 // --------------------------------------------
 
+async function updateQuickChatUnreadBadge(){
+  const badge=document.getElementById("z-quick-chat-unread");
+  const userId=homeState.user?.id;
+  if(!badge||!userId)return;
+  try{
+    const conversations=await supabase.from("chat_conversations").select("id").or("buyer_id.eq."+userId+",seller_id.eq."+userId);
+    if(conversations.error)throw conversations.error;
+    const ids=(conversations.data||[]).map(row=>row.id);
+    if(!ids.length){badge.hidden=true;return;}
+    const unread=await supabase.from("chat_messages").select("id",{count:"exact",head:true}).in("conversation_id",ids).neq("sender_id",userId).eq("is_read",false);
+    if(unread.error)throw unread.error;
+    const count=Number(unread.count||0);
+    badge.textContent=count>99?"99+":String(count);
+    badge.hidden=count===0;
+  }catch(error){console.warn("ZUNE chat unread count:",error.message);}
+}
+
 function bindHomeEvents() {
+  updateQuickChatUnreadBadge();
   bindCategoryEvents();
   loadRecentlyViewedProducts().catch(error=>console.warn("ZUNE recently viewed:",error));
   bindSearchEvents();
