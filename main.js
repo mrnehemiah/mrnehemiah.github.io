@@ -1402,6 +1402,10 @@ async function renderAccount(knownUser = null) {
     app.removeAttribute("aria-busy");
     console.error("ZUNE Marketplace error:", error);
 
+    // Do not let the intro overlay cover the login/error screen either.
+    const splash = document.getElementById("zune-splash");
+    if (splash) splash.remove();
+
     renderLogin(error.message || t("loginError"));
   }
 }
