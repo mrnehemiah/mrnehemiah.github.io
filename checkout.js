@@ -1,5 +1,5 @@
 import { supabase } from "./supabase.js";
-import { readCart, loadCartProducts, writeCart, syncCartCountBadges } from "./cart.js?v=20261128-discounts-1";
+import { readCart, loadCartProducts, writeCart, syncCartCountBadges } from "./cart.js?v=20261128-cart-redesign-1";
 
 const root=document.getElementById("checkout-app");
 const lang=localStorage.getItem("zune_language")==="en"?"en":"sw";
