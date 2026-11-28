@@ -84,6 +84,10 @@ async function init(){
     const card=e.currentTarget,details=card.querySelector(".account-identity-details"),open=card.getAttribute("aria-expanded")==="true";
     card.setAttribute("aria-expanded",String(!open));details.hidden=open;
   });
+  root.querySelector(".account-identity-card")?.addEventListener("keydown",e=>{
+    if(e.target!==e.currentTarget||!(e.key==="Enter"||e.key===" "))return;
+    e.preventDefault();e.currentTarget.click();
+  });
   root.querySelector("[data-copy-id]")?.addEventListener("click",async e=>{e.stopPropagation();const id=e.currentTarget.dataset.copyId;if(!id)return;try{await navigator.clipboard.writeText(id);e.currentTarget.textContent=t("copied");}catch{alert(id);}});
   root.querySelectorAll("[data-unavailable]").forEach(el=>el.addEventListener("click",e=>e.preventDefault()));
   root.addEventListener("click",e=>{
