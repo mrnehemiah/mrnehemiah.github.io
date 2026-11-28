@@ -64,7 +64,7 @@ async function init(){
       row("◷",t("recent"),t("notReady"),null,true),
       row("☆",t("reviews"),t("notReady"),null,true)
     ],"account-shopping-section")+
-    '<section class="account-section account-wallet-section"><div class="account-section-title"><h2>'+t("wallet")+'</h2><a href="./wallet.html">'+t("transactions")+' →</a></div><a class="account-wallet-card" href="./wallet.html"><span class="account-wallet-mark">Ⓩ</span><span class="account-wallet-label">'+t("available")+'</span>'+walletStatus+'<span class="account-wallet-stats"><span><small>'+t("spending")+'</small><b>'+esc(money(totalOut))+'</b></span><span><small>'+t("transactions")+'</small><b>→</b></span></span></a></section>'+
+    '<section class="account-section account-wallet-section account-wallet-glass"><div class="account-section-title"><h2>'+t("wallet")+'</h2><a href="./wallet.html">'+t("transactions")+' →</a></div><a class="account-wallet-card" href="./wallet.html"><span class="account-wallet-mark">Ⓩ</span><span class="account-wallet-label">'+t("available")+'</span>'+walletStatus+'<span class="account-wallet-stats"><span><small>'+t("spending")+'</small><b>'+esc(money(totalOut))+'</b></span><span><small>'+t("transactions")+'</small><b>→</b></span></span></a></section>'+
     '<section class="account-section"><h2>'+t("seller")+'</h2>'+sellerBlock+'</section>'+
     group(t("settings"),[
       row("♙",t("personal"),lang==="sw"?"Jina, simu na picha ya wasifu":"Name, phone and profile photo","./profile.html"),
