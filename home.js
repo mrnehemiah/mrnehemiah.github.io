@@ -3,7 +3,7 @@
 // HOME.JS — SEHEMU YA 1/4
 // ============================================
 
-import { supabase, unregisterZunePushToken } from "./supabase.js?v=phase6-push-token-ownership-20261128";
+import { supabase, unregisterZunePushToken } from "./supabase.js?v=jsdelivr-sdk-20261128";
 import { openZuneAssistant } from "./smart-assistant.js?v=20261125-composer-cache-3";
 import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v=20261125-public-feed-2";
 
