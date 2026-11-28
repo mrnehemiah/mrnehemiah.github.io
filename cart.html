@@ -8,14 +8,14 @@
   <title>Kikapu Changu | ZUNE</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./cart.css?v=20261128-smart-3d">
+  <link rel="stylesheet" href="./cart.css?v=20261128-zune-fill-loader1">
 </head>
 <body>
   <main id="cart-app" aria-busy="true">
-    <div class="z3-login"><div class="z3-empty-orb">Ⓩ</div><p>Inafungua kikapu...</p></div>
+    <div class="z3-loader-layer" role="status" aria-label="ZUNE loading"><div class="z3-loader-logo"><span class="z3-loader-letter" style="--fill:#2584E8;--delay:0s">Z</span><span class="z3-loader-letter" style="--fill:#EC4899;--delay:.35s">U</span><span class="z3-loader-letter" style="--fill:#9254DE;--delay:.7s">N</span><span class="z3-loader-letter" style="--fill:#F28C28;--delay:1.05s">E</span></div></div>
   </main>
   <script type="module">
-    import { mountStandaloneCart } from "./cart.js?v=20261128-smart-3d-fix1";
+    import { mountStandaloneCart } from "./cart.js?v=20261128-zune-fill-loader1";
     const app=document.getElementById("cart-app");
     try { await mountStandaloneCart(app); }
     catch(error) { console.error("ZUNE Cart:",error); app.innerHTML='<div class="z3-login"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><a class="z3-primary" href="./index.html">Rudi sokoni</a></div>'; }
