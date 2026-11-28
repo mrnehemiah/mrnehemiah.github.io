@@ -41,7 +41,7 @@ function render(user,profile,request){
       <button class="zv-btn" type="submit">${tr("Tuma ombi la verification","Submit verification request")}</button>
       <p class="zv-error" id="zv-error" aria-live="polite"></p>
     </form>`}
-    <div class="zv-actions"><a class="zv-link" href="https://mrnehemiah.github.io/zuneacts/">← ${tr("Rudi Seller Dashboard","Back to Seller Dashboard")}</a><a class="zv-link" href="./index.html">ZUNE Marketplace</a></div>
+    <div class="zv-actions"><a class="zv-link" href="./account.html">← ${tr("Rudi kwenye Account","Back to Account")}</a><a class="zv-link" href="./index.html">ZUNE Marketplace</a></div>
   </div></div></section>`;
 
   document.getElementById("zv-form")?.addEventListener("submit",async event=>{
