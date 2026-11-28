@@ -418,6 +418,15 @@ function addHomeStyles() {
       gap: 9px;
     }
 
+    .z-home-notification-link { position: relative; text-decoration: none; }
+    .z-home-notification-link svg { width: 20px; height: 20px; }
+    .z-home-notification-link .zune-bell-count {
+      position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px;
+      padding: 0 4px; display: flex; align-items: center; justify-content: center;
+      border: 2px solid var(--background, #fff); border-radius: 20px;
+      background: #e54848; color: #fff; font-size: 9px; font-weight: 800;
+    }
+    .z-home-notification-link .zune-bell-count[hidden] { display: none; }
     .z-icon-button {
       width: 42px;
       height: 42px;
@@ -2452,6 +2461,17 @@ function renderHomePage() {
           </div>
 
           <div class="z-home-actions">
+
+            <a
+              class="z-icon-button z-home-notification-link"
+              href="./notifications.html"
+              data-open-notifications
+              aria-label="${language()==="sw"?"Arifa":"Notifications"}"
+              title="${language()==="sw"?"Arifa":"Notifications"}"
+            >
+              ${zIcon("notification")}
+              <span class="zune-bell-count" data-notification-count hidden>0</span>
+            </a>
 
             <button
               type="button"
