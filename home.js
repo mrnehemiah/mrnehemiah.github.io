@@ -2668,6 +2668,26 @@ function renderFeaturedStores(){
  }).join("");
 }
 
+function category3DIcon(name) {
+  const value=String(name||"").toLowerCase();
+  const icons=[
+    [/fashion|clothes|clothing|apparel|mavazi|nguo|dress|shirt/,"👕"],
+    [/phone|mobile|electronic|computer|laptop|simu|elektron|tech/,"📱"],
+    [/home|furniture|house|samani|nyumbani|kitchen/,"🛋️"],
+    [/beauty|makeup|cosmetic|urembo|vipodozi|skincare/,"💄"],
+    [/food|grocery|market|chakula|vyakula|drink/,"🛒"],
+    [/sport|fitness|michezo|gym|football/,"⚽"],
+    [/toy|game|mtoto|watoto|kids|baby/,"🧸"],
+    [/car|vehicle|motor|gari|pikipiki|auto/,"🚗"],
+    [/book|education|school|kitabu|elimu|stationery/,"📚"],
+    [/health|medical|dawa|afya|pharmacy/,"💊"],
+    [/shoe|footwear|viatu|sneaker/,"👟"],
+    [/bag|watch|jewelry|accessor|mkoba|saa/,"👜"]
+  ];
+  const match=icons.find(([pattern])=>pattern.test(value));
+  return match?match[1]:"🎁";
+}
+
 // --------------------------------------------
 // 17. RENDER CATEGORIES
 // --------------------------------------------
