@@ -49,7 +49,7 @@ function accountProMarkup(){
   ["about",sw?"Wallet na Malipo":"Wallet & Payments",sw?"Salio halisi na historia ya miamala":"Real balance and transaction history","./wallet.html"],
   ["personal",sw?"Utambulisho na Wasifu":"Identity & Profile",sw?"Taarifa, ZUNE ID na QR Code":"Profile details, ZUNE ID and QR Code","./profile.html"],
   ["security",sw?"Kituo cha Usalama":"Security Center",sw?"Nenosiri, 2FA na vifaa vilivyoingia":"Password, 2FA and signed-in devices","./settings.html?section=security-history"],
-  ["privacy",sw?"Faragha na Data":"Privacy & Data",sw?"Mapendeleo ya faragha na mwonekano":"Privacy and visibility preferences","./settings.html?section=privacy"],
+  ["privacy",sw?"Faragha na Data":"Privacy & Data",sw?"Pakua data na simamia faragha":"Export your data and manage privacy","./account-data.html"],
   ["theme",sw?"Personalization Studio":"Personalization Studio",sw?"Lugha, theme na mapendeleo":"Language, themes and preferences","./settings.html?section=appearance"],
   ["about",sw?"ZUNE Smart Assistant":"ZUNE Smart Assistant",sw?"Fungua marketplace na ZUNE AI":"Open the marketplace and ZUNE AI","./index.html"],
   ["store",sw?"Akaunti ya Muuzaji":"Seller Account Pro",sw?"Dhibiti duka lako au omba kuwa Seller":"Manage your store or apply to sell",isSeller?"https://mrnehemiah.github.io/zuneacts/":"#account-business"],
