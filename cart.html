@@ -4,85 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#087A55">
-  <meta name="description" content="Kikapu chako cha ununuzi — ZUNE Marketplace">
-  <meta name="color-scheme" content="light dark">
-
-  <title>Kikapu changu | ZUNE Marketplace</title>
+  <meta name="description" content="ZUNE Marketplace Cart">
+  <title>Cart | ZUNE</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./cart.css?v=20261128-cart-visual-2">
-
-  <!-- Preload module ya cart ili kuanza kupakia mapema -->
-  <link rel="modulepreload" href="./cart.js?v=20261128-cart-visual-2">
-  <link rel="modulepreload" href="./supabase.js">
+  <link rel="stylesheet" href="./cart.css?v=20261128-cart-reset">
 </head>
 <body>
-  <!-- Header: back link + badge ya cart count -->
-  <header class="z-cart-topbar" role="banner">
-    <a href="./index.html" class="z-back-link" aria-label="Rudi kwenye duka">
-      <span aria-hidden="true">←</span>
-      <span>Duka</span>
-    </a>
-    <a href="./index.html" class="z-brand" aria-label="ZUNE Marketplace – mwanzo">
-      ⓏⓊⓃⒺ
-    </a>
-    <div class="z-cart-topbar-badge" aria-live="polite">
-      <span aria-hidden="true">🛒</span>
-      <span data-cart-count hidden>0</span>
-    </div>
-  </header>
-
-  <main
-    id="cart-app"
-    class="z-marketplace"
-    aria-busy="true"
-    aria-live="polite"
-  >
-    <!-- Skeleton: inaonekana kama kikapu kinachopakia -->
-    <div class="app-loading" role="status" aria-label="Inapakia kikapu">
-      <div class="zune-logo" aria-hidden="true">ⓏⓊⓃⒺ</div>
-      <div class="z-skeleton z-skeleton-title"></div>
-      <div class="z-skeleton z-skeleton-row"></div>
-      <div class="z-skeleton z-skeleton-row"></div>
-      <div class="z-skeleton z-skeleton-row"></div>
-    </div>
+  <main id="cart-app" aria-busy="true">
+    <section class="z-cart-reset">
+      <div class="z-cart-reset-mark" aria-hidden="true">Ⓩ</div>
+      <p>Muundo wa zamani wa Cart umeondolewa. Cart mpya kabisa inajengwa.</p>
+      <a href="./index.html">Rudi sokoni</a>
+    </section>
   </main>
-
-  <!-- Fallback bila JavaScript -->
-  <noscript>
-    <div class="z-noscript">
-      <h1>JavaScript inahitajika</h1>
-      <p>Ili kutumia kikapu chako, tafadhali washa JavaScript kwenye kivinjari chako.</p>
-      <a href="./index.html">← Rudi kwenye duka</a>
-    </div>
-  </noscript>
-
   <script type="module">
+    import { mountStandaloneCart } from "./cart.js?v=20261128-cart-reset";
     const app = document.getElementById("cart-app");
-
-    (async () => {
-      try {
-        const { mountStandaloneCart } = await import("./cart.js?v=20261128-cart-visual-2");
-        if (!app) throw new Error("#cart-app haipo kwenye DOM");
-        await mountStandaloneCart(app);
-        app.setAttribute("aria-busy", "false");
-      } catch (error) {
-        console.error("Cart bootstrap failed:", error);
-        app.setAttribute("aria-busy", "false");
-        app.innerHTML = `
-          <section class="z-home z-cart-page">
-            <main class="z-home-content z-cart-content">
-              <div class="z-cart-empty" role="alert">
-                <div class="z-cart-empty-art" aria-hidden="true">⚠️</div>
-                <h2>Kikapu hakiwezi kupakiwa</h2>
-                <p>Imeshindikana kupakia kikapu chako. Tafadhali angalia muunganisho wako wa intaneti na ujaribu tena.</p>
-                <button type="button" class="z-primary-button" onclick="window.location.reload()">Jaribu tena</button>
-                <a href="./index.html" class="z-continue-shopping">Endelea kununua</a>
-              </div>
-            </main>
-          </section>`;
-      }
-    })();
+    try { await mountStandaloneCart(app); }
+    catch (error) {
+      console.error("Cart reset shell:", error);
+      app.setAttribute("aria-busy", "false");
+    }
   </script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
