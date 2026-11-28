@@ -2699,7 +2699,7 @@ function renderCategories() {
       ${categories.slice(0,8).map((category,index) => `
         <button type="button" class="z-home-category-card ${String(homeState.selectedCategory)===String(category.name)?"active":""}" data-category="${safe(category.name)}" aria-label="${safe(category.name)}">
           <img src="${categoryImage(category.name,index)}" alt="" loading="lazy" decoding="async">
-          <span class="z-home-category-shade"></span><strong>${safe(category.name)}</strong><span class="z-home-category-arrow" aria-hidden="true">↗</span>
+          <span class="z-home-category-shade"></span><span class="z-home-category-icon" aria-hidden="true">${category3DIcon(category.name)}</span><strong>${safe(category.name)}</strong><span class="z-home-category-arrow" aria-hidden="true">↗</span>
         </button>
       `).join("")}
     </div>
@@ -3518,6 +3518,7 @@ function renderCategoriesPage() {
               <button type="button" class="z-category-image-card" data-category-page="${safe(category.name)}" data-category-name="${safe(category.name.toLowerCase())}">
                 <img src="${categoryImage(category.name,index)}" alt="${safe(category.name)}" loading="lazy" decoding="async">
                 <span class="z-category-image-shade"></span>
+                <span class="z-category-image-icon" aria-hidden="true">${category3DIcon(category.name)}</span>
                 <strong>${safe(category.name)}</strong>
                 <span class="z-category-image-arrow">↗</span>
               </button>
@@ -3596,7 +3597,7 @@ function renderExplorePage() {
             ${categories.slice(0, 12).map((category,index) => `
               <button type="button" class="z-explore-category-card ${String(homeState.selectedCategory)===String(category.name)?"active":""}" data-category="${safe(category.name)}">
                 <img src="${categoryImage(category.name,index)}" alt="${safe(category.name)}" loading="lazy" decoding="async">
-                <span class="z-explore-category-shade"></span><strong>${safe(category.name)}</strong>
+                <span class="z-explore-category-shade"></span><span class="z-explore-category-icon" aria-hidden="true">${category3DIcon(category.name)}</span><strong>${safe(category.name)}</strong>
               </button>
             `).join("")}
           </div>
