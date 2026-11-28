@@ -10,10 +10,10 @@
   <title>Kikapu changu | ZUNE Marketplace</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./cart.css?v=20261128-cart-redesign-1">
+  <link rel="stylesheet" href="./cart.css?v=20261128-cart-visual-2">
 
   <!-- Preload module ya cart ili kuanza kupakia mapema -->
-  <link rel="modulepreload" href="./cart.js?v=20261128-cart-redesign-1">
+  <link rel="modulepreload" href="./cart.js?v=20261128-cart-visual-2">
   <link rel="modulepreload" href="./supabase.js">
 </head>
 <body>
@@ -62,7 +62,7 @@
 
     (async () => {
       try {
-        const { mountStandaloneCart } = await import("./cart.js?v=product-variants-cart-3");
+        const { mountStandaloneCart } = await import("./cart.js?v=20261128-cart-visual-2");
         if (!app) throw new Error("#cart-app haipo kwenye DOM");
         await mountStandaloneCart(app);
         app.setAttribute("aria-busy", "false");
