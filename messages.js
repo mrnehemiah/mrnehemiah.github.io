@@ -37,7 +37,7 @@ function renderList(latest,unread){
 }
 async function openThread(id){
  selected=conversations.find(x=>x.id===id);if(!selected)return;
- const seller=stores[selected.seller_id]?.store_name||profiles[selected.seller_id]?.full_name||tr("Muuzaji","Seller");
+ const isBuyer=selected.buyer_id===user.id;const counterpartId=isBuyer?selected.seller_id:selected.buyer_id;const seller=isBuyer?(stores[selected.seller_id]?.store_name||profiles[counterpartId]?.full_name||tr("Muuzaji","Seller")):(profiles[counterpartId]?.full_name||tr("Mnunuzi","Buyer"));
  const product=products[selected.product_id]?.title||tr("Bidhaa","Product");
  root.innerHTML='<section class="messages-panel"><div class="thread-top"><button type="button" id="thread-back">‹ '+tr("Rudi","Back")+'</button><div><strong>'+esc(seller)+'</strong><small>'+esc(product)+'</small></div></div><div class="thread-history" id="thread-history"><div class="messages-loading">'+tr("Inapakia ujumbe...","Loading messages...")+'</div></div><form class="thread-form" id="thread-form"><input name="message" maxlength="4000" autocomplete="off" placeholder="'+tr("Andika ujumbe...","Write a message...")+'" required><button type="submit">'+tr("Tuma","Send")+'</button></form></section>';
  document.getElementById("thread-back").onclick=async()=>{selected=null;await loadList();};
