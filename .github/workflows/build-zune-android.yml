@@ -68,6 +68,14 @@ jobs:
           cp android-app/app/build/outputs/apk/debug/app-debug.apk dist/ZUNE.apk
           echo "ZUNE_BUILD_TYPE=debug-signed" >> "$GITHUB_ENV"
 
+      - name: Verify APK package and signature
+        run: |
+          BUILD_TOOLS_VERSION="$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
+          AAPT="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/aapt"
+          APKSIGNER="$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/apksigner"
+          "$AAPT" dump badging dist/ZUNE.apk | grep -F "package: name='com.zune.app'"
+          "$APKSIGNER" verify --verbose dist/ZUNE.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
