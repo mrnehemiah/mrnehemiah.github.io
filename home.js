@@ -312,6 +312,8 @@ function updateCartBadges() {
 function zIcon(name) {
   const icons = {
     home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
+    chat: '<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/>',
+    store: '<path d="M3 10h18l-1.5-6h-15L3 10Z"/><path d="M5 10v10h14V10M9 20v-6h6v6M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>',
 
     explore: '<circle cx="11" cy="11" r="7"/><path d="m16 16 5 5M14 8l-2 5-5 2 2-5z"/>',
 
@@ -527,6 +529,16 @@ function addHomeStyles() {
     }
 
 
+    .z-quick-access{margin:20px 0 24px}
+    .z-quick-access-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+    .z-quick-access-item{position:relative;min-width:0;min-height:108px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 5px;border:1px solid var(--border,#e4ebe7);border-radius:16px;background:var(--surface,#fff);color:var(--text,#17231e);text-decoration:none;font:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(15,55,38,.045);text-align:center}
+    .z-quick-access-item:active{transform:scale(.98)}
+    .z-quick-access-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--primary,#087a55) 10%,white);color:var(--primary,#087a55)}
+    .z-quick-access-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .z-quick-access-item strong{font-size:11px;font-weight:850}
+    .z-quick-access-item small{font-size:9px;color:var(--text-muted,#718078);line-height:1.2}
+    .z-quick-access-unread{position:absolute;top:7px;right:7px;min-width:18px;height:18px;padding:0 5px;border-radius:20px;background:#e04c4c;color:#fff;font-size:9px;font-weight:900;display:grid;place-items:center}
+    @media(max-width:380px){.z-quick-access-grid{gap:6px}.z-quick-access-item{min-height:100px;border-radius:13px}.z-quick-access-icon{width:38px;height:38px}}
     .z-home-carousel{position:relative;overflow:hidden;min-height:250px;margin:0 0 25px;border:1px solid rgba(255,255,255,.45);border-radius:24px;isolation:isolate;background:#073d2b;color:#fff;touch-action:pan-y;transform:translateZ(0);box-shadow:0 16px 34px rgba(7,55,36,.22),0 5px 0 rgba(5,70,46,.12),inset 0 1px 0 rgba(255,255,255,.28)}
     .z-slide-image{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center;transform:scale(1.035);filter:saturate(1.08) contrast(1.04);transition:transform 7s ease}
     .z-home-carousel:after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(4,25,17,.88) 0%,rgba(4,25,17,.68) 48%,rgba(4,25,17,.12) 100%),linear-gradient(0deg,rgba(0,0,0,.28),transparent 45%);pointer-events:none}.z-home-carousel:hover .z-slide-image{transform:scale(1.09)}
@@ -2655,6 +2667,33 @@ function renderHomePage() {
 
         ${renderHomeCarousel()}
 
+        <section class="z-quick-access" aria-label="${language()==="sw"?"Ufikiaji wa haraka":"Quick Access"}">
+          <div class="z-section-heading"><h2>${language()==="sw"?"Ufikiaji wa Haraka":"Quick Access"}</h2></div>
+          <div class="z-quick-access-grid">
+            <a class="z-quick-access-item" href="./messages.html" aria-label="${language()==="sw"?"Fungua mazungumzo":"Open chats"}">
+              <span class="z-quick-access-icon">${zIcon("chat")}</span>
+              <strong>Chats</strong>
+              <small>${language()==="sw"?"Mnunuzi na Muuzaji":"Buyer & Seller"}</small>
+              <span class="z-quick-access-unread" id="z-quick-chat-unread" hidden>0</span>
+            </a>
+            <a class="z-quick-access-item" href="./orders.html">
+              <span class="z-quick-access-icon">${zIcon("cart")}</span>
+              <strong>${language()==="sw"?"Oda":"Orders"}</strong>
+              <small>${language()==="sw"?"Oda zako":"Your orders"}</small>
+            </a>
+            <button class="z-quick-access-item" type="button" data-quick-saved>
+              <span class="z-quick-access-icon">${zIcon("saved")}</span>
+              <strong>${language()==="sw"?"Zilizohifadhiwa":"Saved"}</strong>
+              <small>${language()==="sw"?"Bidhaa uzipendazo":"Your favourites"}</small>
+            </button>
+            <button class="z-quick-access-item" type="button" data-quick-stores>
+              <span class="z-quick-access-icon">${zIcon("store")}</span>
+              <strong>${language()==="sw"?"Maduka":"Stores"}</strong>
+              <small>${language()==="sw"?"Gundua maduka":"Discover stores"}</small>
+            </button>
+          </div>
+        </section>
+
         <section id="z-home-categories-section">
           <div class="z-section-heading"><h2>${language()==="sw"?"Makundi ya Bidhaa":"Shop by Category"}</h2><button type="button" class="z-all-categories" data-open-categories>${language()==="sw"?"Yote":"View All"} →</button></div>
           <div id="z-category-area">${renderCategories()}</div>
@@ -2949,6 +2988,8 @@ function bindHomeEvents() {
   bindCarouselEvents();
   startCarouselAutoplay();
   loadLiveStoreStatuses();
+  document.querySelector("[data-quick-saved]")?.addEventListener("click", () => renderMarketplacePage("saved"));
+  document.querySelector("[data-quick-stores]")?.addEventListener("click", () => document.getElementById("z-featured-stores-section")?.scrollIntoView({behavior:"smooth",block:"start"}));
   document.querySelector("[data-open-categories]")?.addEventListener("click", () => renderMarketplacePage("categories"));
   document.querySelector("[data-view-all-products]")?.addEventListener("click",()=>renderMarketplacePage("explore"));
   // Delegate clicks from the stable section so async status refreshes can
