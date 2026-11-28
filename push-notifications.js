@@ -89,16 +89,11 @@ export async function setupZunePushNotifications(supabase, user) {
         if (!token) throw new Error("Firebase haikutoa kifaa token. Jaribu tena.");
 
         const now = new Date().toISOString();
-        const { error } = await supabase
-          .from("zune_push_tokens")
-          .upsert({
-            user_id: user.id,
-            fcm_token: token,
-            platform: "web",
-            user_agent: navigator.userAgent,
-            updated_at: now,
-            last_seen_at: now
-          }, { onConflict: "user_id,fcm_token" });
+        const { error } = await supabase.rpc("zune_register_push_token", {
+          p_fcm_token: token,
+          p_platform: "web",
+          p_user_agent: navigator.userAgent || "ZUNE Web"
+        });
 
         if (error) throw error;
 
