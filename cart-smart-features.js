@@ -7,6 +7,12 @@ async function boot(){
  const uid=user.id,cartKey="zune_cart:"+uid,savedKey="zune_cart_saved_later:"+uid,couponKey="zune_cart_coupon:"+uid,addressKey="zune_cart_address:"+uid;
  const mount=async root=>{
   const products=root.querySelector(".z3-products");if(!products||root.dataset.smartCartReady)return;root.dataset.smartCartReady="1";
+  const cartItems=read(cartKey),productIds=[...new Set(cartItems.map(x=>String(x.productId)))];
+  const {data:stockProducts}=productIds.length?await supabase.from("products").select("id,stock_quantity").in("id",productIds):{data:[]};
+  const variantIds=cartItems.map(x=>x.variantId).filter(Boolean);
+  const {data:stockVariants}=variantIds.length?await supabase.from("product_variants").select("id,stock_quantity").in("id",variantIds):{data:[]};
+  const stockMap=new Map((stockProducts||[]).map(x=>[String(x.id),Number(x.stock_quantity)])),variantStock=new Map((stockVariants||[]).map(x=>[String(x.id),Number(x.stock_quantity)]));
+  root.querySelectorAll(".z3-item:not(.z3-item-missing)").forEach(row=>{const key=row.dataset.cartRow,[pid,vid]=key.split("::"),stock=vid&&variantStock.has(vid)?variantStock.get(vid):stockMap.get(pid);if(Number.isFinite(stock)&&!row.querySelector(".z3-stock")){const note=document.createElement("small");note.className="z3-stock"+(stock<=0?" z3-stock-out":"");note.textContent=stock<=0?(en()?"Out of stock":"Imeisha stock"):stock<=5?(en()?"Low stock: ":"Stock imebaki: ")+stock:"";if(note.textContent)row.querySelector(".z3-product-main")?.append(note);}});
   root.querySelectorAll(".z3-store").forEach(store=>{const rows=[...store.querySelectorAll(".z3-item:not(.z3-item-missing)")];const total=rows.reduce((sum,row)=>{const price=Number((row.querySelector(".z3-price")?.textContent||"").replace(/[^0-9.]/g,""));const qty=Number(row.querySelector(".z3-qty b")?.textContent||1);return sum+price*qty;},0);const head=store.querySelector(".z3-store-head");if(head&&!head.querySelector(".z3-store-subtotal")){const el=document.createElement("small");el.className="z3-store-subtotal";el.textContent=(en()?"Store subtotal: ":"Jumla ya duka: ")+new Intl.NumberFormat("sw-TZ",{maximumFractionDigits:0}).format(total)+" TSh";head.append(el);}});
   root.querySelectorAll(".z3-item:not(.z3-item-missing)").forEach(row=>{
    const key=row.dataset.cartRow,btn=document.createElement("button");btn.type="button";btn.className="z3-save-later";btn.dataset.z3SaveLater=key;btn.textContent=en()?"Save for later":"Hifadhi baadaye";row.append(btn);
