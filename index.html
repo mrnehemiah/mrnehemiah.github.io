@@ -31,9 +31,7 @@
     transition: opacity .65s ease, visibility .65s ease;
   }
   #zune-splash.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-  /* CSS failsafe: hide the intro after four seconds even if page scripts stall. */
-  #zune-splash { animation: zuneSplashFailsafe 0.01s linear 4s forwards; }
-  @keyframes zuneSplashFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+  /* Keep the splash visible until the application renders or startup fails visibly. */
   #zune-splash .splash-ripples {
     position: absolute; width: min(72vw, 300px); aspect-ratio: 1;
     display: grid; place-items: center; pointer-events: none;
@@ -71,44 +69,17 @@
   <main id="app"></main>
   <script>
     (function () {
-      // One authoritative controller: remove the overlay by looking it up fresh
-      // every time, so stale element references or early app-ready events cannot
-      // leave a full-screen layer above an already-rendered Home page.
-      var startedAt = Date.now();
-      var minimumDuration = 4000;
-      var removed = false;
-
-      function removeSplash() {
-        if (Date.now() - startedAt < minimumDuration) return false;
-        var node = document.getElementById("zune-splash");
-        if (node) {
-          node.style.setProperty("display", "none", "important");
-          node.style.setProperty("visibility", "hidden", "important");
-          node.style.setProperty("opacity", "0", "important");
-          node.style.setProperty("pointer-events", "none", "important");
-          node.remove();
-        }
-        removed = true;
-        return true;
-      }
-
-      window.setTimeout(removeSplash, minimumDuration);
-      // Re-check after page restore/background suspension and tolerate a
-      // duplicate/stale splash node being reinserted by an old cached document.
-      window.addEventListener("pageshow", removeSplash);
-      document.addEventListener("visibilitychange", function () {
-        if (!document.hidden) removeSplash();
-      });
+      // Keep the splash visible while slow JavaScript modules are loading.
+      // The app-ready event fires after a screen or startup error is rendered.
       window.addEventListener("zune:app-ready", function () {
-        window.setTimeout(removeSplash, Math.max(0, minimumDuration - (Date.now() - startedAt)));
+        var node = document.getElementById("zune-splash");
+        if (!node) return;
+        node.style.setProperty("display", "none", "important");
+        node.style.setProperty("visibility", "hidden", "important");
+        node.style.setProperty("opacity", "0", "important");
+        node.style.setProperty("pointer-events", "none", "important");
+        node.remove();
       }, { once: true });
-
-      // Short safety window after the four-second intro; stops as soon as gone.
-      var checks = 0;
-      var retry = window.setInterval(function () {
-        checks += 1;
-        if (removeSplash() || checks >= 24) window.clearInterval(retry);
-      }, 300);
     })();
   </script>
 
