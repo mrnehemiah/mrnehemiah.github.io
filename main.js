@@ -1346,11 +1346,12 @@ async function handleSignup(event) {
    MARKETPLACE ACCOUNT ENTRY
 ========================================= */
 
-async function renderAccount() {
+async function renderAccount(knownUser = null) {
   state.screen = "marketplace";
 
   try {
-    const user = await getCurrentCustomer();
+    // Tumia user aliyethibitishwa wakati wa startup ili kuepuka getUser() ya pili.
+    const user = knownUser || await getCurrentCustomer();
 
     if (!user) {
       renderWelcome();
@@ -1359,7 +1360,7 @@ async function renderAccount() {
 
     if (!marketplaceHomeModule) {
       app.innerHTML = '<section class="app-loading" role="status" aria-live="polite"><div class="zune-wave" aria-label="ZUNE"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia ZUNE Marketplace...</p></section>';
-      marketplaceHomeModule = await import("./home.js?v=20261128-phase2-final-6");
+      marketplaceHomeModule = await import("./home.js?v=20261128-startup-nonblocking-3");
     }
 
     await marketplaceHomeModule.renderMarketplaceHome({
@@ -1459,7 +1460,7 @@ async function startApp() {
       const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalError) throw aalError;
       if (aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2") { await renderMfaLoginChallenge(); return; }
-      await renderAccount();
+      await renderAccount(authUser);
       return;
     }
 
