@@ -1819,7 +1819,7 @@ function openProductDetails(product) {
         <div class="z-product-store"><button type="button" class="z-product-store-name z-store-open" data-open-store="${safe(product.vendor_id||"")}">${safe(storeName)}</button>${accountVerified ? '<span class="z-verified-account-mark" title="Verified Account" aria-label="Verified Account"><svg viewBox="-30 -30 60 60" role="img"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : ""}${verified ? '<span class="z-verified-store-mark" aria-label="Verified Store">✓</span>' : ""}</div>
         ${location ? `<div class="z-product-location">⌖ ${safe(location)}</div>` : ""}
         <h2>${safe(product.title || tx("emptyName"))}</h2>
-        <div class="z-detail-price-row"><p class="z-detail-price" id="z-detail-price">${money(detailCurrentPrice)}</p>${detailOldPrice>detailCurrentPrice?'<del class="z-detail-old-price">'+money(detailOldPrice)+'</del><span class="z-detail-discount">-'+detailDiscount+'%</span>':""}</div>
+        <div class="z-detail-price-row"><p class="z-detail-price" id="z-detail-price">${money(detailCurrentPrice)}</p>${detailOldPrice>detailCurrentPrice?'<del class="z-detail-old-price" id="z-detail-old-price">'+money(detailOldPrice)+'</del><span class="z-detail-discount" id="z-detail-discount">-'+detailDiscount+'%</span>':""}</div>
         <div id="z-detail-variants" class="z-detail-variants" aria-live="polite"></div>
         <div class="z-detail-quantity" id="z-detail-quantity-wrap" hidden>
           <label for="z-detail-quantity">${language()==="sw"?"Idadi":"Quantity"}</label>
@@ -1901,7 +1901,13 @@ function openProductDetails(product) {
         selectedStock=selectedVariant?Number(selectedVariant.stock_quantity):stock;
         const price=overlay.querySelector("#z-detail-price"),stockNode=overlay.querySelector("#z-detail-stock");
         const rawVariantPrice=Number(selectedVariant?selectedVariant.price:product.price);
-        if(price)price.textContent=money(Math.round(rawVariantPrice*(1-detailDiscountPercent/100)*100)/100);
+        const currentVariantPrice=Math.round(rawVariantPrice*(1-detailDiscountPercent/100)*100)/100;
+        const oldVariantPrice=detailDiscountPercent>0?rawVariantPrice:Number(product.compare_at_price||product.original_price||0);
+        const variantDiscount=oldVariantPrice>currentVariantPrice&&currentVariantPrice>0?Math.round((1-currentVariantPrice/oldVariantPrice)*100):0;
+        if(price)price.textContent=money(currentVariantPrice);
+        const oldPriceNode=overlay.querySelector("#z-detail-old-price"),discountNode=overlay.querySelector("#z-detail-discount");
+        if(oldPriceNode){oldPriceNode.textContent=money(oldVariantPrice);oldPriceNode.hidden=oldVariantPrice<=currentVariantPrice;}
+        if(discountNode){discountNode.textContent="-"+variantDiscount+"%";discountNode.hidden=variantDiscount<=0;}
         if(stockNode)stockNode.textContent=selectedVariant?(Number(selectedVariant.stock_quantity)>0?(language()==="sw"?"Stock iliyopo: ":"Available stock: ")+selectedVariant.stock_quantity:(language()==="sw"?"Imeisha stock":"Out of stock")):"";
         const attrs=selectedVariant?.attributes&&typeof selectedVariant.attributes==="object"?selectedVariant.attributes:{};
         const variantImage=attrs.image_url||attrs.imageUrl||attrs.image||attrs.photo_url||attrs.photoUrl||attrs.photo||"";
