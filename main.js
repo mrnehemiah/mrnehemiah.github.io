@@ -1365,7 +1365,8 @@ async function renderAccount(knownUser = null) {
     }
 
     if (!marketplaceHomeModule) {
-      app.innerHTML = '<section class="app-loading" role="status" aria-live="polite"><div class="zune-wave" aria-label="ZUNE"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia ZUNE Marketplace...</p></section>';
+      // Ondoa loader ya pili ya full-screen; Home itajionyesha moja kwa moja ikishapakiwa.
+      app.setAttribute("aria-busy", "true");
       marketplaceHomeModule = await withStartupTimeout(
         () => import("./home.js?v=20261128-smart-ranking-4"),
         7000,
@@ -1383,8 +1384,10 @@ async function renderAccount(knownUser = null) {
         await handleLogout();
       }
     });
+    app.removeAttribute("aria-busy");
 
   } catch (error) {
+    app.removeAttribute("aria-busy");
     console.error("ZUNE Marketplace error:", error);
 
     renderLogin(error.message || t("loginError"));
