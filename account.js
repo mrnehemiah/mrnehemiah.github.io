@@ -91,7 +91,7 @@ async function init() {
       <div class="account-section-heading"><h2>Unachohitaji</h2><span>Quick access</span></div>
       <div class="account-feature-grid">
         ${feature("♙","My Profile","Taarifa za akaunti","./profile.html")}
-        ${feature("✓","Verification",isVerified ? "Akaunti imethibitishwa" : "Omba uthibitishaji","./account-verification.html",true)}
+        ${feature("✓","Verification",isVerified ? "Akaunti imethibitishwa" : "Omba uthibitishaji","./verification.html")}
         ${feature("▤","My Orders","Oda na ufuatiliaji","./orders.html",true)}
         ${feature("♡","Wishlist","Bidhaa ulizohifadhi","./wishlist.html",true)}
       </div>
