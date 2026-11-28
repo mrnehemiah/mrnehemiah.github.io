@@ -306,8 +306,8 @@ export async function mountStandaloneCart(root) {
     localStorage.setItem(cartStorageKey(userId),JSON.stringify(cart));
   } else console.warn("Cart cloud load:",cloud.error.message);
   let unbind=()=>{},token=0;
-  const render=()=>{root.innerHTML=renderCartPage({cart,products,language});syncCartCountBadges(cart);};
-  const load=async()=>{const n=++token;render();if(!cart.length){products=[];render();return;}try{products=await loadCartProducts(cart);if(n===token)render();}catch(e){console.error(e);if(n===token){render();const notice=root.querySelector(".z3-notice");if(notice)notice.textContent=text(language,"loadError");}}};
+  const render=({loading=false}={})=>{root.innerHTML=renderCartPage({cart,products,language,loading});syncCartCountBadges(cart);};
+  const load=async()=>{const n=++token;if(!cart.length){products=[];render();return;}render({loading:true});try{products=await loadCartProducts(cart);if(n===token)render();}catch(e){console.error(e);if(n===token){render();const notice=root.querySelector(".z3-notice");if(notice)notice.textContent=text(language,"loadError");}}};
   const selected=()=>[...root.querySelectorAll("[data-cart-select]:checked")].map(x=>x.dataset.cartSelect);
   unbind=bindCartEvents(root,{
     onQuantityChange:(key,delta)=>{const item=cart.find(x=>cartItemKey(x)===key);if(!item)return;item.quantity=Math.min(MAX_QTY,Math.max(1,item.quantity+delta));cart=writeCart(cart,userId);render();},
