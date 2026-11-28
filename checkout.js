@@ -30,38 +30,6 @@ function render(){
  root.querySelector("#zc-coupon")?.addEventListener("input",()=>{quote=null;updateQuoteUI();});
  root.querySelector("#zc-place").addEventListener("click",placeOrder);
  root.querySelector("#zc-form").addEventListener("input",e=>{if(!["latitude","longitude"].includes(e.target.name)){const lat=root.querySelector('[name="latitude"]'),lng=root.querySelector('[name="longitude"]');if(lat)lat.value="";if(lng)lng.value="";}quote=null;updateQuoteUI();});
- loadCheckoutSponsoredAds().catch(error=>console.warn("Checkout sponsored ads unavailable:",error));
-}
-async function loadCheckoutSponsoredAds(){
- if(!user||!root.querySelector(".zc-grid"))return;
- const {data:settings,error:settingsError}=await supabase.rpc("zune_ad_public_settings");
- if(settingsError||!settings?.checkout_ads_enabled)return;
- const now=new Date().toISOString();
- const {data:campaigns,error}=await supabase.from("ad_campaigns").select("id,product_id,title,starts_at,ends_at")
-  .eq("status","approved").eq("placement","checkout").not("product_id","is",null).limit(8);
- if(error)throw error;
- const live=(campaigns||[]).filter(c=>(!c.starts_at||c.starts_at<=now)&&(!c.ends_at||c.ends_at>now));
- const maxAds=Math.max(1,Math.min(20,Number(settings.max_ads_per_placement)||3));
- const ids=[...new Set(live.map(c=>c.product_id))].slice(0,maxAds);
- if(!ids.length)return;
- const {data:items,error:productError}=await supabase.from("products").select("id,title,price,image_url").in("id",ids).eq("moderation_status","approved");
- if(productError)throw productError;
- const byId=new Map((items||[]).map(p=>[String(p.id),p]));
- const cards=live.filter(c=>byId.has(String(c.product_id))).map(c=>{
-  const p=byId.get(String(c.product_id));
-  return '<article class="zc-ad-card" data-ad-campaign="'+esc(c.id)+'"><span>Sponsored</span><img src="'+esc(p.image_url||"")+'" alt="'+esc(p.title)+'" loading="lazy"><strong>'+esc(p.title)+'</strong><small>'+money(p.price)+'</small><a href="./index.html" data-ad-open="'+esc(c.id)+'">Angalia bidhaa</a></article>';
- }).join("");
- if(!cards)return;
- const section=document.createElement("section");section.className="zc-sponsored";section.innerHTML='<h2>Sponsored recommendations</h2><div>'+cards+'</div>';
- const style=document.createElement("style");style.textContent=".zc-sponsored{margin:18px 0;padding:16px;border:1px solid #e6ece8;border-radius:16px;background:#fff}.zc-sponsored h2{font-size:15px;margin:0 0 12px}.zc-sponsored>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.zc-ad-card{display:grid;gap:6px;min-width:0;font-size:12px}.zc-ad-card img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:#f1f4f2}.zc-ad-card span{font-size:9px;font-weight:800;color:#9a570c}.zc-ad-card a{color:#087a55;font-weight:700}@media(max-width:520px){.zc-sponsored>div{grid-template-columns:repeat(2,minmax(0,1fr))}}";
- section.append(style);root.querySelector(".zc-grid").after(section);
- const visitorKey=(()=>{try{let k=localStorage.getItem("zune_ads_visitor_key");if(!k){k=crypto.randomUUID();localStorage.setItem("zune_ads_visitor_key",k);}return k;}catch(_){return crypto.randomUUID();}})();
- section.querySelectorAll("[data-ad-campaign]").forEach(card=>{
-  const campaignId=card.dataset.adCampaign;
-  const send=eventType=>supabase.from("ad_events").insert({campaign_id:campaignId,event_type:eventType,event_key:crypto.randomUUID(),visitor_key:visitorKey,placement:"checkout",metadata:{source:"checkout"}}).then(({error})=>{if(error)console.warn("Checkout ad event:",error.message);});
-  send("impression");
-  card.querySelector("[data-ad-open]")?.addEventListener("click",()=>send("click"),{once:true});
- });
 }
 function field(name,label,value,type="text"){return '<label class="zc-field"><span>'+label+'</span><input name="'+name+'" type="'+type+'" maxlength="180" required value="'+esc(value)+'"></label>';}
 function updateQuoteUI(){const button=root.querySelector("#zc-place");const hint=root.querySelector("#zc-hint");const delivery=root.querySelector("#zc-delivery");const grand=root.querySelector("#zc-grand");const discountRow=root.querySelector("#zc-discount-row");const discount=root.querySelector("#zc-discount");const distance=root.querySelector("#zc-distance");if(button)button.disabled=busy;if(hint)hint.textContent=quote?"":t("quoteNeeded");if(delivery)delivery.textContent=quote?money(quote.delivery_total):"—";if(grand)grand.textContent=quote?money(quote.grand_total):money(subtotal());if(distance){distance.hidden=!(quote&&Number(quote.estimated_distance_km)>0);distance.textContent=quote&&Number(quote.estimated_distance_km)>0?t("distance")+": "+Number(quote.estimated_distance_km).toFixed(2)+" km":"";}if(discountRow)discountRow.hidden=!(quote&&Number(quote.discount_total)>0);if(discount)discount.textContent=quote?"-"+money(quote.discount_total):"-"+money(0);}
