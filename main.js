@@ -562,7 +562,10 @@ function chooseLanguage(language) {
 
   localStorage.setItem("zune_language", language);
 
-  waveTo(renderWelcome);
+  // Re-run the normal auth router after language selection.
+  // Signed-in customers go straight to Marketplace Home; signed-out
+  // visitors continue to the Welcome/Login flow.
+  waveTo(() => startApp());
 }
 
 /* =========================================
