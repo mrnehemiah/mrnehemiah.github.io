@@ -23,7 +23,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(t
 function verifiedBadge(){return '<span class="account-name-verified" role="img" aria-label="Verified Account" title="Verified Account"><svg viewBox="-30 -30 60 60" aria-hidden="true"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';}
 function icon(symbol){return '<span class="account-row-icon" aria-hidden="true">'+symbol+'</span>';}
 function row(symbol,title,description,href,disabled=false){return disabled?'<div class="account-list-row is-disabled" aria-disabled="true">'+icon(symbol)+'<span class="account-row-copy"><b>'+title+'</b><small>'+description+'</small></span><span class="account-row-note">—</span></div>':'<a class="account-list-row" href="'+href+'">'+icon(symbol)+'<span class="account-row-copy"><b>'+title+'</b><small>'+description+'</small></span><span class="account-row-arrow">›</span></a>';}
-function group(title,rows){return '<section class="account-section account-list-section"><h2>'+title+'</h2><div class="account-list-card">'+rows.join("")+'</div></section>';}
+function group(title,rows,extraClass=""){return '<section class="account-section account-list-section '+extraClass+'"><h2>'+title+'</h2><div class="account-list-card">'+rows.join("")+'</div></section>';}
 function renderGuest(){root.innerHTML='<section class="account-guest"><div class="account-guest-mark">Ⓩ</div><h1>Karibu ZUNE</h1><p>'+t("signInText")+'</p><a class="account-primary-button" href="./index.html">'+t("signIn")+'</a></section>';}
 async function init(){
   const {data:{session},error:sessionError}=await supabase.auth.getSession();
@@ -63,7 +63,7 @@ async function init(){
       row("⌖",t("addresses"),lang==="sw"?"Anwani za kupokea bidhaa":"Delivery addresses","./addresses.html"),
       row("◷",t("recent"),t("notReady"),null,true),
       row("☆",t("reviews"),t("notReady"),null,true)
-    ])+
+    ],"account-shopping-section")+
     '<section class="account-section account-wallet-section"><div class="account-section-title"><h2>'+t("wallet")+'</h2><a href="./wallet.html">'+t("transactions")+' →</a></div><a class="account-wallet-card" href="./wallet.html"><span class="account-wallet-mark">Ⓩ</span><span class="account-wallet-label">'+t("available")+'</span>'+walletStatus+'<span class="account-wallet-stats"><span><small>'+t("spending")+'</small><b>'+esc(money(totalOut))+'</b></span><span><small>'+t("transactions")+'</small><b>→</b></span></span></a></section>'+
     '<section class="account-section"><h2>'+t("seller")+'</h2>'+sellerBlock+'</section>'+
     group(t("settings"),[
