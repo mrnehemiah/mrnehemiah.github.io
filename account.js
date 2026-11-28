@@ -73,7 +73,7 @@ async function init(){
       '<button class="account-list-row account-action-row" type="button" data-account-action="language">'+icon("文")+'<span class="account-row-copy"><b>'+t("language")+'</b><small>'+(lang==="sw"?"Kiswahili":"English")+'</small></span><span class="account-row-arrow">›</span></button>',
       '<button class="account-list-row account-action-row" type="button" data-account-action="theme">'+icon("◐")+'<span class="account-row-copy"><b>'+t("appearance")+'</b><small>'+t(themeMode)+'</small></span><span class="account-row-arrow">›</span></button>',
       row("⛨",t("privacy"),lang==="sw"?"Dhibiti taarifa zako":"Manage your data","./account-data.html")
-    ])+
+    ],"account-settings-section")+
     group(t("support"),[
       row("?",t("support"),lang==="sw"?"Pata msaada kutoka ZUNE":"Get help from ZUNE","./support.html"),
       row("Ⓩ",t("about"),lang==="sw"?"Taarifa rasmi za ZUNE":"Official ZUNE information","./about-zune.html"),

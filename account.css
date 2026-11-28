@@ -218,3 +218,85 @@
 .account-wallet-glass .account-wallet-card:focus-visible{outline:3px solid #f0a23a;outline-offset:4px}
 @media(max-width:420px){.account-wallet-glass .account-wallet-card{min-height:180px;padding:18px;border-radius:24px}.account-wallet-glass .account-wallet-stats{gap:7px}.account-wallet-glass .account-wallet-stats>span{padding:9px;border-radius:13px}}
 @media(prefers-reduced-motion:reduce){.account-wallet-glass .account-wallet-card{transition:none!important}}
+
+
+/* STEP 5 — ACCOUNT SETTINGS: PREMIUM 3D GLASS */
+.account-settings-section .account-list-card{
+  position:relative;
+  isolation:isolate;
+  border:1px solid rgba(255,255,255,.82);
+  border-radius:24px;
+  background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(232,246,237,.84));
+  box-shadow:0 19px 38px rgba(10,72,45,.10),0 5px 12px rgba(10,72,45,.05),inset 0 1px 0 rgba(255,255,255,.96),inset 0 -1px 0 rgba(193,222,204,.48);
+  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:blur(18px);
+}
+.account-settings-section .account-list-row{
+  min-height:76px;
+  padding:12px 16px;
+  border-bottom-color:rgba(190,215,199,.48);
+  transition:background .2s,transform .2s,box-shadow .2s;
+}
+.account-settings-section .account-row-icon{
+  width:46px;height:46px;flex-basis:46px;
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:16px;
+  background:linear-gradient(145deg,#f5fff8 0%,#d6f1e0 55%,#c2e7d0 100%);
+  box-shadow:0 7px 13px rgba(8,105,69,.10),inset 0 1px 0 #fff,inset 0 -2px 4px rgba(15,100,62,.08);
+  color:#087a55;
+}
+.account-settings-section .account-row-copy b{font-size:12px;letter-spacing:.05px}
+.account-settings-section .account-row-copy small{font-size:10px;line-height:1.45}
+.account-settings-section .account-row-arrow{font-size:27px;color:#78a58d}
+.account-settings-section .account-action-row{font-family:inherit}
+.account-settings-section .account-action-row:focus-visible,
+.account-settings-section a:focus-visible{outline:3px solid #f0a23a;outline-offset:-4px;border-radius:15px}
+.account-choice-dialog{
+  border:1px solid rgba(255,255,255,.78);
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(231,246,237,.94));
+  box-shadow:0 30px 90px rgba(0,36,23,.34),inset 0 1px 0 #fff;
+  -webkit-backdrop-filter:blur(24px);
+  backdrop-filter:blur(24px);
+}
+.account-choice-dialog label{
+  min-height:50px;
+  border:1px solid transparent;
+  border-radius:14px;
+  transition:background .18s,border-color .18s,transform .18s;
+}
+.account-choice-dialog label:has(input:checked){
+  border-color:rgba(8,122,85,.28);
+  background:linear-gradient(145deg,rgba(210,247,224,.9),rgba(238,250,242,.95));
+  box-shadow:inset 0 1px 0 #fff,0 5px 12px rgba(8,122,85,.08);
+}
+.account-choice-dialog input{width:18px;height:18px;accent-color:#087a55}
+.account-choice-dialog .account-primary-button{min-height:48px;box-shadow:0 10px 18px rgba(8,122,85,.22),inset 0 1px 0 rgba(255,255,255,.55)}
+[data-account-theme="dark"] .account-settings-section .account-list-card{
+  border-color:rgba(115,164,133,.34);
+  background:linear-gradient(145deg,rgba(28,54,40,.96),rgba(18,39,28,.94));
+  box-shadow:0 20px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-account-theme="dark"] .account-settings-section .account-list-row{border-bottom-color:rgba(109,151,122,.22)}
+[data-account-theme="dark"] .account-settings-section .account-row-icon{
+  border-color:rgba(149,212,169,.24);
+  background:linear-gradient(145deg,#285c40,#183e2c);
+  color:#b9f1ce;
+  box-shadow:0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12);
+}
+[data-account-theme="dark"] .account-settings-section .account-row-arrow{color:#8fc5a3}
+[data-account-theme="dark"] .account-choice-dialog label:has(input:checked){
+  border-color:rgba(126,222,160,.38);
+  background:linear-gradient(145deg,rgba(35,91,57,.9),rgba(24,65,42,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 5px 12px rgba(0,0,0,.18);
+}
+@media(hover:hover){
+  .account-settings-section .account-list-row:hover{background:rgba(224,246,232,.72)}
+  .account-settings-section .account-action-row:hover{transform:translateX(2px)}
+}
+@media(max-width:420px){
+  .account-settings-section .account-list-row{min-height:72px;padding:10px 12px}
+  .account-settings-section .account-row-icon{width:43px;height:43px;flex-basis:43px}
+}
+@media(prefers-reduced-motion:reduce){
+  .account-settings-section .account-list-row,.account-choice-dialog label{transition:none!important}
+}
