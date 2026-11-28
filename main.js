@@ -1481,13 +1481,26 @@ async function startApp() {
           : "Account verification timed out. Check your connection and retry."
       );
       if (authUser && !authUser.user_metadata?.account_type) {
-        const { error: metadataError } = await supabase.auth.updateUser({ data: { account_type: "buyer" } });
-        if (metadataError) throw metadataError;
+        const metadataResult = await withStartupTimeout(
+          () => supabase.auth.updateUser({ data: { account_type: "buyer" } }),
+          5000,
+          state.language === "sw"
+            ? "Kuhifadhi aina ya akaunti kumechelewa. Jaribu tena."
+            : "Saving account type timed out. Please retry."
+        );
+        if (metadataResult?.error) throw metadataResult.error;
       }
       // Password-recovery sessions must reach the reset form before the normal
       // sign-in MFA gate; otherwise an enrolled factor can trap the recovery flow.
       if (passwordRecoveryActive || location.hash.includes("type=recovery")) { passwordRecoveryActive = true; await renderPasswordReset(); return; }
-      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const aalResult = await withStartupTimeout(
+        () => supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+        5000,
+        state.language === "sw"
+          ? "Ukaguzi wa usalama umechelewa. Jaribu tena."
+          : "Security verification timed out. Please retry."
+      );
+      const { data: aal, error: aalError } = aalResult || {};
       if (aalError) throw aalError;
       if (aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2") { await renderMfaLoginChallenge(); return; }
       await renderAccount(authUser);
