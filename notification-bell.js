@@ -79,7 +79,18 @@ function addStyles() {
 function findHomeActions() {
   const actions = document.querySelector(".z-home-actions");
 
-  if (!actions || !currentUser) return;
+  if (!actions) return;
+
+  // The home-page notification link is rendered in home.js and stays visible
+  // before authentication and unread-count loading complete.
+  const staticBell = actions.querySelector("[data-open-notifications]");
+  if (staticBell) {
+    bellMount = staticBell;
+    renderBell();
+    return;
+  }
+
+  if (!currentUser) return;
 
   // MutationObserver also sees changes made inside the bell itself.
   // Do not re-render when the bell is already mounted, or the observer
@@ -104,7 +115,19 @@ function findHomeActions() {
 ===================================== */
 
 function renderBell() {
-  if (!bellMount || !currentUser) return;
+  if (!bellMount) return;
+
+  // Preserve the static Home Page link and only refresh its unread badge.
+  if (bellMount.matches("[data-open-notifications]")) {
+    const badge = bellMount.querySelector("[data-notification-count]");
+    if (badge) {
+      badge.hidden = unreadCount === 0;
+      badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
+    }
+    return;
+  }
+
+  if (!currentUser) return;
 
   addStyles();
 
