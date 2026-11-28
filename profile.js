@@ -1,91 +1,299 @@
 import { supabase } from "./supabase.js";
-const root=document.getElementById("profile-root");
-const $=(s,r=document)=>r.querySelector(s);
-const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let user,profile={},store=null,addresses=[],avatarUrl="",map=null,marker=null,selectedPoint=null,editingAddress=null,isEditingPersonal=false;
-const initials=n=>String(n||"Z").trim().split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
-const roleLabel=()=>profile.role==="vendor"?"Seller":profile.role==="admin"?"Admin":"Customer";
-const publicUrl=()=>new URL("./public-profile.html?zune_id="+encodeURIComponent(profile.zune_id||""),location.href).href;
-function message(el,text,bad=false){if(el){el.textContent=text;el.style.color=bad?"var(--danger)":"var(--primary)";}}
-function navRow(icon,title,desc,url){const paths={security:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3"/>',verification:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',history:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',activity:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',notifications:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',language:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',contact:'<path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/>',about:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9h.01"/>'};return '<a class="profile-nav-row" href="'+url+'"><span class="profile-nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(paths[icon]||paths.about)+'</svg></span><span class="profile-nav-copy"><b>'+title+'</b><small>'+desc+'</small></span><span class="profile-arrow">›</span></a>';}
-function render(){
- const name=profile.full_name||user.email?.split("@")[0]||"ZUNE User";
- const avatar=avatarUrl?'<img class="profile-avatar" src="'+esc(avatarUrl)+'" alt="Picha ya wasifu">':'<div class="profile-avatar">'+esc(initials(name))+'</div>';
- const storeBadge=store&&["verified","approved"].includes(String(store.verification_status).toLowerCase());
- root.innerHTML=
- '<section class="profile-identity">'+avatar+'<div class="profile-id-copy"><h2>'+esc(name)+'</h2><p>'+esc(user.email||"")+'</p><div class="profile-badges"><span class="profile-pill">'+roleLabel()+'</span>'+(profile.is_verified?'<span class="profile-pill account-verified">✓ Verified Account</span>':'')+(storeBadge?'<span class="profile-pill store-verified">✓ Verified Store</span>':'')+'</div></div></section>'+
- '<section class="profile-card"><p class="profile-eyebrow">ZUNE SCAN CODE</p><h2>Utambulisho wako wa ZUNE</h2><p class="profile-muted">Mtu akiscani code hii ataona wasifu wako wa umma ndani ya ZUNE.</p><div class="profile-qr-wrap"><div class="profile-qr" id="profile-qr" aria-label="ZUNE QR code"></div><div><p class="profile-muted">ZUNE ID</p><div class="profile-id-value">ZUN-'+esc(profile.zune_id||"Inapakia")+'</div><p class="profile-muted">ID hii ni ya kipekee na haiwezi kubadilishwa.</p><div class="profile-actions"><button class="profile-btn" id="share-profile">Shiriki wasifu</button><button class="profile-btn secondary" id="download-qr">Pakua QR</button></div></div></div><div class="profile-privacy">QR code hii haionyeshi namba yako ya simu, barua pepe au taarifa binafsi.</div></section>'+
- personalMarkup(name)+
- '<section class="profile-section" id="addresses"><p class="profile-eyebrow">ANWANI ZANGU</p><h2>Anwani za kupokea oda</h2><div id="address-list">'+addressMarkup()+'</div><div class="profile-actions"><a class="profile-btn" href="./addresses.html">+ Ongeza anwani</a></div></section>'+
- '<section class="profile-section"><p class="profile-eyebrow">AKAUNTI YAKO</p><h2>Huduma na mipangilio</h2><div class="profile-row-list">'+
- navRow("security","Usalama wa Akaunti","Password na ulinzi wa akaunti","./settings.html?section=security")+
- navRow("verification","Uthibitishaji wa Akaunti","Hali na maombi ya Verified Account","./verification.html")+
- navRow("history","Historia ya Usalama","Vifaa na taarifa za usalama wa akaunti","./settings.html?section=security-history")+
- navRow("activity","Historia ya Shughuli","Oda na maombi yako ya hivi karibuni","./settings.html?section=activity")+
- navRow("notifications","Taarifa na Arifa","Tazama arifa na ujumbe wa akaunti","./settings.html?section=notifications")+
- navRow("language","Lugha na Muonekano","Kiswahili, English na theme","./settings.html?section=language")+
- navRow("contact","Msaada na Huduma kwa Wateja","Wasiliana na timu ya ZUNE","./settings.html?section=contact")+
- navRow("about","Kuhusu ZUNE","Taarifa rasmi za ZUNE Marketplace","./about-zune.html")+
- '</div></section>'+
- '<section class="profile-section" id="security-history"><p class="profile-eyebrow">USALAMA WA AKAUNTI</p><h2>Historia ya Usalama</h2><div id="security-list" class="profile-timeline"><div class="profile-empty">Inapakia historia ya usalama...</div></div></section>'+
- '<section class="profile-section" id="activity"><p class="profile-eyebrow">HISTORIA YA SHUGHULI</p><h2>Shughuli zako za hivi karibuni</h2><div id="activity-list" class="profile-timeline"><div class="profile-empty">Inapakia historia...</div></div></section>';
- if(window.QRCode&&profile.zune_id)new QRCode($("#profile-qr"),{text:publicUrl(),width:118,height:118,colorDark:"#111111",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
- $("#share-profile").onclick=shareProfile;
- $("#download-qr").onclick=downloadQr;
- bindPersonalSection();
- 
- loadActivity();
- loadSecurityHistory();
- loadNotifications();
+
+const root = document.getElementById("profile-root");
+const $ = (selector, scope = document) => scope.querySelector(selector);
+const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+  "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+}[char]));
+
+let user = null;
+let profile = {};
+let avatarUrl = "";
+let selectedPhoto = null;
+let editing = false;
+let saving = false;
+
+const genderLabels = {
+  male: "Mwanaume",
+  female: "Mwanamke",
+  other: "Nyingine",
+  prefer_not_to_say: "Sitaki kusema"
+};
+
+function display(value) {
+  return value ? esc(value) : '<span class="muted">Haijawekwa</span>';
 }
 
-function personalMarkup(name){
- const value=(v)=>v?esc(v):'<span class="profile-muted">Haijawekwa</span>';
- if(!isEditingPersonal)return '<section class="profile-section" id="personal"><p class="profile-eyebrow">TAARIFA BINAFSI</p><div class="profile-personal-heading"><div><h2>Wasifu wangu</h2><p class="profile-muted">Angalia taarifa za akaunti yako. Unaweza kuzibadilisha wakati wowote.</p></div><button class="profile-btn" id="edit-personal" type="button">✎ Hariri Wasifu</button></div><div class="profile-photo-row">'+(avatarUrl?'<img src="'+esc(avatarUrl)+'" alt="Picha ya wasifu">':'<div class="profile-avatar">'+esc(initials(name))+'</div>')+'<div><b>'+esc(name)+'</b><div class="profile-muted">Picha ya wasifu</div></div></div><div class="profile-details-grid"><div class="profile-detail"><small>Jina kamili</small><b>'+value(profile.full_name)+'</b></div><div class="profile-detail"><small>Barua pepe</small><b>'+value(user.email)+'</b></div><div class="profile-detail"><small>Namba ya simu</small><b>'+value(profile.phone_number)+'</b></div><div class="profile-detail"><small>Tarehe ya kuzaliwa</small><b>'+value(profile.date_of_birth)+'</b></div><div class="profile-detail"><small>Jinsia</small><b>'+value(({female:"Mwanamke",male:"Mwanaume",other:"Nyingine",prefer_not_to_say:"Sitaki kusema"})[profile.gender]||profile.gender)+'</b></div><div class="profile-detail profile-detail-full"><small>Anwani ya makazi</small><b>'+value(profile.residential_address)+'</b></div></div></section>';
- return '<section class="profile-section" id="personal"><p class="profile-eyebrow">HARIRI TAARIFA BINAFSI</p><div class="profile-personal-heading"><div><h2>Hariri Wasifu</h2><p class="profile-muted">Sasisha taarifa zako kisha hifadhi mabadiliko.</p></div></div><div class="profile-photo-row">'+(avatarUrl?'<img src="'+esc(avatarUrl)+'" alt="Picha">':'<div class="profile-avatar">'+esc(initials(name))+'</div>')+'<div><label class="profile-btn secondary" for="profile-photo">Badili picha</label><input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden><div class="profile-muted">JPG, PNG au WebP · hadi 5MB</div></div></div><form class="profile-form" id="personal-form"><label class="profile-field full">Jina kamili<input name="full_name" required maxlength="100" value="'+esc(profile.full_name||"")+'"></label><label class="profile-field">Barua pepe<input class="profile-readonly" value="'+esc(user.email||"")+'" readonly><small class="profile-muted">Barua pepe inasimamiwa kupitia uthibitishaji wa login.</small></label><label class="profile-field">Namba ya simu<input name="phone_number" type="tel" maxlength="25" value="'+esc(profile.phone_number||"")+'"></label><label class="profile-field">Tarehe ya kuzaliwa (si lazima)<input name="date_of_birth" type="date" value="'+esc(profile.date_of_birth||"")+'"></label><label class="profile-field">Jinsia (si lazima)<select name="gender"><option value="">Chagua</option><option value="female" '+(profile.gender==="female"?"selected":"")+'>Mwanamke</option><option value="male" '+(profile.gender==="male"?"selected":"")+'>Mwanaume</option><option value="other" '+(profile.gender==="other"?"selected":"")+'>Nyingine</option><option value="prefer_not_to_say" '+(profile.gender==="prefer_not_to_say"?"selected":"")+'>Sitaki kusema</option></select></label><label class="profile-field full">Anwani ya makazi (si lazima)<textarea name="residential_address" maxlength="500">'+esc(profile.residential_address||"")+'</textarea></label><div class="profile-field full"><div class="profile-actions"><button class="profile-btn" type="submit">Hifadhi mabadiliko</button><button class="profile-btn secondary" id="cancel-personal" type="button">Ghairi</button></div><p class="profile-message" id="personal-message" aria-live="polite"></p></div></form></section>';
-}
-function bindPersonalSection(){
- const edit=$("#edit-personal");if(edit)edit.onclick=()=>{isEditingPersonal=true;renderPersonalOnly();};
- const cancel=$("#cancel-personal");if(cancel)cancel.onclick=()=>{isEditingPersonal=false;renderPersonalOnly();};
- const form=$("#personal-form");if(form)form.onsubmit=savePersonal;
- const photo=$("#profile-photo");if(photo)photo.onchange=uploadAvatar;
-}
-function renderPersonalOnly(){
- const old=$("#personal");if(!old)return;
- const name=profile.full_name||user.email?.split("@")[0]||"ZUNE User";
- old.outerHTML=personalMarkup(name);bindPersonalSection();
+function initials(name) {
+  return String(name || "ZUNE").trim().split(/\s+/).slice(0, 2)
+    .map(part => part[0] || "").join("").toUpperCase();
 }
 
-function addressMarkup(){
- if(!addresses.length)return '<div class="profile-empty">Bado hujahifadhi anwani. Ongeza anwani ya kupokea oda.</div>';
- return addresses.map(a=>'<div class="profile-address"><div class="profile-nav-icon">📍</div><div class="profile-address-copy"><b>'+esc(a.recipient_name)+(a.is_default?'<span class="profile-default">ANWANI KUU</span>':'')+'</b><p>'+esc([a.phone,a.street,a.ward,a.district,a.region,a.country].filter(Boolean).join(", "))+(a.landmark?" · "+esc(a.landmark):"")+'</p></div></div>').join("");
+function avatarMarkup(name, extraClass = "") {
+  return avatarUrl
+    ? '<img class="personal-avatar ' + extraClass + '" src="' + esc(avatarUrl) + '" alt="Picha ya akaunti">'
+    : '<div class="personal-avatar personal-avatar-fallback ' + extraClass + '">' + esc(initials(name)) + '</div>';
 }
-function bindAddressActions(){
- root.querySelectorAll("[data-edit-address]").forEach(b=>b.onclick=()=>showAddressForm(addresses.find(a=>a.id===b.dataset.editAddress)));
- root.querySelectorAll("[data-delete-address]").forEach(b=>b.onclick=()=>deleteAddress(b.dataset.deleteAddress));
- root.querySelectorAll("[data-default-address]").forEach(b=>b.onclick=()=>setDefaultAddress(b.dataset.defaultAddress));
+
+function statusLabel() {
+  const status = String(profile.account_status || "active").toLowerCase();
+  if (status === "suspended") return "Akaunti imesitishwa";
+  if (status === "removed") return "Akaunti imeondolewa";
+  return "Akaunti hai";
 }
-function showAddressForm(a=null){
- editingAddress=a;selectedPoint=null;map=null;marker=null;
- const wrap=$("#address-form-wrap");
- wrap.innerHTML='<form class="profile-form" id="address-form"><label class="profile-field">Jina la mpokeaji<input name="recipient_name" required maxlength="120" value="'+esc(a?.recipient_name||profile.full_name||"")+'"></label><label class="profile-field">Namba ya simu<input name="phone" required type="tel" maxlength="25" value="'+esc(a?.phone||profile.phone_number||"")+'"></label><label class="profile-field">Nchi<input name="country" required value="'+esc(a?.country||"Tanzania")+'"></label><label class="profile-field">Mkoa<input name="region" required value="'+esc(a?.region||"")+'"></label><label class="profile-field">Wilaya<input name="district" required value="'+esc(a?.district||"")+'"></label><label class="profile-field">Kata<input name="ward" required value="'+esc(a?.ward||"")+'"></label><label class="profile-field full">Mtaa / Kijiji<input name="street" required value="'+esc(a?.street||"")+'"></label><label class="profile-field full">Alama ya karibu<input name="landmark" value="'+esc(a?.landmark||"")+'"></label><label class="profile-field full">Maelekezo ya ziada<textarea name="delivery_notes">'+esc(a?.delivery_notes||"")+'</textarea></label><div class="profile-field full"><b>Chagua eneo kwenye ramani</b><div class="profile-actions"><button class="profile-btn secondary" type="button" id="locate-me">Tumia eneo langu</button><span class="profile-muted" id="map-coordinates">'+(a?.latitude&&a?.longitude?Number(a.latitude).toFixed(5)+", "+Number(a.longitude).toFixed(5):"Bofya ramani kuweka alama")+'</span></div><div id="address-map" class="profile-map"></div><p class="profile-map-help">Unaweza kubofya ramani au kuburuta alama kuweka sehemu sahihi ya kufikishiwa.</p></div><label class="profile-field full"><span><input type="checkbox" name="is_default" '+(a?.is_default||!addresses.length?"checked":"")+'> Weka hii kuwa anwani yangu kuu</span></label><div class="profile-field full"><div class="profile-actions"><button class="profile-btn" type="submit">Hifadhi anwani</button><button class="profile-btn secondary" type="button" id="cancel-address">Ghairi</button></div><p class="profile-message" id="address-message"></p></div></form>';
- $("#cancel-address").onclick=()=>{wrap.innerHTML="";editingAddress=null;};
- $("#address-form").onsubmit=saveAddress;
- if(window.L){map=L.map("address-map").setView(a?.latitude&&a?.longitude?[Number(a.latitude),Number(a.longitude)]:[-6.369,34.888],a?.latitude?14:5);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);if(a?.latitude&&a?.longitude)marker=L.marker([a.latitude,a.longitude],{draggable:true}).addTo(map);map.on("click",e=>setPoint(e.latlng.lat,e.latlng.lng));if(marker)marker.on("dragend",()=>{const p=marker.getLatLng();setPoint(p.lat,p.lng,false);});setTimeout(()=>map.invalidateSize(),150);}
- $("#locate-me").onclick=()=>{if(!navigator.geolocation){message($("#address-message"),"Kifaa hiki hakitumii GPS.",true);return;}navigator.geolocation.getCurrentPosition(pos=>{const {latitude,longitude}=pos.coords;setPoint(latitude,longitude);map?.setView([latitude,longitude],16);},err=>message($("#address-message"),"Imeshindikana kupata eneo. Ruhusu GPS kisha jaribu tena.",true),{enableHighAccuracy:true,timeout:12000});};
+
+function render() {
+  const name = profile.full_name || user.email?.split("@")[0] || "Mtumiaji wa ZUNE";
+  root.innerHTML = `
+    <section class="personal-card">
+      <div class="personal-card-heading">
+        <div>
+          <span class="eyebrow">AKAUNTI YAKO</span>
+          <h2>${editing ? "Hariri Taarifa Binafsi" : "Taarifa Binafsi"}</h2>
+          <p>${editing ? "Sasisha taarifa zako kisha hifadhi mabadiliko." : "Hizi ndizo taarifa zilizosajiliwa kwenye akaunti yako ya ZUNE."}</p>
+        </div>
+        ${editing ? "" : '<button class="edit-button" id="edit-personal" type="button"><span aria-hidden="true">✎</span> Hariri</button>'}
+      </div>
+
+      <div class="personal-identity">
+        <div class="avatar-wrap">
+          ${avatarMarkup(name)}
+          ${editing ? '<label class="photo-edit" for="profile-photo" title="Badilisha picha" aria-label="Badilisha picha">✎</label><input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden>' : ""}
+        </div>
+        <div class="identity-copy">
+          <h3>${esc(name)}</h3>
+          <p>${esc(user.email || "")}</p>
+          <div class="identity-badges">
+            <span class="status-pill">${esc(profile.role === "vendor" ? "MUUZAJI" : profile.role === "admin" ? "ADMIN" : "MTEJA")}</span>
+            <span class="status-pill active-pill">${esc(statusLabel())}</span>
+          </div>
+          ${editing ? '<small class="photo-hint">JPG, PNG au WebP · hadi 5MB</small>' : ""}
+        </div>
+      </div>
+
+      ${editing ? editFormMarkup() : readOnlyMarkup()}
+      <p class="form-message" id="personal-message" role="status" aria-live="polite"></p>
+    </section>
+    <p class="page-footnote">ⓏⓊⓃⒺ MARKETPLACE · 2.0</p>
+  `;
+
+  if (editing) {
+    $("#personal-form").addEventListener("submit", savePersonal);
+    $("#cancel-personal").addEventListener("click", () => {
+      selectedPhoto = null;
+      editing = false;
+      render();
+    });
+    $("#profile-photo").addEventListener("change", previewPhoto);
+    $("#profile-photo").addEventListener("change", () => {
+      const file = $("#profile-photo").files?.[0];
+      if (file) {
+        const preview = URL.createObjectURL(file);
+        const oldPreview = root.dataset.previewUrl;
+        if (oldPreview) URL.revokeObjectURL(oldPreview);
+        root.dataset.previewUrl = preview;
+        const current = $(".personal-avatar", root);
+        const img = document.createElement("img");
+        img.className = "personal-avatar";
+        img.alt = "Picha mpya ya akaunti";
+        img.src = preview;
+        current.replaceWith(img);
+      }
+    });
+  } else {
+    $("#edit-personal").addEventListener("click", () => {
+      editing = true;
+      render();
+    });
+  }
 }
-function setPoint(lat,lng,move=true){selectedPoint={latitude:Number(lat.toFixed(7)),longitude:Number(lng.toFixed(7))};if(map){if(!marker)marker=L.marker([lat,lng],{draggable:true}).addTo(map);else marker.setLatLng([lat,lng]);if(move)map.setView([lat,lng],15);marker.off("dragend").on("dragend",()=>{const p=marker.getLatLng();setPoint(p.lat,p.lng,false);});}const c=$("#map-coordinates");if(c)c.textContent=lat.toFixed(5)+", "+lng.toFixed(5);}
-async function saveAddress(e){e.preventDefault();const f=new FormData(e.currentTarget);const payload={user_id:user.id,recipient_name:String(f.get("recipient_name")).trim(),phone:String(f.get("phone")).trim(),country:String(f.get("country")).trim(),region:String(f.get("region")).trim(),district:String(f.get("district")).trim(),ward:String(f.get("ward")).trim(),street:String(f.get("street")).trim(),landmark:String(f.get("landmark")||"").trim()||null,delivery_notes:String(f.get("delivery_notes")||"").trim()||null,is_default:f.get("is_default")==="on",latitude:selectedPoint?.latitude??editingAddress?.latitude??null,longitude:selectedPoint?.longitude??editingAddress?.longitude??null};const msg=$("#address-message");try{if(payload.is_default){const {error}=await supabase.from("delivery_addresses").update({is_default:false}).eq("user_id",user.id);if(error)throw error;}let result;if(editingAddress){result=await supabase.from("delivery_addresses").update(payload).eq("id",editingAddress.id).eq("user_id",user.id);}else{result=await supabase.from("delivery_addresses").insert(payload);}if(result.error)throw result.error;const {data,error}=await supabase.from("delivery_addresses").select("*").eq("user_id",user.id).order("is_default",{ascending:false}).order("created_at",{ascending:false});if(error)throw error;addresses=data||[];$("#address-list").innerHTML=addressMarkup();bindAddressActions();$("#address-form-wrap").innerHTML="";editingAddress=null;selectedPoint=null;map=null;marker=null;}catch(err){message(msg,err.message||"Imeshindikana kuhifadhi anwani.",true);}}
-async function deleteAddress(id){if(!confirm("Una uhakika unataka kufuta anwani hii?"))return;const {error}=await supabase.from("delivery_addresses").delete().eq("id",id).eq("user_id",user.id);if(error){alert(error.message);return;}addresses=addresses.filter(a=>a.id!==id);$("#address-list").innerHTML=addressMarkup();bindAddressActions();}
-async function setDefaultAddress(id){const {error:e1}=await supabase.from("delivery_addresses").update({is_default:false}).eq("user_id",user.id);if(e1){alert(e1.message);return;}const {error:e2}=await supabase.from("delivery_addresses").update({is_default:true}).eq("id",id).eq("user_id",user.id);if(e2){alert(e2.message);return;}addresses=addresses.map(a=>({...a,is_default:a.id===id}));$("#address-list").innerHTML=addressMarkup();bindAddressActions();}
-async function savePersonal(e){e.preventDefault();const f=new FormData(e.currentTarget);const updates={full_name:String(f.get("full_name")).trim(),phone_number:String(f.get("phone_number")||"").trim()||null,date_of_birth:f.get("date_of_birth")||null,gender:f.get("gender")||null,residential_address:String(f.get("residential_address")||"").trim()||null};const {error}=await supabase.from("profiles").update(updates).eq("id",user.id);if(error){message($("#personal-message"),error.message,true);return;}profile={...profile,...updates};isEditingPersonal=false;renderPersonalOnly();const saved=$("#personal");if(saved)saved.scrollIntoView({behavior:"smooth",block:"start"});}
-async function uploadAvatar(e){const file=e.target.files?.[0];if(!file)return;if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024){message($("#personal-message"),"Chagua JPG, PNG au WebP isiyozidi 5MB.",true);return;}try{const path=user.id+"/"+crypto.randomUUID()+"."+file.name.split(".").pop().toLowerCase();const {error:up}=await supabase.storage.from("zune-avatars").upload(path,file,{contentType:file.type,upsert:false,cacheControl:"3600"});if(up)throw up;const old=profile.avatar_path;const {error}=await supabase.from("profiles").update({avatar_path:path}).eq("id",user.id);if(error)throw error;profile.avatar_path=path;const {data:blob,error:down}=await supabase.storage.from("zune-avatars").download(path);if(down)throw down;if(avatarUrl.startsWith("blob:"))URL.revokeObjectURL(avatarUrl);avatarUrl=URL.createObjectURL(blob);if(old)await supabase.storage.from("zune-avatars").remove([old]);render();bindAddressActions();message($("#personal-message"),"Picha ya wasifu imebadilishwa.");}catch(err){message($("#personal-message"),err.message||"Imeshindikana kupakia picha.",true);}}
-async function shareProfile(){const url=publicUrl();try{if(navigator.share)await navigator.share({title:"Wasifu wangu wa ZUNE",url});else{await navigator.clipboard.writeText(url);alert("Kiungo cha wasifu kimenakiliwa.");}}catch(e){if(e.name!=="AbortError")alert("Imeshindikana kushiriki kiungo.");}}
-function downloadQr(){const canvas=$("#profile-qr canvas");const img=$("#profile-qr img");const source=canvas?canvas.toDataURL("image/png"):img?.src;if(!source){alert("QR Code haijapatikana.");return;}const a=document.createElement("a");a.href=source;a.download="ZUNE-"+profile.zune_id+"-QR.png";a.click();}
-async function loadNotifications(){const target=$("#notification-list");try{const {data,error}=await supabase.from("notifications").select("id,type,title_sw,title_en,body_sw,body_en,action_url,is_read,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(30);if(error)throw error;const rows=data||[];target.innerHTML=rows.length?rows.map(n=>'<article class="profile-address" style="align-items:flex-start"><div class="profile-nav-icon">🔔</div><div class="profile-address-copy"><b>'+esc(localStorage.getItem("zune_language")==="en"?(n.title_en||n.title_sw):(n.title_sw||n.title_en))+'</b><p>'+esc(localStorage.getItem("zune_language")==="en"?(n.body_en||n.body_sw||""):(n.body_sw||n.body_en||""))+'</p><small class="profile-muted">'+new Date(n.created_at).toLocaleString("sw-TZ")+(n.is_read?" · Imesomwa":" · Haijasomwa")+'</small><div class="profile-address-actions">'+(!n.is_read?'<button type="button" data-read-notice="'+n.id+'">Weka imesomwa</button>':'')+(n.action_url?'<a href="'+esc(n.action_url)+'" class="profile-muted">Fungua</a>':'')+'</div></div></article>').join(""):'<div class="profile-empty">Huna arifa kwa sasa.</div>';target.querySelectorAll("[data-read-notice]").forEach(b=>b.onclick=()=>markNotificationRead(b.dataset.readNotice));$("#mark-all-read").onclick=markAllNotificationsRead;}catch(e){target.innerHTML='<div class="profile-empty">Arifa hazipatikani kwa sasa.</div>';console.warn("Notifications unavailable",e);}}
-async function markNotificationRead(id){const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString()}).eq("id",id).eq("user_id",user.id);if(error){alert(error.message);return;}loadNotifications();}
-async function markAllNotificationsRead(){const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString()}).eq("user_id",user.id).eq("is_read",false);if(error){alert(error.message);return;}loadNotifications();}
-async function loadSecurityHistory(){const target=$("#security-list");try{const {data,error}=await supabase.from("security_events").select("id,event_type,severity,source,occurred_at,details").eq("user_id",user.id).order("occurred_at",{ascending:false}).limit(12);if(error)throw error;target.innerHTML=data?.length?data.map(x=>'<div class="profile-event"><b>'+esc(String(x.event_type||"Tukio la usalama").replace(/_/g," "))+'</b><small>'+esc(x.severity||"info")+' · '+new Date(x.occurred_at).toLocaleString("sw-TZ")+(x.source?" · "+esc(x.source):"")+'</small></div>').join(""):'<div class="profile-empty">Hakuna matukio ya usalama yaliyorekodiwa bado.</div>';}catch(e){console.warn("Security history unavailable",e);target.innerHTML='<div class="profile-empty">Historia ya usalama haipatikani kwa sasa.</div>';}}
-async function loadActivity(){const target=$("#activity-list");try{const [o,v,s]=await Promise.all([supabase.from("orders").select("id,created_at,status").eq("buyer_id",user.id).order("created_at",{ascending:false}).limit(8),supabase.from("verified_badge_requests").select("id,created_at,status,verification_type").eq("user_id",user.id).order("created_at",{ascending:false}).limit(8),supabase.from("seller_applications").select("id,created_at,status").eq("user_id",user.id).order("created_at",{ascending:false}).limit(8)]);const events=[...(o.data||[]).map(x=>({date:x.created_at,title:"Oda imeundwa",detail:"Hali: "+x.status})),...(v.data||[]).map(x=>({date:x.created_at,title:x.verification_type==="seller"?"Ombi la Verified Store":"Ombi la Verified Account",detail:"Hali: "+x.status})),...(s.data||[]).map(x=>({date:x.created_at,title:"Ombi la kufungua duka",detail:"Hali: "+x.status}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,15);target.innerHTML=events.length?events.map(x=>'<div class="profile-event"><b>'+esc(x.title)+'</b><small>'+esc(x.detail)+' · '+new Date(x.date).toLocaleString("sw-TZ")+'</small></div>').join(""):'<div class="profile-empty">Bado hakuna shughuli za kuonyesha.</div>';}catch(e){target.innerHTML='<div class="profile-empty">Historia ya shughuli haipatikani kwa sasa.</div>';}}
-async function init(){try{const {data:{user:u},error}=await supabase.auth.getUser();if(error)throw error;if(!u){location.replace("./index.html");return;}user=u;const [p,s,a]=await Promise.all([supabase.from("profiles").select("id,zune_id,full_name,phone_number,avatar_path,role,is_verified,created_at,date_of_birth,gender,residential_address").eq("id",user.id).single(),supabase.from("stores").select("store_name,verification_status").eq("owner_id",user.id).maybeSingle(),supabase.from("delivery_addresses").select("*").eq("user_id",user.id).order("is_default",{ascending:false}).order("created_at",{ascending:false})]);if(p.error)throw p.error;if(a.error)throw a.error;profile=p.data;store=s.data;addresses=a.data||[];if(profile.avatar_path){const {data:blob}=await supabase.storage.from("zune-avatars").download(profile.avatar_path);if(blob)avatarUrl=URL.createObjectURL(blob);}document.documentElement.setAttribute("data-theme",localStorage.getItem("zune_theme")||"emerald");render();bindAddressActions();}catch(e){console.error(e);root.innerHTML='<div class="profile-empty">'+esc(e.message||"Imeshindikana kupakia wasifu.")+'</div>';}}
+
+function readOnlyMarkup() {
+  return `
+    <div class="details-heading">TAARIFA ZA MSINGI</div>
+    <div class="details-grid">
+      <div class="detail-item"><span>Jina kamili</span><strong>${display(profile.full_name)}</strong></div>
+      <div class="detail-item"><span>Barua pepe</span><strong>${display(user.email)}</strong></div>
+      <div class="detail-item"><span>Namba ya simu</span><strong>${display(profile.phone_number)}</strong></div>
+      <div class="detail-item"><span>Tarehe ya kuzaliwa</span><strong>${display(profile.date_of_birth)}</strong></div>
+      <div class="detail-item"><span>Jinsia</span><strong>${display(genderLabels[profile.gender] || profile.gender)}</strong></div>
+      <div class="detail-item detail-wide"><span>Anwani ya makazi</span><strong>${display(profile.residential_address)}</strong></div>
+    </div>
+    <div class="details-heading secondary-heading">UTAMBULISHO WA ZUNE</div>
+    <div class="details-grid identity-grid">
+      <div class="detail-item"><span>ZUNE ID</span><strong>${display(profile.zune_id)}</strong></div>
+      <div class="detail-item"><span>Tarehe ya kufungua akaunti</span><strong>${profile.created_at ? esc(new Date(profile.created_at).toLocaleDateString("sw-TZ", {day:"numeric",month:"long",year:"numeric"})) : '<span class="muted">Haijulikani</span>'}</strong></div>
+    </div>
+  `;
+}
+
+function editFormMarkup() {
+  return `
+    <form id="personal-form" class="personal-form" novalidate>
+      <div class="details-heading">HARIRI TAARIFA ZAKO</div>
+      <label class="field field-wide">Jina kamili
+        <input name="full_name" type="text" maxlength="100" required value="${esc(profile.full_name || "")}" autocomplete="name">
+      </label>
+      <label class="field field-wide">Barua pepe
+        <input type="email" value="${esc(user.email || "")}" disabled>
+        <small>Barua pepe inahitaji utaratibu maalumu wa uthibitishaji ili kubadilishwa.</small>
+      </label>
+      <label class="field">Namba ya simu
+        <input name="phone_number" type="tel" maxlength="25" value="${esc(profile.phone_number || "")}" autocomplete="tel" placeholder="+255...">
+      </label>
+      <label class="field">Tarehe ya kuzaliwa
+        <input name="date_of_birth" type="date" value="${esc(profile.date_of_birth || "")}" max="${new Date().toISOString().slice(0,10)}">
+      </label>
+      <label class="field">Jinsia
+        <select name="gender">
+          <option value="">Chagua jinsia</option>
+          <option value="male" ${profile.gender === "male" ? "selected" : ""}>Mwanaume</option>
+          <option value="female" ${profile.gender === "female" ? "selected" : ""}>Mwanamke</option>
+          <option value="other" ${profile.gender === "other" ? "selected" : ""}>Nyingine</option>
+          <option value="prefer_not_to_say" ${profile.gender === "prefer_not_to_say" ? "selected" : ""}>Sitaki kusema</option>
+        </select>
+      </label>
+      <label class="field field-wide">Anwani ya makazi
+        <textarea name="residential_address" maxlength="500" rows="3" placeholder="Weka anwani yako ya makazi">${esc(profile.residential_address || "")}</textarea>
+      </label>
+      <div class="form-actions field-wide">
+        <button class="save-button" id="save-personal" type="submit">Hifadhi Mabadiliko</button>
+        <button class="cancel-button" id="cancel-personal" type="button">Ghairi</button>
+      </div>
+    </form>
+  `;
+}
+
+function previewPhoto(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    event.target.value = "";
+    showMessage("Chagua JPG, PNG au WebP isiyozidi 5MB.", true);
+    return;
+  }
+  selectedPhoto = file;
+}
+
+function showMessage(text, isError = false) {
+  const target = $("#personal-message");
+  if (!target) return;
+  target.textContent = text;
+  target.className = "form-message " + (isError ? "error-message" : "success-message");
+}
+
+async function savePersonal(event) {
+  event.preventDefault();
+  if (saving) return;
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+
+  const values = new FormData(form);
+  const fullName = String(values.get("full_name") || "").trim();
+  if (!fullName) return showMessage("Tafadhali weka jina lako kamili.", true);
+
+  const birthDate = String(values.get("date_of_birth") || "");
+  if (birthDate && birthDate > new Date().toISOString().slice(0, 10)) {
+    return showMessage("Tarehe ya kuzaliwa haiwezi kuwa ya baadaye.", true);
+  }
+
+  const updates = {
+    full_name: fullName,
+    phone_number: String(values.get("phone_number") || "").trim() || null,
+    date_of_birth: birthDate || null,
+    gender: String(values.get("gender") || "") || null,
+    residential_address: String(values.get("residential_address") || "").trim() || null
+  };
+
+  saving = true;
+  const saveButton = $("#save-personal");
+  saveButton.disabled = true;
+  saveButton.textContent = "Inahifadhi...";
+
+  let uploadedPath = null;
+  const oldAvatarPath = profile.avatar_path;
+  try {
+    if (selectedPhoto) {
+      const extension = selectedPhoto.type === "image/png" ? "png" : selectedPhoto.type === "image/webp" ? "webp" : "jpg";
+      uploadedPath = user.id + "/" + crypto.randomUUID() + "." + extension;
+      const { error: uploadError } = await supabase.storage.from("zune-avatars")
+        .upload(uploadedPath, selectedPhoto, {
+          contentType: selectedPhoto.type,
+          upsert: false,
+          cacheControl: "3600"
+        });
+      if (uploadError) throw uploadError;
+      updates.avatar_path = uploadedPath;
+    }
+
+    const { data, error } = await supabase.from("profiles")
+      .update(updates)
+      .eq("id", user.id)
+      .select("id,full_name,phone_number,date_of_birth,gender,residential_address,avatar_path")
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error("Taarifa hazikuhifadhiwa. Tafadhali jaribu tena.");
+
+    profile = { ...profile, ...data };
+    if (uploadedPath) {
+      const { data: blob, error: downloadError } = await supabase.storage.from("zune-avatars").download(uploadedPath);
+      if (downloadError) throw downloadError;
+      if (avatarUrl.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
+      avatarUrl = URL.createObjectURL(blob);
+      if (oldAvatarPath && oldAvatarPath !== uploadedPath) {
+        const { error: removeError } = await supabase.storage.from("zune-avatars").remove([oldAvatarPath]);
+        if (removeError) console.warn("Old avatar cleanup failed:", removeError.message);
+      }
+    }
+
+    selectedPhoto = null;
+    editing = false;
+    const preview = root.dataset.previewUrl;
+    if (preview) URL.revokeObjectURL(preview);
+    delete root.dataset.previewUrl;
+    render();
+    showMessage("Mabadiliko yako yamehifadhiwa kikamilifu.");
+  } catch (error) {
+    if (uploadedPath) await supabase.storage.from("zune-avatars").remove([uploadedPath]);
+    console.error("ZUNE personal information save:", error);
+    showMessage(error.message || "Imeshindikana kuhifadhi taarifa. Jaribu tena.", true);
+    saveButton.disabled = false;
+    saveButton.textContent = "Hifadhi Mabadiliko";
+  } finally {
+    saving = false;
+  }
+}
+
+async function init() {
+  try {
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    if (!currentUser) {
+      location.replace("./index.html");
+      return;
+    }
+    user = currentUser;
+
+    const { data, error } = await supabase.from("profiles")
+      .select("id,zune_id,full_name,phone_number,avatar_path,role,is_verified,account_status,created_at,date_of_birth,gender,residential_address")
+      .eq("id", user.id)
+      .single();
+
+    if (error) throw error;
+    profile = data || {};
+
+    if (profile.avatar_path) {
+      const { data: blob, error: avatarError } = await supabase.storage.from("zune-avatars").download(profile.avatar_path);
+      if (!avatarError && blob) avatarUrl = URL.createObjectURL(blob);
+    }
+
+    document.documentElement.setAttribute("data-theme", localStorage.getItem("zune_theme") || "emerald");
+    render();
+  } catch (error) {
+    console.error("ZUNE personal information load:", error);
+    root.innerHTML = '<div class="load-error">Imeshindikana kupakia taarifa zako. ' + esc(error.message || "") + '</div>';
+  }
+}
+
 init();
