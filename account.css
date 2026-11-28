@@ -86,3 +86,50 @@
 @media(hover:hover){.account-identity-card:hover{transform:translateY(-3px) rotateX(1deg);box-shadow:0 30px 58px rgba(3,61,42,.28),0 9px 22px rgba(8,122,85,.14),inset 0 1px 0 rgba(255,255,255,.72)}}
 @media(max-width:420px){.account-identity-card{border-radius:25px}.account-avatar{border-radius:20px}}
 @media(prefers-reduced-motion:reduce){.account-identity-card{transform:none!important}}
+
+
+/* STEP 2 — PREMIUM 3D GLASS QUICK ACCESS TILES */
+.account-quick-section{gap:14px}
+.account-quick-grid{gap:12px;perspective:900px}
+.account-quick-grid a{
+  position:relative;isolation:isolate;overflow:hidden;
+  min-height:116px;padding:14px 6px 12px;
+  border:1px solid rgba(255,255,255,.94);
+  border-radius:22px;
+  background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(225,245,234,.72));
+  box-shadow:8px 10px 20px rgba(14,73,45,.09),inset 1px 1px 0 rgba(255,255,255,.98),inset -1px -1px 0 rgba(190,222,202,.62);
+  -webkit-backdrop-filter:blur(16px) saturate(135%);backdrop-filter:blur(16px) saturate(135%);
+  transform:translateZ(0);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;
+}
+.account-quick-grid a:before{
+  content:"";position:absolute;z-index:-1;width:92px;height:92px;right:-43px;top:-55px;
+  border:1px solid rgba(8,122,85,.13);border-radius:50%;
+  box-shadow:0 0 0 12px rgba(8,122,85,.035),0 0 0 25px rgba(8,122,85,.025);
+}
+.account-quick-grid a:after{
+  content:"";position:absolute;left:13px;right:13px;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.98),transparent);
+}
+.account-quick-grid a>span{
+  position:relative;width:49px;height:49px;border:1px solid rgba(255,255,255,.72);
+  border-radius:17px;background:linear-gradient(145deg,#22b982 0%,#087a55 58%,#04583e 100%);
+  box-shadow:0 9px 16px rgba(8,122,85,.27),inset 0 1px 1px rgba(255,255,255,.76),inset 0 -4px 8px rgba(0,55,37,.16);
+  transform:translateZ(14px);transition:transform .22s ease,box-shadow .22s ease;
+}
+.account-quick-grid small{position:relative;z-index:1;font-size:10px;font-weight:950;letter-spacing:.05px}
+.account-quick-grid a:focus-visible{outline:3px solid #f0a23a;outline-offset:3px}
+.account-quick-grid a.is-disabled{opacity:.58;filter:saturate(.65);cursor:not-allowed}
+.account-quick-grid a.is-disabled>span{background:linear-gradient(145deg,#8da99a,#637d70);box-shadow:0 7px 13px rgba(40,75,56,.15),inset 0 1px 1px rgba(255,255,255,.5)}
+@media(hover:hover){
+ .account-quick-grid a:not(.is-disabled):hover{transform:translateY(-5px) rotateX(2deg);border-color:#fff;box-shadow:11px 16px 25px rgba(14,73,45,.14),inset 1px 1px 0 #fff}
+ .account-quick-grid a:not(.is-disabled):hover>span{transform:translateY(-2px) translateZ(18px);box-shadow:0 13px 20px rgba(8,122,85,.32),inset 0 1px 1px rgba(255,255,255,.8)}
+}
+.account-quick-grid a:not(.is-disabled):active{transform:translateY(2px) scale(.965);box-shadow:inset 3px 4px 10px rgba(14,73,45,.13)}
+[data-account-theme="dark"] .account-quick-grid a{
+ border-color:rgba(113,159,132,.42);background:linear-gradient(145deg,rgba(36,67,49,.94),rgba(21,48,34,.9));
+ box-shadow:7px 9px 19px rgba(0,0,0,.24),inset 1px 1px 0 rgba(255,255,255,.09),inset -1px -1px 0 rgba(0,0,0,.12);
+}
+[data-account-theme="dark"] .account-quick-grid a:before{border-color:rgba(135,226,174,.14);box-shadow:0 0 0 12px rgba(135,226,174,.035),0 0 0 25px rgba(135,226,174,.02)}
+[data-account-theme="dark"] .account-quick-grid a.is-disabled>span{background:linear-gradient(145deg,#637d70,#405b4d)}
+@media(max-width:420px){.account-quick-grid{gap:8px}.account-quick-grid a{min-height:108px;padding:12px 3px 10px;border-radius:19px}.account-quick-grid a>span{width:44px;height:44px;border-radius:15px}.account-quick-grid small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.account-quick-grid a,.account-quick-grid a>span{transition:none!important;transform:none!important}}
