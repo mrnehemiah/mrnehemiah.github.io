@@ -180,7 +180,9 @@ function computeTotals(cart, products) {
     const product = byId.get(String(item.productId)) || null;
     const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1));
     const variant = product && item.variantId ? (product.__zuneVariants||[]).find(v=>String(v.id)===String(item.variantId))||null : null;
-    const unitPrice = variant ? Number(variant.price||0) : Number(product?.price||0);
+    const rawUnitPrice = variant ? Number(variant.price||0) : Number(product?.price||0);
+    const discountPercent = Math.min(100,Math.max(0,Number(product?.discount_percent||0)));
+    const unitPrice = Math.round(rawUnitPrice*(1-discountPercent/100)*100)/100;
     return { productId:item.productId, variantId:item.variantId||null, cartKey:cartItemKey(item), quantity, product, variant, unitPrice, lineTotal:product?unitPrice*quantity:0 };
   });
   const subtotal = rows.reduce((sum, r) => sum + r.lineTotal, 0);
@@ -376,7 +378,9 @@ export async function mountStandaloneCart(root) {
     if (plus)  plus.disabled  = quantity >= Math.min(MAX_QTY, Number(variant?.stock_quantity ?? MAX_QTY));
 
     const lineTotal = row.querySelector(".z-cart-line-total");
-    if (lineTotal) lineTotal.textContent = money(Number(variant?.price ?? product.price ?? 0) * quantity, language);
+    const rawUnitPrice=Number(variant?.price ?? product.price ?? 0);
+    const discountPercent=Math.min(100,Math.max(0,Number(product.discount_percent||0)));
+    if (lineTotal) lineTotal.textContent = money(Math.round(rawUnitPrice*(1-discountPercent/100)*100)/100 * quantity, language);
     return true;
   };
 
