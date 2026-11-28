@@ -95,7 +95,13 @@ async function placeOrder(){
 }
 async function start(){
  const {data:{user:u},error}=await supabase.auth.getUser();if(error)throw error;if(!u){root.innerHTML='<section class="zc-empty"><h1>Ingia kwenye akaunti kwanza</h1><a href="./index.html">Rudi sokoni kuingia</a></section>';return;}user=u;
- cart=readCart(user.id);if(!cart.length){render();return;}
+ buyNowMode=new URLSearchParams(window.location.search).get("mode")==="buy-now";
+ if(buyNowMode){
+  let intent=null;try{intent=JSON.parse(sessionStorage.getItem("zune_buy_now:"+user.id)||"null");}catch{}
+  if(!intent||!intent.productId||!Number.isFinite(Number(intent.quantity))||Number(intent.quantity)<1||Number(intent.quantity)>99||!intent.createdAt||Date.now()-Number(intent.createdAt)>30*60*1000){sessionStorage.removeItem("zune_buy_now:"+user.id);throw new Error("Ombi la Nunua Sasa limeisha muda. Rudi kwenye bidhaa na ujaribu tena.");}
+  cart=[{productId:String(intent.productId),variantId:intent.variantId||null,quantity:Math.floor(Number(intent.quantity))}];
+ }else{cart=readCart(user.id);}
+ if(!cart.length){render();return;}
  const [p,a]=await Promise.all([loadCartProducts(cart),supabase.from("delivery_addresses").select("*").eq("user_id",user.id).order("is_default",{ascending:false}).order("created_at",{ascending:false})]);
  products=p.filter(x=>x.moderation_status==="approved"&&!x.removed_at);addresses=a.data||[];
  if(a.error)throw a.error;
