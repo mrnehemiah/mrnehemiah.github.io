@@ -81,7 +81,7 @@ async function init() {
       <div class="account-avatar">${initials}</div>
       <div class="account-profile-copy">
         <span class="account-eyebrow">MY ZUNE ACCOUNT</span>
-        <h1 class="account-name">${isVerified ? verifiedBadge() : ""}${esc(name)}</h1>
+        <h1 class="account-name">${esc(name)}${isVerified ? verifiedBadge() : ""}</h1>
         <p class="account-email">${esc(user.email || user.phone || "Akaunti ya ZUNE")}</p>
         <p class="account-id">${zuneId}</p>
       </div>

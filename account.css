@@ -19,3 +19,41 @@
 .account-loading,.account-error{padding:24px;text-align:center;color:var(--text-muted,#71817a);font-size:13px}.account-error{color:#b42318}.account-footer{padding:20px 0 16px;text-align:center;color:var(--text-muted,#71817a);font-size:9px;font-weight:900;letter-spacing:1.4px}
 @media(max-width:440px){.account-profile-card{padding:16px}.account-feature-grid{gap:8px}.account-feature{padding:10px;gap:9px;min-height:72px}.account-feature-icon{width:34px;height:34px;flex-basis:34px}.account-feature-copy b{font-size:11px}.account-group-links{grid-template-columns:1fr}.account-topbar{margin-bottom:18px}}
 @media(prefers-reduced-motion:reduce){.account-feature{transition:none}}
+
+
+/* ZUNE Account — modern card refresh */
+.account-shell{width:min(100% - 32px,820px)}
+.account-topbar{position:relative;isolation:isolate;margin-bottom:26px;padding-top:20px;padding-bottom:20px;border-radius:0 0 28px 28px;box-shadow:0 12px 32px #063d2a24}
+.account-topbar:after{content:"";position:absolute;z-index:-1;width:190px;height:190px;right:-58px;top:-92px;border:1px solid #ffffff26;border-radius:50%;box-shadow:0 0 0 22px #ffffff0b,0 0 0 46px #ffffff08}
+.account-root{gap:24px}
+.account-profile-card{min-height:158px;padding:25px;border:0;border-radius:26px;background:linear-gradient(125deg,#064b38 0%,#087a55 58%,#14a879 100%);color:#fff;box-shadow:0 18px 38px #064b3826}
+.account-profile-card:after{content:"";position:absolute;width:190px;height:190px;right:-58px;bottom:-115px;border:1px solid #ffffff30;border-radius:50%;box-shadow:0 0 0 20px #ffffff0d,0 0 0 42px #ffffff09}
+.account-avatar{width:76px;height:76px;flex-basis:76px;border:2px solid #ffffff80;border-radius:23px;background:#ffffff20;color:#fff;box-shadow:0 8px 24px #002d1e30}
+.account-eyebrow{color:#c8f3dd;letter-spacing:1.6px}
+.account-name{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:0;color:#fff;font-size:clamp(20px,4vw,26px);letter-spacing:-.55px}
+.account-email{color:#e2f5eb;font-size:12px}
+.account-id{display:inline-flex;width:max-content;max-width:100%;margin-top:11px;padding:7px 10px;border:1px solid #ffffff35;border-radius:999px;background:#ffffff16;color:#fff;font-size:10px;letter-spacing:.35px}
+.account-name-verified{width:23px;height:23px;flex:0 0 23px;margin:0;vertical-align:middle;filter:drop-shadow(0 2px 3px #54280035)}
+.account-section{gap:13px}
+.account-section-heading{padding:0 2px}
+.account-section-heading h2{font-size:16px;letter-spacing:-.2px}
+.account-section-heading span{padding:5px 9px;border-radius:999px;background:#e8f4ed;color:#087a55;font-size:10px;font-weight:800}
+.account-feature-grid{gap:12px}
+.account-feature{position:relative;min-height:88px;padding:15px;border-radius:19px;border-color:#e8eeea;box-shadow:0 7px 20px #153d2608}
+.account-feature:hover{transform:translateY(-2px);border-color:#b7d9c5;box-shadow:0 12px 24px #153d2610}
+.account-feature-icon{width:43px;height:43px;flex-basis:43px;border-radius:15px;background:linear-gradient(145deg,#e8f6ee,#f3faf5);font-size:20px}
+.account-feature-copy b{font-size:12px;font-weight:850;letter-spacing:-.1px}
+.account-feature-copy small{font-size:10px;line-height:1.45}
+.account-feature-arrow{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:#f2f7f4;color:#087a55;font-size:18px}
+.account-feature.is-pending{background:#f9fbfa;border-style:dashed;box-shadow:none}
+.account-feature.is-pending .account-feature-icon{background:#f0f3f1}
+.account-group{border-radius:19px;box-shadow:0 7px 20px #153d2606}
+.account-group summary{min-height:72px;padding:16px}
+.account-group-icon{width:42px;height:42px;border-radius:15px;background:linear-gradient(145deg,#e8f6ee,#f3faf5)}
+.account-group-title{font-size:13px}
+.account-group-subtitle{font-size:10px}
+.account-group-links{padding:0 14px 14px;gap:9px}
+.account-group-links a,.account-group-links button{min-height:44px;padding:11px 12px;border-radius:12px;background:#f8fbf9;border-color:#eaf0ec;font-size:11px}
+.account-account-note{border:1px solid #dcece2;border-radius:16px;background:linear-gradient(120deg,#edf8f1,#f8fbf9);font-size:10px}
+@media(max-width:520px){.account-shell{width:calc(100% - 24px)}.account-topbar{margin-left:-12px;margin-right:-12px;padding-left:16px;padding-right:16px}.account-profile-card{padding:19px;gap:13px;min-height:145px}.account-avatar{width:64px;height:64px;flex-basis:64px;border-radius:20px}.account-name{font-size:20px}.account-feature-grid{gap:9px}.account-feature{min-height:84px;padding:11px;gap:9px}.account-feature-icon{width:36px;height:36px;flex-basis:36px;border-radius:12px;font-size:17px}.account-feature-copy b{font-size:11px}.account-feature-arrow{width:20px;height:20px;font-size:15px}.account-group-links{grid-template-columns:1fr}}
+@media(max-width:360px){.account-profile-card{align-items:flex-start;padding:15px}.account-avatar{width:54px;height:54px;flex-basis:54px;font-size:20px}.account-name{font-size:18px}.account-feature{gap:7px;padding:9px}.account-feature-icon{width:32px;height:32px;flex-basis:32px}}
