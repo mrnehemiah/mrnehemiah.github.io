@@ -31,6 +31,9 @@
     transition: opacity .65s ease, visibility .65s ease;
   }
   #zune-splash.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  /* CSS failsafe: hide the intro after four seconds even if page scripts stall. */
+  #zune-splash { animation: zuneSplashFailsafe 0.01s linear 4s forwards; }
+  @keyframes zuneSplashFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
   #zune-splash .splash-ripples {
     position: absolute; width: min(72vw, 300px); aspect-ratio: 1;
     display: grid; place-items: center; pointer-events: none;
@@ -139,7 +142,7 @@
       }, 15000);
     })();
   </script>
-  <script type="module" src="./main.js?v=20261128-splash-4sec"></script>
+  <script type="module" src="./main.js?v=20261128-splash-hard-stop-1"></script>
   <script type="module" src="./notification-bell.js"></script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
