@@ -14,7 +14,7 @@ import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v
 let cartModule = null;
 let walletModule = null;
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 24;
 
 
 
@@ -2272,21 +2272,109 @@ function bindProductCards(root){
 function renderProductCards(products,gridClass="z-product-grid"){
  return products.length ? '<div class="'+gridClass+'">'+products.map(productCard).join("")+"</div>" : '<div class="z-empty-state"><strong>'+tx("empty")+"</strong></div>";
 }
-function updateProductArea() {
-  const area=document.getElementById("z-product-area");
-  if(area){
-    const savedIds=new Set((homeState.saved||[]).map(String));
-    const hybrid=[...homeState.products].sort((a,b)=>{
-      const score=p=>Number(savedIds.has(String(p.id)))*-2+Number(String(p.category||"")===String(homeState.selectedCategory||"")&&homeState.selectedCategory?2:0)+Number(p.average_rating||p.rating_average||p.rating||0)*2+Number(p.sold_count||p.sales_count||p.total_sold||0)*.25;
-      return score(b)-score(a);
-    });
-    area.innerHTML=renderProductCards(hybrid);
+function readRankingIds(key){
+  try{
+    const value=JSON.parse(localStorage.getItem(key)||"[]");
+    return Array.isArray(value)?value.map(String):[];
+  }catch(_){return [];}
+}
+function rankingSignals(products){
+  const byId=new Map(products.map(p=>[String(p.id),p]));
+  const savedIds=new Set((homeState.saved||[]).map(String));
+  const cartIds=new Set((homeState.cart||[]).map(x=>String(x.productId)));
+  const recentIds=readRankingIds(recentlyViewedStorageKey()).slice(0,12);
+  const categoryWeights=new Map(),brandWeights=new Map(),storeWeights=new Map();
+  const addWeight=(map,key,weight)=>{
+    const value=String(key||"").trim().toLowerCase();
+    if(value)map.set(value,(map.get(value)||0)+weight);
+  };
+  recentIds.forEach(id=>{
+    const p=byId.get(id);if(!p)return;
+    addWeight(categoryWeights,p.category,3);
+    addWeight(brandWeights,p.brand,2);
+    addWeight(storeWeights,p.vendor_id,1.5);
+  });
+  savedIds.forEach(id=>{
+    const p=byId.get(id);if(!p)return;
+    addWeight(categoryWeights,p.category,2.5);
+    addWeight(brandWeights,p.brand,1.8);
+    addWeight(storeWeights,p.vendor_id,1.2);
+  });
+  cartIds.forEach(id=>{
+    const p=byId.get(id);if(!p)return;
+    addWeight(categoryWeights,p.category,3.5);
+    addWeight(brandWeights,p.brand,2.4);
+    addWeight(storeWeights,p.vendor_id,1.5);
+  });
+  return {savedIds,cartIds,recentIds,categoryWeights,brandWeights,storeWeights};
+}
+function rankingMetrics(product,signals){
+  const number=(...keys)=>{
+    for(const key of keys){const n=Number(product?.[key]);if(Number.isFinite(n)&&n>0)return n;}
+    return 0;
+  };
+  const sales=number("sold_count","sales_count","total_sold","units_sold");
+  const views=number("view_count","views_count","total_views","click_count");
+  const carts=number("cart_add_count","add_to_cart_count","cart_count");
+  const rating=number("average_rating","rating_average","rating");
+  const reviews=number("review_count","reviews_count");
+  const stock=product.stock_quantity==null?null:Number(product.stock_quantity);
+  const images=Array.isArray(product.image_urls)?product.image_urls.length:(product.image_url?1:0);
+  const description=String(product.description||"").trim().length;
+  const created=product.created_at?new Date(product.created_at).getTime():0;
+  const ageDays=created>0?Math.max(0,(Date.now()-created)/86400000):365;
+  const recency=Math.exp(-ageDays/35);
+  const storeVerified=product.__zuneStore?.verification_status==="verified";
+  const quality=(Math.min(images,5)*0.35)+(Math.min(description,500)/500*0.8)+(rating>0?(rating/5)*1.7:0.35)+(reviews>0?Math.min(Math.log1p(reviews)/4,1):0.15)+(storeVerified?1.1:0)+(stock===null||stock>0?0.45:0);
+  const popularity=Math.log1p(sales)*1.8+Math.log1p(views)*0.45+Math.log1p(carts)*0.9+(rating/5)*1.2+Math.log1p(reviews)*0.35;
+  const key=value=>String(value||"").trim().toLowerCase();
+  const preference=(signals.categoryWeights.get(key(product.category))||0)*1.5+
+    (signals.brandWeights.get(key(product.brand))||0)*1.15+
+    (signals.storeWeights.get(key(product.vendor_id))||0)*0.8;
+  const alreadySaved=signals.savedIds.has(String(product.id));
+  const alreadyInCart=signals.cartIds.has(String(product.id));
+  const alreadyViewed=signals.recentIds.includes(String(product.id));
+  const personalization=preference-(alreadySaved?1.2:0)-(alreadyInCart?0.7:0)+(alreadyViewed?0.15:0);
+  return {quality,popularity,recency,personalization,available:stock===null||stock>0};
+}
+function diversifyProducts(products,limit,maxPerStore=2){
+  const chosen=[],deferred=[],counts=new Map();
+  for(const product of products){
+    const store=String(product.vendor_id||product.id);
+    if((counts.get(store)||0)<maxPerStore&&chosen.length<limit){
+      chosen.push(product);counts.set(store,(counts.get(store)||0)+1);
+    }else deferred.push(product);
   }
+  for(const product of deferred){if(chosen.length>=limit)break;chosen.push(product);}
+  return chosen;
+}
+function rankHomeProducts(products,mode="recommended"){
+  const candidates=(products||[]).filter(p=>p&&p.id&&
+    (p.stock_quantity==null||Number(p.stock_quantity)>0));
+  const signals=rankingSignals(candidates);
+  const scored=candidates.map(product=>{
+    const m=rankingMetrics(product,signals);
+    const score=mode==="trending"
+      ?m.popularity*1.8+m.quality*0.9+m.recency*0.35
+      :m.personalization*1.7+m.quality*1.15+m.popularity*0.65+m.recency*0.55;
+    return {product,score};
+  }).sort((a,b)=>b.score-a.score);
+  return diversifyProducts(scored.map(x=>x.product),mode==="feed"?24:8,2);
+}
+function updateProductArea() {
+  const source=[...homeState.products];
+  const area=document.getElementById("z-product-area");
+  const recommendedHost=document.getElementById("z-smart-recommended-products");
+  const recommended=rankHomeProducts(source,"recommended");
+  const feed=rankHomeProducts(source,"feed");
+  if(area)area.innerHTML=renderProductCards(feed);
+  if(recommendedHost)recommendedHost.innerHTML=renderProductCards(recommended);
+
   const dealsHost=document.getElementById("z-flash-deals-products");
   if(dealsHost){
-    const deals=[...homeState.products].filter(p=>{
+    const deals=source.filter(p=>{
       const price=Number(p.price||0),old=Number(p.compare_at_price||p.original_price||0),pct=Number(p.discount_percent||0);
-      return price>0&&(pct>0||old>price);
+      return price>0&&(pct>0||old>price)&&(p.stock_quantity==null||Number(p.stock_quantity)>0);
     }).sort((a,b)=>{
       const discount=p=>{const price=Number(p.price||0),old=Number(p.compare_at_price||p.original_price||0),pct=Number(p.discount_percent||0);return pct>0?pct:(old>price?(1-price/old)*100:0);};
       return discount(b)-discount(a);
@@ -2295,16 +2383,14 @@ function updateProductArea() {
     bindProductCards(dealsHost);
   }
   const arrivals=document.getElementById("z-new-arrivals");
-  if(arrivals)arrivals.innerHTML=homeState.products.length?homeState.products.slice(0,6).map(productCard).join(""):'<div class="z-empty-state">'+tx("empty")+"</div>";
-  const trending=document.getElementById("z-trending-products");
-  if(trending){
-    const ranked=[...homeState.products].sort((a,b)=>{
-      const score=p=>Number(p.sold_count||p.sales_count||p.total_sold||0)*3+Number(p.average_rating||p.rating_average||p.rating||0)*2+Number(p.review_count||p.reviews_count||0)*.1;
-      return score(b)-score(a);
-    }).slice(0,8);
-    trending.innerHTML=renderProductCards(ranked);
+  if(arrivals){
+    const newest=source.filter(p=>p.stock_quantity==null||Number(p.stock_quantity)>0)
+      .sort((a,b)=>new Date(b.created_at||0).getTime()-new Date(a.created_at||0).getTime()).slice(0,6);
+    arrivals.innerHTML=newest.length?newest.map(productCard).join():'<div class="z-empty-state">'+tx("empty")+'</div>';
   }
-  document.querySelectorAll(".z-home-content #z-product-area,.z-home-content #z-new-arrivals,.z-home-content #z-trending-products").forEach(bindProductCards);
+  const trending=document.getElementById("z-trending-products");
+  if(trending)trending.innerHTML=renderProductCards(rankHomeProducts(source,"trending"));
+  document.querySelectorAll(".z-home-content #z-product-area,.z-home-content #z-smart-recommended-products,.z-home-content #z-new-arrivals,.z-home-content #z-trending-products").forEach(bindProductCards);
 }
 // --------------------------------------------
 // 16. LOADING STATUS AND RETRY
@@ -2723,15 +2809,37 @@ function renderHomePage() {
           <div id="z-category-area">${renderCategories()}</div>
         </section>
 
-        <section id="z-featured-stores-section">
+        <section>
+          <div class="z-section-heading"><h2>${language()==="sw"?"Bidhaa Mpya":"New Arrivals"}</h2><button type="button" class="z-all-categories" data-view-all-products>${language()==="sw"?"Zote":"View All"} →</button></div>
+          <div id="z-new-arrivals" class="z-product-row">${homeState.products.slice(0,6).map(productCard).join("")}</div>
+        </section>
+
+<section id="z-flash-deals-section" class="z-flash-deals-section">
+          <div class="z-flash-deals-heading">
+            <div><span class="z-flash-deals-kicker">ZUNE • LIMITED OFFERS</span><h2>⚡ Flash Deals</h2><p>${language()==="sw"?"Ofa maalumu kwenye bidhaa zenye punguzo.":"Special offers on products with active discounts."}</p></div>
+            <span class="z-flash-deals-pill">${language()==="sw"?"OFA":"DEALS"}</span>
+          </div>
+          <div id="z-flash-deals-products" class="z-product-row"><div class="z-empty-state">${language()==="sw"?"Inatafuta ofa...":"Finding active deals..."}</div></div>
+        </section>
+
+<section>
+          <div class="z-section-heading"><h2>Trending Products</h2></div>
+          <div id="z-trending-products" class="z-product-grid"></div>
+        </section>
+
+<section id="z-featured-stores-section">
           <div class="z-section-heading"><h2>${language()==="sw"?"Maduka Maarufu":"Featured Stores"}</h2></div>
           <div class="z-featured-stores" id="z-featured-stores">${renderFeaturedStores()}</div>
         </section>
 
-        <section id="z-recently-viewed-section" hidden>
+<section id="z-recently-viewed-section" hidden>
           <div class="z-section-heading"><h2>${language()==="sw"?"Ulizotazama Hivi Karibuni":"Recently Viewed"}</h2></div>
           <div id="z-recently-viewed-products" class="z-product-row"></div>
         </section>
+
+
+
+        
         <section id="z-sponsored-stores-section"><div class="z-section-heading"><h2>${language()==="sw"?"Maduka Yaliyodhaminiwa":"Sponsored Stores"}</h2></div><div id="z-sponsored-stores" class="z-sponsored-stores"></div></section>
 
         <section id="z-sponsored-products-section">
@@ -2739,24 +2847,16 @@ function renderHomePage() {
           <div class="z-sponsored-products" id="z-sponsored-products"><div class="z-sponsored-empty">${language()==="sw"?"Inapakia matangazo…":"Loading sponsored products…"}</div></div>
         </section>
 
-        <section id="z-flash-deals-section" class="z-flash-deals-section">
-          <div class="z-flash-deals-heading">
-            <div><span class="z-flash-deals-kicker">ZUNE • LIMITED OFFERS</span><h2>⚡ Flash Deals</h2><p>${language()==="sw"?"Ofa maalumu kwenye bidhaa zenye punguzo.":"Special offers on products with active discounts."}</p></div>
-            <span class="z-flash-deals-pill">${language()==="sw"?"OFA":"DEALS"}</span>
-          </div>
-          <div id="z-flash-deals-products" class="z-product-row"><div class="z-empty-state">${language()==="sw"?"Inatafuta ofa...":"Finding active deals..."}</div></div>
+        
+        
+        
+        <section id="z-smart-recommended-section">
+          <div class="z-section-heading"><h2>${language()==="sw"?"Imependekezwa kwako":"Recommended for You"}</h2></div>
+          <div id="z-smart-recommended-products">${homeState.products.length?renderProductCards(rankHomeProducts(homeState.products,"recommended")):""}</div>
         </section>
-        <section>
-          <div class="z-section-heading"><h2>${language()==="sw"?"Bidhaa Mpya":"New Arrivals"}</h2><button type="button" class="z-all-categories" data-view-all-products>${language()==="sw"?"Zote":"View All"} →</button></div>
-          <div id="z-new-arrivals" class="z-product-row">${homeState.products.slice(0,6).map(productCard).join("")}</div>
-        </section>
-        <section>
-          <div class="z-section-heading"><h2>Trending Products</h2></div>
-          <div id="z-trending-products" class="z-product-grid"></div>
-        </section>
-        <section>
-          <div class="z-section-heading"><h2>${language()==="sw"?"Smart Hybrid — Imependekezwa kwako":"Smart Hybrid — Recommended for You"}</h2></div>
-          <div id="z-product-area">${homeState.products.length?`<div class="z-product-grid">${homeState.products.map(productCard).join("")}</div>`:""}</div>
+        <section id="z-infinite-feed-section">
+          <div class="z-section-heading"><h2>${language()==="sw"?"Endelea Kugundua":"Explore More Products"}</h2></div>
+          <div id="z-product-area">${homeState.products.length?renderProductCards(rankHomeProducts(homeState.products,"feed")):""}</div>
           <div class="z-load-status" id="z-load-status"></div><div id="z-scroll-trigger"></div>
         </section>
 
