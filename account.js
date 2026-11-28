@@ -21,7 +21,22 @@ function applyTheme(){
 applyTheme();
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(themeMode==="system")applyTheme();});
 function verifiedBadge(){return '<span class="account-name-verified" role="img" aria-label="Verified Account" title="Verified Account"><svg viewBox="-30 -30 60 60" aria-hidden="true"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';}
-function icon(symbol){return '<span class="account-row-icon" aria-hidden="true">'+symbol+'</span>';}
+function icon(symbol){
+  const paths={
+    "▣":'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8v8H8z"/>',
+    "⌖":'<path d="M12 22s7-6.2 7-13a7 7 0 1 0-14 0c0 6.8 7 13 7 13Z"/><circle cx="12" cy="9" r="2.3"/>',
+    "♙":'<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
+    "⌑":'<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    "♧":'<path d="M12 21v-8"/><path d="M12 13C5 13 4 7 7 5c2-1 4 0 5 3 1-3 3-4 5-3 3 2 2 8-5 8Z"/>',
+    "⛨":'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',
+    "?":'<circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.2 1-1.8 1.4-1.8 3"/><path d="M12 17h.01"/>',
+    "Ⓩ":'<path d="M5 7h14L5 17h14"/>',
+    "文":'<path d="M4 6h16M8 3h8M10 6c0 7-3 10-6 12m6-7 5 5m-1-5 4 6"/>',
+    "◐":'<path d="M12 3a9 9 0 1 0 0 18V3Z"/><path d="M12 3a9 9 0 0 1 0 18"/>',
+    "↗":'<path d="M7 17 17 7M8 7h9v9"/>'
+  };
+  return '<span class="account-row-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(paths[symbol]||'<circle cx="12" cy="12" r="8"/>')+'</svg></span>';
+}
 function row(symbol,title,description,href,disabled=false){return disabled?'<div class="account-list-row is-disabled" aria-disabled="true">'+icon(symbol)+'<span class="account-row-copy"><b>'+title+'</b><small>'+description+'</small></span><span class="account-row-note">—</span></div>':'<a class="account-list-row" href="'+href+'">'+icon(symbol)+'<span class="account-row-copy"><b>'+title+'</b><small>'+description+'</small></span><span class="account-row-arrow">›</span></a>';}
 function group(title,rows,extraClass=""){return '<section class="account-section account-list-section '+extraClass+'"><h2>'+title+'</h2><div class="account-list-card">'+rows.join("")+'</div></section>';}
 function renderGuest(){root.innerHTML='<section class="account-guest"><div class="account-guest-mark">Ⓩ</div><h1>Karibu ZUNE</h1><p>'+t("signInText")+'</p><a class="account-primary-button" href="./index.html">'+t("signIn")+'</a></section>';}
@@ -53,16 +68,13 @@ async function init(){
   root.innerHTML=
     '<section class="account-identity-card" tabindex="0" role="button" aria-expanded="false" aria-controls="account-identity-details"><span class="account-avatar">'+avatar+'</span><span class="account-identity-main"><small class="account-eyebrow">'+t("eyebrow")+'</small><span class="account-name">'+esc(name)+(verified?verifiedBadge():"")+'</span><small class="account-identity-hint">'+t("profile")+'</small></span><span class="account-expand-icon">⌄</span><span class="account-identity-details" id="account-identity-details" hidden><span><small>'+t("id")+'</small><b>'+esc(profile.zune_id||"—")+'</b><button type="button" class="account-copy-id" data-copy-id="'+esc(profile.zune_id||"")+'">'+t("copy")+'</button></span><span><small>Email / Phone</small><b>'+esc(user.email||user.phone||"—")+'</b></span><span><small>'+t("active")+'</small><b>'+esc(profile.account_status||"active")+'</b></span><span><small>Account type</small><b>'+ (isSeller?t("sellerRole"):t("customer"))+'</b></span><a href="./profile.html">'+t("profile")+' →</a></span></section>'+
     '<section class="account-section account-quick-section"><h2>'+t("quick")+'</h2><div class="account-quick-grid">'+
-      '<a href="./profile.html"><span>♙</span><small>'+t("myProfile")+'</small></a>'+
-      '<a href="./verification.html"><span>✓</span><small>'+t("verification")+'</small></a>'+
-      '<a href="./orders.html"><span>▤</span><small>'+t("orders")+'</small></a>'+
-      '<a href="#" class="is-disabled" aria-disabled="true" data-unavailable><span>♡</span><small>'+t("wishlist")+'</small></a>'+
+      '<a href="./profile.html">'+icon("♙")+'<small>'+t("myProfile")+'</small></a>'+
+      '<a href="./verification.html">'+icon("⛨")+'<small>'+t("verification")+'</small></a>'+
+      '<a href="./orders.html">'+icon("▣")+'<small>'+t("orders")+'</small></a>'+
     '</div></section>'+
     group(t("shopping"),[
       row("▣",t("cart"),lang==="sw"?"Bidhaa zako za kununua":"Items ready for checkout","./cart.html"),
       row("⌖",t("addresses"),lang==="sw"?"Anwani za kupokea bidhaa":"Delivery addresses","./addresses.html"),
-      row("◷",t("recent"),t("notReady"),null,true),
-      row("☆",t("reviews"),t("notReady"),null,true)
     ],"account-shopping-section")+
     '<section class="account-section account-wallet-section account-wallet-glass"><div class="account-section-title"><h2>'+t("wallet")+'</h2><a href="./wallet.html">'+t("transactions")+' →</a></div><a class="account-wallet-card" href="./wallet.html"><span class="account-wallet-mark">Ⓩ</span><span class="account-wallet-label">'+t("available")+'</span>'+walletStatus+'<span class="account-wallet-stats"><span><small>'+t("spending")+'</small><b>'+esc(money(totalOut))+'</b></span><span><small>'+t("transactions")+'</small><b>→</b></span></span></a></section>'+
     '<section class="account-section"><h2>'+t("seller")+'</h2>'+sellerBlock+'</section>'+
@@ -89,7 +101,6 @@ async function init(){
     e.preventDefault();e.currentTarget.click();
   });
   root.querySelector("[data-copy-id]")?.addEventListener("click",async e=>{e.stopPropagation();const id=e.currentTarget.dataset.copyId;if(!id)return;try{await navigator.clipboard.writeText(id);e.currentTarget.textContent=t("copied");}catch{alert(id);}});
-  root.querySelectorAll("[data-unavailable]").forEach(el=>el.addEventListener("click",e=>e.preventDefault()));
   root.addEventListener("click",e=>{
     const action=e.target.closest("[data-account-action]")?.dataset.accountAction;
     if(action==="language")showChoice("language");
