@@ -87,9 +87,21 @@
       var app = document.getElementById("app");
       var started = Date.now();
       var shown = false;
+      var appReady = false;
+      var splash = document.getElementById("zune-splash");
+      window.addEventListener("zune:app-ready", function () { appReady = true; }, { once: true });
+      function revealStartupFailure() {
+        if (!splash) return;
+        splash.classList.add("is-hidden");
+        window.setTimeout(function () {
+          if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          splash = null;
+        }, 750);
+      }
       function showStartupFailure(message) {
-        if (shown || !app) return;
+        if (shown || appReady || !app) return;
         shown = true;
+        revealStartupFailure();
         var detail = String(message || "Unknown startup error").slice(0, 500);
         app.innerHTML = '<section style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f5f8f6;font-family:Arial,sans-serif;color:#18352a"><div style="width:min(100%,440px);background:#fff;border:1px solid #dce8e1;border-radius:18px;padding:24px;box-shadow:0 12px 36px #163b2814"><div style="font-size:28px;font-weight:900;color:#087a55">ZUNE</div><h2 style="margin:14px 0 8px">Marketplace haijafunguka</h2><p style="line-height:1.5">Imeshindikana kuanzisha ukurasa. Hakuna taarifa za akaunti zilizofutwa. Jaribu tena au tuma ujumbe huu kwa support.</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f6f3;padding:12px;border-radius:10px;font-size:12px;color:#8a3028"></pre><button id="zune-startup-retry" type="button" style="margin-top:12px;width:100%;padding:13px;border:0;border-radius:10px;background:#087a55;color:#fff;font-weight:800">Jaribu tena</button></div></section>';
         var pre = app.querySelector("pre");
@@ -98,24 +110,29 @@
         if (retry) retry.onclick = function () { location.reload(); };
       }
       window.addEventListener("error", function (event) {
-        if (event && (event.message || event.filename)) {
+        if (!appReady && event && (event.message || event.filename)) {
           showStartupFailure((event.message || "Script load error") + (event.filename ? " — " + event.filename : "") + (event.lineno ? ":" + event.lineno : ""));
         }
       }, true);
       window.addEventListener("unhandledrejection", function (event) {
+        if (appReady) return;
         var reason = event && event.reason;
         showStartupFailure(reason && (reason.stack || reason.message) || reason || "Unhandled startup rejection");
       });
       window.setTimeout(function () {
-        if (!app) return;
+        if (!app || appReady) return;
         var loading = app.querySelector(".app-loading, .zune-wave");
         if (loading && Date.now() - started >= 10000) {
-          showStartupFailure("Marketplace haijamaliza kuanza ndani ya sekunde 10. Angalia muunganisho wa intaneti kisha jaribu tena.");
+          showStartupFailure("Marketplace haijamaliza kuanza ndani ya sekunde 10. Angalia intaneti kisha jaribu tena.");
+          return;
         }
-      }, 10500);
+        if (!shown && !appReady) {
+          showStartupFailure("ZUNE haijaanzisha programu ndani ya sekunde 15. Inawezekana main.js au faili lake halijapakiwa. Jaribu tena au tuma taarifa hii kwa support.");
+        }
+      }, 15000);
     })();
   </script>
-  <script type="module" src="./main.js?v=20261128-startup-timeout-1"></script>
+  <script type="module" src="./main.js?v=20261128-startup-guard-2"></script>
   <script type="module" src="./notification-bell.js"></script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
