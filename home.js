@@ -1621,6 +1621,11 @@ function productCard(product) {
   const rating = Number(product.average_rating || product.rating_average || product.rating || 0);
   const reviews = Number(product.review_count || product.reviews_count || 0);
   const stock = product.stock_quantity == null ? null : Number(product.stock_quantity);
+  const detailDiscountPercent=Math.min(100,Math.max(0,Number(product.discount_percent||0)));
+  const detailBasePrice=Number(product.price||0);
+  const detailCurrentPrice=Math.round(detailBasePrice*(1-detailDiscountPercent/100)*100)/100;
+  const detailOldPrice=detailDiscountPercent>0?detailBasePrice:Number(product.compare_at_price||product.original_price||0);
+  const detailDiscount=detailOldPrice>detailCurrentPrice&&detailCurrentPrice>0?Math.round((1-detailCurrentPrice/detailOldPrice)*100):0;
   const createdAt = product.created_at ? new Date(product.created_at).getTime() : 0;
   const isNew = createdAt > 0 && Date.now() - createdAt < 7 * 24 * 60 * 60 * 1000;
   const discount = discountPercent > 0
@@ -1814,7 +1819,7 @@ function openProductDetails(product) {
         <div class="z-product-store"><button type="button" class="z-product-store-name z-store-open" data-open-store="${safe(product.vendor_id||"")}">${safe(storeName)}</button>${accountVerified ? '<span class="z-verified-account-mark" title="Verified Account" aria-label="Verified Account"><svg viewBox="-30 -30 60 60" role="img"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : ""}${verified ? '<span class="z-verified-store-mark" aria-label="Verified Store">✓</span>' : ""}</div>
         ${location ? `<div class="z-product-location">⌖ ${safe(location)}</div>` : ""}
         <h2>${safe(product.title || tx("emptyName"))}</h2>
-        <p class="z-detail-price" id="z-detail-price">${money(product.price)}</p>
+        <div class="z-detail-price-row"><p class="z-detail-price" id="z-detail-price">${money(detailCurrentPrice)}</p>${detailOldPrice>detailCurrentPrice?'<del class="z-detail-old-price">'+money(detailOldPrice)+'</del><span class="z-detail-discount">-'+detailDiscount+'%</span>':""}</div>
         <div id="z-detail-variants" class="z-detail-variants" aria-live="polite"></div>
         <div class="z-detail-quantity" id="z-detail-quantity-wrap" hidden>
           <label for="z-detail-quantity">${language()==="sw"?"Idadi":"Quantity"}</label>
@@ -1868,7 +1873,8 @@ function openProductDetails(product) {
   const refreshQuantityTotal=()=>{
     const qty=Math.max(1,Math.min(99,Math.floor(Number(quantityInput?.value)||1)));
     if(quantityInput)quantityInput.value=String(qty);
-    const unitPrice=Number(selectedVariant?.price ?? product.price ?? 0);
+    const rawUnitPrice=Number(selectedVariant?.price ?? product.price ?? 0);
+    const unitPrice=Math.round(rawUnitPrice*(1-detailDiscountPercent/100)*100)/100;
     if(lineTotal)lineTotal.textContent=money(unitPrice*qty);
     const unavailable=(product.__zuneHasVariants&&!selectedVariant)||((selectedVariant||product.stock_quantity!=null)&&(!Number.isFinite(Number(selectedStock))||qty>Number(selectedStock)));
     if(addButton)addButton.disabled=unavailable;
@@ -1894,7 +1900,8 @@ function openProductDetails(product) {
         selectedVariant=availableVariants.find(v=>String(v.id)===select.value)||null;
         selectedStock=selectedVariant?Number(selectedVariant.stock_quantity):stock;
         const price=overlay.querySelector("#z-detail-price"),stockNode=overlay.querySelector("#z-detail-stock");
-        if(price)price.textContent=money(selectedVariant?selectedVariant.price:product.price);
+        const rawVariantPrice=Number(selectedVariant?selectedVariant.price:product.price);
+        if(price)price.textContent=money(Math.round(rawVariantPrice*(1-detailDiscountPercent/100)*100)/100);
         if(stockNode)stockNode.textContent=selectedVariant?(Number(selectedVariant.stock_quantity)>0?(language()==="sw"?"Stock iliyopo: ":"Available stock: ")+selectedVariant.stock_quantity:(language()==="sw"?"Imeisha stock":"Out of stock")):"";
         const attrs=selectedVariant?.attributes&&typeof selectedVariant.attributes==="object"?selectedVariant.attributes:{};
         const variantImage=attrs.image_url||attrs.imageUrl||attrs.image||attrs.photo_url||attrs.photoUrl||attrs.photo||"";
@@ -3248,7 +3255,7 @@ function renderCategoriesPage() {
                 <span class="z-category-image-arrow">↗</span>
               </button>
               <div class="z-category-subcategory-list">
-                ${(homeState.subcategories||[]).filter(sub=>String(sub.parent_id)===String(category.id)).map(sub=>`<button type="button" class="z-category-subcategory" data-category-page="${safe(sub.name)}">${safe(sub.name)}</button>`).join("")}
+                ${(homeState.subcategories||[]).filter(sub=>String(sub.parent_id)===String(category.id)).map(sub=>`<button type="button" class="z-category-subcategory" data-category-page="${safe(sub.name)}" data-category-name="${safe(sub.name.toLowerCase())}">${safe(sub.name)}</button>`).join("")}
               </div>
             </div>
           `).join("")}
