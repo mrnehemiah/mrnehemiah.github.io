@@ -492,3 +492,83 @@
  #app .z-home .z-home-content #z-smart-recommended-products .z-product-card,
  #app .z-home .z-home-content #z-product-area .z-product-card{transition:none}
 }
+
+
+/* ZUNE 3D ICON SYSTEM — tactile emerald glass, consistent across navigation and actions */
+#app .z-nav-icon,
+#app .z-quick-access-icon,
+#app .z-icon-button{
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  place-items:center;
+  overflow:visible;
+  border:1px solid rgba(255,255,255,.78);
+  background:linear-gradient(145deg,#ffffff 0%,#edf7f0 48%,#dceee3 100%);
+  color:#087a55;
+  box-shadow:
+    0 5px 0 rgba(7,91,59,.10),
+    0 8px 16px rgba(13,75,47,.13),
+    inset 0 1.5px 0 rgba(255,255,255,.98),
+    inset 0 -2px 4px rgba(18,99,63,.08);
+  transform:translateZ(0);
+  transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+}
+#app .z-nav-icon:before,
+#app .z-quick-access-icon:before,
+#app .z-icon-button:before{
+  content:"";
+  position:absolute;
+  inset:2px 3px auto;
+  height:42%;
+  border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,0));
+  pointer-events:none;
+  z-index:-1;
+}
+#app .z-nav-icon svg,
+#app .z-quick-access-icon svg,
+#app .z-icon-button svg{
+  width:22px;height:22px;
+  filter:drop-shadow(0 2px 1px rgba(4,83,52,.20));
+  stroke-width:2;
+}
+#app .z-nav-item.active .z-nav-icon{
+  color:#fff;
+  border-color:rgba(173,255,216,.78);
+  background:linear-gradient(145deg,#19a875 0%,#087a55 54%,#04583e 100%);
+  box-shadow:0 5px 0 #034d36,0 9px 17px rgba(4,91,58,.27),inset 0 1px 0 rgba(255,255,255,.38);
+  transform:translateY(-3px);
+}
+#app .z-nav-item.active .z-nav-icon svg{filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+#app .z-quick-access-item{
+  border-color:#d9e9df;
+  background:linear-gradient(155deg,#fff 0%,#f7fcf8 60%,#edf6f0 100%);
+  box-shadow:0 7px 0 rgba(10,86,55,.055),0 10px 20px rgba(14,65,43,.075),inset 0 1px 0 #fff;
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+#app .z-quick-access-icon{
+  width:48px;height:48px;border-radius:16px;
+  border-color:#cde5d6;
+  background:linear-gradient(145deg,#fff 0%,#e9f7ee 55%,#d6eddf 100%);
+  box-shadow:0 4px 0 #c8e1d1,0 8px 13px rgba(7,90,55,.14),inset 0 1px 0 #fff;
+}
+#app .z-quick-access-icon svg{width:25px;height:25px;stroke-width:1.9}
+#app .z-icon-button{border-color:rgba(255,255,255,.32);background:linear-gradient(145deg,rgba(255,255,255,.25),rgba(255,255,255,.10));color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.10),0 7px 14px rgba(0,0,0,.13),inset 0 1px 0 rgba(255,255,255,.38)}
+#app .z-icon-button svg{filter:drop-shadow(0 2px 2px rgba(0,0,0,.22))}
+@media(hover:hover) and (pointer:fine){
+ #app .z-nav-item:not(.active):hover .z-nav-icon,
+ #app .z-quick-access-item:hover .z-quick-access-icon,
+ #app .z-icon-button:hover{transform:translateY(-3px) rotateX(7deg);box-shadow:0 7px 0 rgba(7,91,59,.10),0 13px 20px rgba(13,75,47,.17),inset 0 1.5px 0 rgba(255,255,255,.98)}
+ #app .z-quick-access-item:hover{transform:translateY(-2px)}
+}
+#app .z-nav-item:active .z-nav-icon,
+#app .z-quick-access-item:active .z-quick-access-icon,
+#app .z-icon-button:active{transform:translateY(2px) scale(.96);box-shadow:inset 0 3px 7px rgba(5,73,46,.16)}
+@media(max-width:380px){
+ #app .z-quick-access-icon{width:43px;height:43px;border-radius:14px}
+ #app .z-quick-access-icon svg{width:23px;height:23px}
+}
+@media(prefers-reduced-motion:reduce){
+ #app .z-nav-icon,#app .z-quick-access-icon,#app .z-icon-button,#app .z-quick-access-item{transition:none}
+}
