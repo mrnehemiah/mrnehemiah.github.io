@@ -389,3 +389,8 @@
 .z-category-subcategory { border: 1px solid var(--border, #e2eae5); border-radius: 999px; background: var(--surface, #fff); color: var(--text, #25342c); padding: 7px 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
 .z-category-subcategory:active { border-color: var(--primary, #087a55); background: color-mix(in srgb, var(--primary, #087a55) 8%, var(--surface, #fff)); }
 #z-recently-viewed-section[hidden] { display: none !important; }
+
+.z-detail-price-row { display:flex; align-items:baseline; flex-wrap:wrap; gap:9px; margin:0 0 12px; }
+.z-detail-price-row .z-detail-price { margin:0; }
+.z-detail-old-price { color:var(--text-muted,#718078); font-size:13px; font-weight:650; }
+.z-detail-discount { display:inline-flex; align-items:center; border-radius:7px; padding:4px 7px; background:color-mix(in srgb,var(--danger,#d64545) 12%,var(--surface,#fff)); color:var(--danger,#c53b3b); font-size:11px; font-weight:900; }
