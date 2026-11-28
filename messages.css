@@ -26,3 +26,69 @@
 .seller-verified{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#1688e8;color:#fff;font-size:10px;font-weight:900}
 .seller-message-button{flex:0 0 auto;border:0;border-radius:11px;padding:10px 12px;background:var(--primary);color:#fff;font:inherit;font-size:10px;font-weight:850;white-space:nowrap}
 .seller-message-button:disabled{opacity:.55}
+
+
+/* ZUNE premium 3D chat cards */
+.messages-shell{perspective:1100px}
+.messages-panel{
+  border:1px solid color-mix(in srgb,var(--primary) 13%,var(--border));
+  border-radius:22px;
+  background:linear-gradient(155deg,var(--surface),color-mix(in srgb,var(--primary) 3%,var(--surface)));
+  box-shadow:0 12px 28px #062f2314,0 3px 8px #062f230c,inset 0 1px 0 #ffffffa8;
+  transform:translateZ(0);
+}
+.messages-panel-head{background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 7%,var(--surface)),var(--surface))}
+.messages-view-tabs{padding:5px;border:1px solid color-mix(in srgb,var(--primary) 12%,var(--border));box-shadow:inset 0 2px 5px #071d1510}
+.messages-view-tabs button{transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
+.messages-view-tabs button.active{background:linear-gradient(135deg,#087653,#10a878);box-shadow:0 5px 12px #08765338,inset 0 1px 0 #ffffff55;transform:translateY(-1px)}
+.messages-toolbar{gap:13px}
+.messages-search{border-radius:15px;box-shadow:inset 0 2px 5px #071d150c,0 2px 5px #071d1508;transition:border-color .2s,box-shadow .2s}
+.messages-search:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 13%,transparent),inset 0 2px 5px #071d1508}
+.message-row,.seller-directory-row{
+  position:relative;
+  margin:8px 10px;
+  width:calc(100% - 20px);
+  border:1px solid color-mix(in srgb,var(--primary) 10%,var(--border));
+  border-radius:17px;
+  background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--primary) 3%,var(--surface)));
+  box-shadow:0 5px 12px #061f1710,0 1px 2px #061f170a,inset 0 1px 0 #ffffffb8;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.message-row:last-child,.seller-directory-row:last-child{border-bottom:1px solid color-mix(in srgb,var(--primary) 10%,var(--border))}
+.message-row:active,.seller-directory-row:active{transform:scale(.985) translateY(1px);box-shadow:0 2px 5px #061f1710}
+.message-avatar{
+  border:1px solid color-mix(in srgb,var(--primary) 17%,transparent);
+  background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 18%,var(--surface)),color-mix(in srgb,var(--primary) 5%,var(--surface)));
+  box-shadow:0 5px 10px #061f1718,inset 0 1px 0 #ffffffb8;
+}
+.seller-directory-row .message-avatar{width:52px;height:52px;flex-basis:52px;border-radius:17px}
+.seller-directory-row .message-row-copy strong{font-size:12px}
+.seller-directory-row .message-row-copy p{font-size:10px;line-height:1.45}
+.seller-verified{box-shadow:0 2px 5px #1688e84d;border:1px solid #ffffffa8}
+.seller-message-button{
+  border-radius:12px;
+  background:linear-gradient(135deg,#087653,#10a878);
+  box-shadow:0 5px 10px #08765335,inset 0 1px 0 #ffffff55;
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.seller-message-button:active{transform:translateY(2px);box-shadow:0 2px 5px #08765330}
+.thread-top{background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 6%,var(--surface)),var(--surface))}
+.thread-top button{box-shadow:0 3px 7px #061f1710}
+.thread-history{background:radial-gradient(ellipse at top,color-mix(in srgb,var(--primary) 6%,var(--background)),var(--background) 65%)}
+.thread-message{box-shadow:0 4px 10px #061f170d,inset 0 1px 0 #ffffffa8}
+.thread-message.mine{background:linear-gradient(145deg,color-mix(in srgb,var(--primary) 15%,var(--surface)),color-mix(in srgb,var(--primary) 7%,var(--surface)));box-shadow:0 5px 12px color-mix(in srgb,var(--primary) 13%,transparent),inset 0 1px 0 #ffffffb8}
+.thread-form{background:var(--surface)}
+.thread-form input{box-shadow:inset 0 2px 5px #061f170c}
+.thread-form button{background:linear-gradient(135deg,#087653,#10a878);box-shadow:0 5px 11px #08765335,inset 0 1px 0 #ffffff55}
+@media(hover:hover){
+ .message-row:hover,.seller-directory-row:hover{transform:translateY(-3px) rotateX(1deg);border-color:color-mix(in srgb,var(--primary) 30%,var(--border));box-shadow:0 12px 20px #061f1718,0 3px 7px #061f170c,inset 0 1px 0 #ffffffc9}
+ .seller-message-button:hover{transform:translateY(-2px);box-shadow:0 8px 15px #08765340,inset 0 1px 0 #ffffff66}
+}
+@media(max-width:380px){
+ .seller-directory-row{gap:8px;padding:11px 9px}
+ .seller-directory-row .message-avatar{width:45px;height:45px;flex-basis:45px}
+ .seller-message-button{padding:9px 10px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .message-row,.seller-directory-row,.seller-message-button,.messages-view-tabs button{transition:none}
+}
