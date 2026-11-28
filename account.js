@@ -1,10 +1,11 @@
 import { supabase } from "./supabase.js";
 
 const root = document.getElementById("account-root");
+const logoutButton = document.getElementById("account-logout");
+const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[char]));
 
-// Keep the existing verification artwork unchanged while rebuilding the
-// Account interface. This page reads profile data only; it never deletes or
-// modifies users, profiles, orders, wallets, or any other Supabase records.
 const verifiedBadge = () => `
   <span class="account-name-verified" role="img" aria-label="Verified Account" title="Verified Account">
     <svg viewBox="-30 -30 60 60" aria-hidden="true">
@@ -17,41 +18,130 @@ const verifiedBadge = () => `
     </svg>
   </span>`;
 
-const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, char => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-}[char]));
+function feature(icon, title, description, href, pending = false) {
+  if (pending) return `
+    <div class="account-feature is-pending" aria-disabled="true">
+      <span class="account-feature-icon">${icon}</span>
+      <span class="account-feature-copy"><b>${title}</b><small>${description} · Inajengwa</small></span>
+    </div>`;
+  return `
+    <a class="account-feature" href="${href}">
+      <span class="account-feature-icon">${icon}</span>
+      <span class="account-feature-copy"><b>${title}</b><small>${description}</small></span>
+      <span class="account-feature-arrow" aria-hidden="true">›</span>
+    </a>`;
+}
+
+function group(icon, title, subtitle, links) {
+  return `
+    <details class="account-group">
+      <summary>
+        <span class="account-group-icon">${icon}</span>
+        <span><span class="account-group-title">${title}</span><span class="account-group-subtitle">${subtitle}</span></span>
+      </summary>
+      <div class="account-group-links">${links}</div>
+    </details>`;
+}
 
 async function init() {
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
 
   if (!session?.user) {
-    root.innerHTML = '<p class="account-error">Ingia kwanza ili kuona akaunti yako. <a href="./index.html">Ingia</a></p>';
+    root.innerHTML = `
+      <div class="account-profile-card">
+        <div class="account-profile-copy">
+          <span class="account-eyebrow">ZUNE ACCOUNT</span>
+          <h1 class="account-name">Karibu ZUNE</h1>
+          <p class="account-email">Ingia au jisajili ili kusimamia akaunti yako.</p>
+          <div class="account-group-links" style="padding:14px 0 0">
+            <a href="./index.html">Ingia / Jisajili <span>›</span></a>
+          </div>
+        </div>
+      </div>`;
+    logoutButton.hidden = true;
     return;
   }
 
   const user = session.user;
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("full_name,is_verified")
+    .select("full_name,is_verified,zune_id,role")
     .eq("id", user.id)
     .maybeSingle();
-
   if (error) throw error;
 
-  const name = profile?.full_name
-    || user.user_metadata?.full_name
-    || user.email?.split("@")[0]
-    || "ZUNE Customer";
+  const name = profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "ZUNE Customer";
+  const initials = name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
+  const zuneId = profile?.zune_id ? `ZUNE ID: ${esc(profile.zune_id)}` : "ZUNE Member";
+  const isVerified = profile?.is_verified === true;
 
   root.innerHTML = `
-    <div class="account-identity">
-      <h1 class="account-name">
-        ${profile?.is_verified ? verifiedBadge() : ""}
-        <span>${escapeHTML(name)}</span>
-      </h1>
-    </div>`;
+    <section class="account-profile-card" aria-label="Wasifu wa akaunti">
+      <div class="account-avatar">${initials}</div>
+      <div class="account-profile-copy">
+        <span class="account-eyebrow">MY ZUNE ACCOUNT</span>
+        <h1 class="account-name">${isVerified ? verifiedBadge() : ""}${esc(name)}</h1>
+        <p class="account-email">${esc(user.email || user.phone || "Akaunti ya ZUNE")}</p>
+        <p class="account-id">${zuneId}</p>
+      </div>
+    </section>
+
+    <section class="account-section">
+      <div class="account-section-heading"><h2>Unachohitaji</h2><span>Quick access</span></div>
+      <div class="account-feature-grid">
+        ${feature("♙","My Profile","Taarifa za akaunti","./account-profile.html",true)}
+        ${feature("✓","Verification",isVerified ? "Akaunti imethibitishwa" : "Omba uthibitishaji","./account-verification.html",true)}
+        ${feature("▤","My Orders","Oda na ufuatiliaji","./orders.html",true)}
+        ${feature("♡","Wishlist","Bidhaa ulizohifadhi","./wishlist.html",true)}
+      </div>
+    </section>
+
+    <section class="account-section">
+      <div class="account-section-heading"><h2>Shopping & Delivery</h2><span>Manunuzi</span></div>
+      <div class="account-feature-grid">
+        ${feature("▣","Shopping Cart","Endelea na manunuzi","./index.html")}
+        ${feature("⌖","My Addresses","Anwani na eneo la delivery","./addresses.html",true)}
+        ${feature("◷","Recently Viewed","Bidhaa ulizotazama","./recently-viewed.html",true)}
+        ${feature("☆","Reviews & Ratings","Maoni ya bidhaa","./my-reviews.html",true)}
+      </div>
+    </section>
+
+    ${group("▤","Payments & Wallet","Salio, malipo na miamala",
+      '<a href="./wallet.html">Wallet & Payments ›</a><a href="./wallet.html">Payment History ›</a><a href="./wallet.html">Refunds ›</a><a href="./wallet.html">Receipts ›</a>')}
+    ${group("⚙","Settings & Security","Mipangilio na ulinzi wa akaunti",
+      '<a href="./account-data.html">Privacy & Data Center ›</a><button type="button" data-account-action="language">Language: Kiswahili / English</button><button type="button" data-account-action="theme">Display preferences</button><button type="button" data-account-action="security" disabled>Login & Security · Inajengwa</button>')}
+    ${group("☏","Help & Support","Pata msaada kutoka ZUNE",
+      '<a href="./support.html">Help Center & Support ›</a><a href="./support.html">Report a Problem ›</a><a href="./support.html">Complaints & Disputes ›</a>')}
+    ${group("Ⓩ","About ZUNE","Taarifa na huduma za ZUNE",
+      '<a href="./about.html">About ZUNE ›</a><a href="./index.html">Rudi Marketplace ›</a>')}
+    <p class="account-account-note">Akaunti yako na taarifa zako za Supabase zimehifadhiwa. Vipengele vilivyoandikwa “Inajengwa” vitaunganishwa hatua kwa hatua bila kufuta historia yako.</p>
+  `;
+
+  root.addEventListener("click", event => {
+    const action = event.target.closest("[data-account-action]")?.dataset.accountAction;
+    if (!action) return;
+    if (action === "language") {
+      alert("Chaguo la lugha litajengwa ndani ya Account Settings.");
+    } else if (action === "theme") {
+      alert("Light, Dark na System theme zitajengwa ndani ya Account Settings.");
+    }
+  });
 }
+
+logoutButton.addEventListener("click", async () => {
+  logoutButton.disabled = true;
+  logoutButton.textContent = "…";
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("ZUNE logout:", error);
+    logoutButton.disabled = false;
+    logoutButton.textContent = "↗";
+    alert("Imeshindikana kutoka. Tafadhali jaribu tena.");
+    return;
+  }
+  location.replace("./index.html");
+});
 
 init().catch(error => {
   console.error("ZUNE Account:", error);
