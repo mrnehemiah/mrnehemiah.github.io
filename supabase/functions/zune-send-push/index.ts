@@ -82,19 +82,12 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Keep the current webhook secret valid during rotation. Once the database
-    // trigger switches to Vault, the new verifier path authenticates it.
-    const legacySecret = Deno.env.get("ZUNE_PUSH_WEBHOOK_SECRET");
-    let authorized = Boolean(legacySecret && suppliedSecret === legacySecret);
-    if (!authorized) {
-      const { data: validSecret, error: secretError } = await admin.rpc(
-        "zune_verify_push_webhook_secret",
-        { p_secret: suppliedSecret },
-      );
-      if (secretError) throw secretError;
-      authorized = validSecret === true;
-    }
-    if (!authorized) return json({ error: "Unauthorized" }, 401);
+    const { data: validSecret, error: secretError } = await admin.rpc(
+      "zune_verify_push_webhook_secret",
+      { p_secret: suppliedSecret },
+    );
+    if (secretError) throw secretError;
+    if (validSecret !== true) return json({ error: "Unauthorized" }, 401);
 
     const firebaseRaw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
     if (!firebaseRaw) return json({ error: "FIREBASE_SERVICE_ACCOUNT_JSON is not configured" }, 500);
