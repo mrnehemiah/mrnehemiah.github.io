@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087A55">
+<meta name="description" content="QR Code yako ya ZUNE Marketplace.">
+<title>QR Code Yangu · ZUNE</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./qr-code.css?v=1">
+</head>
+<body class="zune-qr-body">
+<main class="zqr-shell">
+<header class="zqr-header"><a href="./account.html" class="zqr-brand" aria-label="Rudi akaunti">ⓏⓊⓃⒺ</a><span>MY QR CODE</span></header>
+<section class="zqr-content">
+<h1>QR Code Yangu</h1>
+<p class="zqr-subtitle">Msimbo wako wa kipekee wa ZUNE</p>
+<div class="zqr-card">
+<div id="zqr-code" class="zqr-code" aria-label="QR Code ya akaunti yako"><span class="zqr-loading"></span></div>
+<div class="zqr-id-label">ZUNE ID</div>
+<strong id="zqr-id">Inapakia...</strong>
+<p>Scan to open my ZUNE profile</p>
+</div>
+<div class="zqr-actions">
+<button id="zqr-download" class="zqr-primary" type="button" disabled><span>↓</span> Pakua QR Code</button>
+<button id="zqr-share" class="zqr-secondary" type="button" disabled><span>↗</span> Shiriki QR Code</button>
+<button id="zqr-scan" class="zqr-secondary" type="button"><span>▦</span> Scan QR Code</button>
+</div>
+<div id="zqr-scanner-wrap" class="zqr-scanner-wrap" hidden>
+<div class="zqr-scanner-head"><strong>Scan QR Code</strong><button id="zqr-close-scan" type="button" aria-label="Funga scanner">×</button></div>
+<video id="zqr-video" playsinline muted></video>
+<p id="zqr-scan-message" role="status">Elekeza kamera kwenye QR Code ya ZUNE.</p>
+</div>
+<p id="zqr-message" class="zqr-message" role="status" aria-live="polite"></p>
+</section>
+<footer>ⓏⓊⓃⒺ MARKETPLACE · 2.0</footer>
+</main>
+<script type="module" src="./qr-code.js?v=1"></script>
+</body>
+</html>
