@@ -8,11 +8,6 @@ async function boot(){
  const mount=async root=>{
   const products=root.querySelector(".z3-products");if(!products||root.dataset.smartCartReady)return;root.dataset.smartCartReady="1";
   const cartItems=read(cartKey),productIds=[...new Set(cartItems.map(x=>String(x.productId)))];
-  const {data:stockProducts}=productIds.length?await supabase.from("products").select("id,stock_quantity").in("id",productIds):{data:[]};
-  const variantIds=cartItems.map(x=>x.variantId).filter(Boolean);
-  const {data:stockVariants}=variantIds.length?await supabase.from("product_variants").select("id,stock_quantity").in("id",variantIds):{data:[]};
-  const stockMap=new Map((stockProducts||[]).map(x=>[String(x.id),Number(x.stock_quantity)])),variantStock=new Map((stockVariants||[]).map(x=>[String(x.id),Number(x.stock_quantity)]));
-  root.querySelectorAll(".z3-item:not(.z3-item-missing)").forEach(row=>{const key=row.dataset.cartRow,[pid,vid]=key.split("::"),stock=vid&&variantStock.has(vid)?variantStock.get(vid):stockMap.get(pid);if(Number.isFinite(stock)&&!row.querySelector(".z3-stock")){const note=document.createElement("small");note.className="z3-stock"+(stock<=0?" z3-stock-out":"");note.textContent=stock<=0?(en()?"Out of stock":"Imeisha stock"):stock<=5?(en()?"Low stock: ":"Stock imebaki: ")+stock:"";if(note.textContent)row.querySelector(".z3-product-main")?.append(note);}});
   root.querySelectorAll(".z3-store").forEach(store=>{const rows=[...store.querySelectorAll(".z3-item:not(.z3-item-missing)")];const total=rows.reduce((sum,row)=>{const price=Number((row.querySelector(".z3-price")?.textContent||"").replace(/[^0-9.]/g,""));const qty=Number(row.querySelector(".z3-qty b")?.textContent||1);return sum+price*qty;},0);const head=store.querySelector(".z3-store-head");if(head&&!head.querySelector(".z3-store-subtotal")){const el=document.createElement("small");el.className="z3-store-subtotal";el.textContent=(en()?"Store subtotal: ":"Jumla ya duka: ")+new Intl.NumberFormat("sw-TZ",{maximumFractionDigits:0}).format(total)+" TSh";head.append(el);}});
   root.querySelectorAll(".z3-item:not(.z3-item-missing)").forEach(row=>{
    const key=row.dataset.cartRow,btn=document.createElement("button");btn.type="button";btn.className="z3-save-later";btn.dataset.z3SaveLater=key;btn.textContent=en()?"Save for later":"Hifadhi baadaye";row.append(btn);
@@ -21,7 +16,28 @@ async function boot(){
   const panel=document.createElement("section");panel.className="z3-smart-extra";
   panel.innerHTML='<div class="z3-smart-panel"><b class="z3-smart-title">✦ '+(en()?"Smart Cart Assistant":"Smart Cart Assistant")+'</b><p>'+(root.querySelector(".z3-item-missing")?(en()?"Remove unavailable products before checkout.":"Ondoa bidhaa zisizopatikana kabla ya Checkout."):root.querySelector(".z3-stock")?(en()?"Review low-stock products.":"Kagua bidhaa zenye stock ndogo."): (en()?"Review quantities and totals before checkout.":"Kagua idadi na jumla kabla ya Checkout."))+'</p></div><div class="z3-tools-grid"><div class="z3-tool-card"><h3>'+(en()?"Coupon & discounts":"Coupon na punguzo")+'</h3><p>'+(en()?"Code is validated at Checkout.":"Code itathibitishwa Checkout.")+'</p><div class="z3-coupon-line"><input id="z3-coupon-code" maxlength="80" placeholder="ZUNE10"><button id="z3-save-coupon">'+(en()?"Save":"Hifadhi")+'</button></div><small id="z3-coupon-feedback"></small></div><div class="z3-tool-card"><h3>'+(en()?"Delivery address":"Anwani ya delivery")+'</h3><p>'+(en()?"Choose your saved delivery address.":"Chagua anwani yako ya delivery.")+'</p><select id="z3-address-select"><option>...</option></select><small>'+(en()?"Exact fee is calculated at Checkout.":"Gharama halisi itakokotolewa Checkout.")+'</small></div><div class="z3-tool-card"><h3>🛡 ZUNE Purchase Protection</h3><p>'+(en()?"Your order is tracked through ZUNE. Review details before payment.":"Oda itafuatiliwa kupitia ZUNE. Kagua taarifa kabla ya kulipa.")+'</p></div><div class="z3-tool-card"><h3>⌁ '+(en()?"Estimated arrival":"Makadirio ya kufika")+'</h3><p>'+(en()?"Delivery estimate appears at Checkout after confirming your location.":"Makadirio yataonekana Checkout baada ya kuthibitisha eneo.")+'</p></div></div>';
   const savedItems=read(savedKey);if(savedItems.length){const savedPanel=document.createElement("div");savedPanel.className="z3-saved-panel";savedPanel.innerHTML="<h3>"+(en()?"Saved for later":"Zilizohifadhiwa baadaye")+"</h3><div class=\"z3-saved-list\">"+savedItems.map((x,i)=>"<div class=\"z3-saved-row\"><span>"+(en()?"Saved item ":"Bidhaa iliyohifadhiwa ")+(i+1)+"</span><button type=\"button\" data-z3-restore=\""+esc(String(x.productId)+"::"+String(x.variantId||""))+"\">"+(en()?"Move to cart":"Rudisha Cart")+"</button></div>").join("")+"</div>";panel.append(savedPanel);}
-  products.after(panel);
+  products.append(panel);
+  // Show Cart tools immediately; stock lookup must never block their appearance.
+  void (async()=>{
+   try{
+    const variantIds=cartItems.map(x=>x.variantId).filter(Boolean);
+    const [productResult,variantResult]=await Promise.all([
+     productIds.length?supabase.from("products").select("id,stock_quantity").in("id",productIds):Promise.resolve({data:[]}),
+     variantIds.length?supabase.from("product_variants").select("id,stock_quantity").in("id",variantIds):Promise.resolve({data:[]})
+    ]);
+    const stockMap=new Map((productResult.data||[]).map(x=>[String(x.id),Number(x.stock_quantity)]));
+    const variantStock=new Map((variantResult.data||[]).map(x=>[String(x.id),Number(x.stock_quantity)]));
+    root.querySelectorAll(".z3-item:not(.z3-item-missing)").forEach(row=>{
+     const key=row.dataset.cartRow||"",[pid,vid]=key.split("::");
+     const stock=vid&&variantStock.has(vid)?variantStock.get(vid):stockMap.get(pid);
+     if(Number.isFinite(stock)&&!row.querySelector(".z3-stock")){
+      const note=document.createElement("small");note.className="z3-stock"+(stock<=0?" z3-stock-out":"");
+      note.textContent=stock<=0?(en()?"Out of stock":"Imeisha stock"):stock<=5?(en()?"Low stock: ":"Stock imebaki: ")+stock:"";
+      if(note.textContent)row.querySelector(".z3-product-main")?.append(note);
+     }
+    });
+   }catch(error){console.warn("ZUNE Cart stock lookup:",error?.message||error);}
+  })();
   const coupon=panel.querySelector("#z3-coupon-code");coupon.value=sessionStorage.getItem(couponKey)||"";
   panel.querySelector("#z3-save-coupon").onclick=()=>{sessionStorage.setItem(couponKey,coupon.value.trim());panel.querySelector("#z3-coupon-feedback").textContent=en()?"Saved for Checkout validation.":"Imehifadhiwa; itathibitishwa Checkout."};
   const select=panel.querySelector("#z3-address-select"),{data:addresses,error}=await supabase.from("delivery_addresses").select("id,recipient_name,street,district,region,is_default").eq("user_id",uid).order("is_default",{ascending:false}).order("created_at",{ascending:false});
