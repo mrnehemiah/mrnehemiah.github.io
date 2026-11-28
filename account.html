@@ -4,22 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#087A55">
-  <meta name="description" content="Akaunti ya ZUNE Marketplace.">
-  <title>Akaunti · ZUNE</title>
+  <meta name="description" content="Simamia akaunti yako ya ZUNE Marketplace.">
+  <title>Akaunti yangu · ZUNE</title>
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./account.css?v=clean-slate-1">
+  <link rel="stylesheet" href="./account.css?v=hybrid-2">
 </head>
 <body class="z-account-body">
   <main class="account-shell">
     <header class="account-topbar">
       <a class="account-brand" href="./index.html" aria-label="Rudi sokoni">ⓏⓊⓃⒺ</a>
-      <span class="account-heading">Akaunti yangu</span>
+      <div class="account-top-actions">
+        <a class="account-market-link" href="./index.html">Sokoni</a>
+        <button class="account-icon-button" id="account-logout" type="button" aria-label="Toka" title="Toka">↗</button>
+      </div>
     </header>
     <section id="account-root" class="account-root" aria-live="polite">
       <div class="account-loading">Inapakia akaunti...</div>
     </section>
     <footer class="account-footer">ZUNE MARKETPLACE · 2.0</footer>
   </main>
-  <script type="module" src="./account.js?v=clean-slate-1"></script>
+  <script type="module" src="./account.js?v=hybrid-2"></script>
 </body>
 </html>
