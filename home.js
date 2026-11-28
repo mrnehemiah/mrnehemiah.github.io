@@ -4674,46 +4674,57 @@ export async function renderMarketplaceHome({
   // Cart na Wishlist ni za akaunti iliyoingia pekee; cloud ndiyo chanzo kikuu baada ya migration ya kwanza.
   homeState.saved = readUserStorage("zune_saved_products", []);
   homeState.cart = readUserStorage("zune_cart", []);
+  // Usawazishaji wa Cart/Wishlist ufanyike nyuma; usizuie Marketplace kuonekana.
   if (homeState.user?.id) {
     const userId = homeState.user.id;
     const marker = "zune_collections_cloud_ready:" + userId;
-    try {
-      const [cloudCart, cloudSaved] = await Promise.all([
-        supabase.from("cart_items").select("product_id,variant_id,quantity").eq("user_id", userId),
-        supabase.from("wishlists").select("product_id").eq("user_id", userId)
-      ]);
-      if (cloudCart.error) throw cloudCart.error;
-      if (cloudSaved.error) throw cloudSaved.error;
-      if (localStorage.getItem(marker) !== "1") {
-        const cartMap = new Map((cloudCart.data || []).map(row => [String(row.product_id)+"::"+String(row.variant_id||""), { productId: row.product_id, variantId:row.variant_id||null, quantity: Number(row.quantity) || 1 }]));
-        homeState.cart.forEach(item => {
-          const id = String(item.productId)+"::"+String(item.variantId||""), existing = cartMap.get(id);
-          cartMap.set(id, { productId: item.productId, variantId:item.variantId||null, quantity: Math.max(Number(item.quantity) || 1, existing?.quantity || 1) });
-        });
-        homeState.cart = [...cartMap.values()];
-        await saveCart();
-        const cartCheck = await supabase.from("cart_items").select("product_id").eq("user_id", userId);
-        if (cartCheck.error) throw cartCheck.error;
-        if ((cartCheck.data || []).length !== homeState.cart.length) throw new Error("Cart cloud sync verification failed");
+    void (async () => {
+      try {
+        const [cloudCart, cloudSaved] = await Promise.all([
+          supabase.from("cart_items").select("product_id,variant_id,quantity").eq("user_id", userId),
+          supabase.from("wishlists").select("product_id").eq("user_id", userId)
+        ]);
+        if (cloudCart.error) throw cloudCart.error;
+        if (cloudSaved.error) throw cloudSaved.error;
 
-        const savedSet = new Set((cloudSaved.data || []).map(row => String(row.product_id)));
-        homeState.saved.forEach(id => savedSet.add(String(id)));
-        homeState.saved = [...savedSet];
-        const cloudSavedSet = new Set((cloudSaved.data || []).map(row => String(row.product_id)));
-        for (const id of homeState.saved.filter(value => !cloudSavedSet.has(String(value)))) {
-          const result = await supabase.from("wishlists").insert({ user_id: userId, product_id: id });
-          if (result.error && result.error.code !== "23505") throw result.error;
+        // Tumia hali ya sasa ya kifaa ili bidhaa zilizoongezwa wakati wa sync zisipotee.
+        if (localStorage.getItem(marker) !== "1") {
+          const cartMap = new Map((cloudCart.data || []).map(row => [String(row.product_id)+"::"+String(row.variant_id||""), { productId: row.product_id, variantId:row.variant_id||null, quantity: Number(row.quantity) || 1 }]));
+          homeState.cart.forEach(item => {
+            const id = String(item.productId)+"::"+String(item.variantId||""), existing = cartMap.get(id);
+            cartMap.set(id, { productId: item.productId, variantId:item.variantId||null, quantity: Math.max(Number(item.quantity) || 1, existing?.quantity || 1) });
+          });
+          homeState.cart = [...cartMap.values()];
+          await saveCart();
+          const cartCheck = await supabase.from("cart_items").select("product_id").eq("user_id", userId);
+          if (cartCheck.error) throw cartCheck.error;
+          if ((cartCheck.data || []).length !== homeState.cart.length) throw new Error("Cart cloud sync verification failed");
+
+          const savedSet = new Set((cloudSaved.data || []).map(row => String(row.product_id)));
+          homeState.saved.forEach(id => savedSet.add(String(id)));
+          homeState.saved = [...savedSet];
+          const cloudSavedSet = new Set((cloudSaved.data || []).map(row => String(row.product_id)));
+          for (const id of homeState.saved.filter(value => !cloudSavedSet.has(String(value)))) {
+            const result = await supabase.from("wishlists").insert({ user_id: userId, product_id: id });
+            if (result.error && result.error.code !== "23505") throw result.error;
+          }
+          localStorage.setItem(marker, "1");
+        } else {
+          homeState.cart = (cloudCart.data || []).map(row => ({ productId: row.product_id, variantId:row.variant_id||null, quantity: row.quantity }));
+          homeState.saved = (cloudSaved.data || []).map(row => row.product_id);
         }
-        localStorage.setItem(marker, "1");
-      } else {
-        homeState.cart = (cloudCart.data || []).map(row => ({ productId: row.product_id, variantId:row.variant_id||null, quantity: row.quantity }));
-        homeState.saved = (cloudSaved.data || []).map(row => row.product_id);
+        // Usihamishe data ya akaunti nyingine ikiwa mtumiaji amebadilisha session.
+        if (homeState.user?.id !== userId) return;
+        localStorage.setItem("zune_cart:" + userId, JSON.stringify(homeState.cart));
+        localStorage.setItem("zune_saved_products:" + userId, JSON.stringify(homeState.saved));
+        updateCartBadges();
+        if (homeState.activeTab === "cart" || homeState.activeTab === "saved") {
+          void renderMarketplacePage(homeState.activeTab);
+        }
+      } catch (error) {
+        console.warn("ZUNE cloud collections load; using this device cache:", error.message);
       }
-      localStorage.setItem("zune_cart:" + userId, JSON.stringify(homeState.cart));
-      localStorage.setItem("zune_saved_products:" + userId, JSON.stringify(homeState.saved));
-    } catch (error) {
-      console.warn("ZUNE cloud collections load; using this device cache:", error.message);
-    }
+    })();
   }
   homeState.cartProducts = [];
   homeState.cartProductsKey = "";
