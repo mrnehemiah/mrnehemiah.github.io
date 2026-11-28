@@ -1,0 +1,1 @@
+const params=new URLSearchParams(location.search);const name=params.get("name")||"Mtumiaji wa ZUNE";const id=params.get("zune_id")||"";document.getElementById("public-name").textContent=name;document.getElementById("public-id").textContent=id||"ZUNE";
