@@ -1826,6 +1826,7 @@ function openProductDetails(product) {
         ${stock !== null ? `<p class="z-detail-stock" id="z-detail-stock">${stock > 0 ? (language()==="sw" ? "Stock iliyopo: " : "Available stock: ") + stock : (language()==="sw" ? "Bidhaa imeisha stock" : "Out of stock")}</p>` : `<p class="z-detail-stock" id="z-detail-stock"></p>`}
         <div class="z-detail-actions">
           <button type="button" class="z-primary-button z-detail-add" ${stock !== null && stock <= 0 ? "disabled" : ""}>${tx("addCart")}</button>
+          <button type="button" class="z-primary-button z-detail-buy-now" disabled>${language()==="sw"?"Nunua Sasa":"Buy Now"}</button>
           <button type="button" class="z-detail-compare" data-detail-compare>${language()==="sw"?"⇄ Linganisha":"⇄ Compare"}</button>
         </div>
         <section class="z-detail-reviews" aria-labelledby="z-detail-reviews-title">
@@ -1852,12 +1853,15 @@ function openProductDetails(product) {
   const quantityInput=overlay.querySelector("#z-detail-quantity");
   const lineTotal=overlay.querySelector("#z-detail-line-total");
   const addButton=overlay.querySelector(".z-detail-add");
+  const buyNowButton=overlay.querySelector(".z-detail-buy-now");
   const refreshQuantityTotal=()=>{
     const qty=Math.max(1,Math.min(99,Math.floor(Number(quantityInput?.value)||1)));
     if(quantityInput)quantityInput.value=String(qty);
     const unitPrice=Number(selectedVariant?.price ?? product.price ?? 0);
     if(lineTotal)lineTotal.textContent=money(unitPrice*qty);
-    if(addButton)addButton.disabled=(product.__zuneHasVariants&&!selectedVariant)||((selectedVariant||product.stock_quantity!=null)&&(!Number.isFinite(Number(selectedStock))||qty>Number(selectedStock)));
+    const unavailable=(product.__zuneHasVariants&&!selectedVariant)||((selectedVariant||product.stock_quantity!=null)&&(!Number.isFinite(Number(selectedStock))||qty>Number(selectedStock)));
+    if(addButton)addButton.disabled=unavailable;
+    if(buyNowButton)buyNowButton.disabled=unavailable;
   };
   overlay.querySelectorAll("[data-qty-step]").forEach(button=>button.addEventListener("click",()=>{
     if(!quantityInput)return;
@@ -1866,6 +1870,7 @@ function openProductDetails(product) {
   }));
   quantityInput?.addEventListener("input",refreshQuantityTotal);
   if(addButton)addButton.disabled=true;
+  if(buyNowButton)buyNowButton.disabled=true;
   supabase.from("product_variants").select("id,label,sku,attributes,price,stock_quantity").eq("product_id",product.id).eq("is_active",true).order("sort_order",{ascending:true}).then(({data,error})=>{
     if(error){console.warn("ZUNE product variants:",error);const host=overlay.querySelector("#z-detail-variants");if(host)host.textContent=language()==="sw"?"Imeshindikana kupakia chaguo za bidhaa. Jaribu tena.":"Unable to load product options. Please try again.";if(addButton)addButton.disabled=true;return;}
     availableVariants=data||[];
@@ -1899,6 +1904,13 @@ function openProductDetails(product) {
     if(product.__zuneHasVariants&&!selectedVariant){alert(language()==="sw"?"Chagua aina ya bidhaa kwanza.":"Please select a product option first.");return;}
     addToCart(String(product.id),product,selectedVariant,quantityInput?.value||1);
     close();
+  });
+  buyNowButton?.addEventListener("click",()=>{
+    if(!homeState.user?.id){alert(language()==="sw"?"Tafadhali ingia kupitia Akaunti kabla ya kununua.":"Please sign in through Account before purchasing.");return;}
+    if(product.__zuneHasVariants&&!selectedVariant){alert(language()==="sw"?"Chagua aina ya bidhaa kwanza.":"Please select a product option first.");return;}
+    const quantity=Math.max(1,Math.min(99,Math.floor(Number(quantityInput?.value)||1)));
+    sessionStorage.setItem("zune_buy_now:"+homeState.user.id,JSON.stringify({productId:String(product.id),variantId:selectedVariant?.id||null,quantity,createdAt:Date.now()}));
+    window.location.assign("./checkout.html?mode=buy-now");
   });
   overlay.querySelector("[data-detail-compare]")?.addEventListener("click", async event => {
     const button=event.currentTarget;
