@@ -362,3 +362,53 @@
 .z-account-body .z-driver-account-panel h2,.z-account-body .z-driver-account-panel p{color:#fff!important}
 .z-account-body .z-driver-account-panel p{line-height:1.6}
 .z-account-body .z-driver-account-panel .account-button{background:linear-gradient(145deg,#fff,#dcfce9)!important;color:#07583e!important}
+
+/* ZUNE Account Hub — complete hierarchy and visual reset */
+.z-account-body{background:#f4f7f5!important;color:#17231e}
+.z-account-body .account-shell{width:min(100% - 28px,760px);padding-bottom:42px}
+.z-account-body .account-topbar{min-height:0!important;margin:0 calc((min(100vw - 28px,760px) - 100vw)/2) 18px!important;padding:13px max(14px,calc((100vw - 760px)/2))!important;border-radius:0 0 18px 18px!important;background:#202522!important;box-shadow:none!important}
+.z-account-body .account-topbar:after{display:none!important}
+.z-account-body .account-brand{font-size:19px!important;margin-bottom:5px!important}
+.z-account-body .account-heading h1{font-size:18px!important;color:#fff!important}
+.z-account-body .account-heading p{font-size:10px!important}
+.z-account-body .account-profile-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-radius:20px;background:linear-gradient(135deg,#064b38,#087a55 70%,#0b9166);color:#fff;box-shadow:0 10px 24px rgba(5,75,52,.16)}
+.z-account-body .account-profile-main{display:flex;align-items:center;gap:12px;min-width:0}
+.z-account-body .account-profile-card .account-avatar{width:60px;height:60px;flex:0 0 60px;border:2px solid rgba(255,255,255,.65);border-radius:50%;background:#fff;color:#087a55;font-size:20px;box-shadow:none}
+.z-account-body .account-profile-card .account-eyebrow{color:#c9f3df}
+.z-account-body .account-profile-card .account-name{display:flex;align-items:center;gap:5px;margin:0 0 3px;color:#fff;font-size:16px;line-height:1.3}
+.z-account-body .account-profile-card .account-name-text{overflow-wrap:anywhere}
+.z-account-body .account-profile-card .account-identity p{color:rgba(255,255,255,.82);font-size:10px}
+.z-account-body .account-profile-card .account-role{background:rgba(255,255,255,.16);color:#fff}
+.z-account-body .account-profile-card .account-role.vendor{background:#2586ce}
+.z-account-body .account-profile-card .account-store-verified{background:rgba(255,255,255,.16);color:#fff}
+.z-account-body .account-profile-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.z-account-body .account-profile-edit{color:#fff;text-decoration:none;font-size:10px;font-weight:800;padding:8px 10px;border:1px solid rgba(255,255,255,.35);border-radius:10px}
+.z-account-body .account-qr-link{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#fff;color:#087a55;text-decoration:none}
+.z-account-body .account-qr-link svg{width:21px;height:21px}
+.z-account-body .account-section{margin-top:23px}
+.z-account-body .account-section-head{margin:0 2px 11px}
+.z-account-body .account-section-head h2{font-size:17px;font-weight:900}
+.z-account-body .account-shopping-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+.z-account-body .account-shopping-grid .account-card{min-height:82px!important;display:flex!important;flex-direction:row!important;align-items:center!important;gap:10px!important;padding:11px!important;border:1px solid #e2eae5!important;border-radius:14px!important;background:#fff!important;color:#17231e!important;box-shadow:0 3px 10px rgba(20,50,35,.035)!important}
+.z-account-body .account-shopping-grid .account-card-icon,.z-account-body .account-row-list .account-card-icon{width:38px!important;height:38px!important;flex:0 0 38px!important;display:grid!important;place-items:center!important;border-radius:12px!important;background:#e8f4ed!important;color:#087a55!important;box-shadow:none!important}
+.z-account-body .account-card-icon:after,.z-account-body .account-card:before{display:none!important}
+.z-account-body .account-card-icon svg{width:20px;height:20px;filter:none!important}
+.z-account-body .account-shopping-grid .account-card-copy strong,.z-account-body .account-row-list .account-card-copy strong{font-size:11px!important;line-height:1.35}
+.z-account-body .account-shopping-grid .account-card-copy small,.z-account-body .account-row-list .account-card-copy small{font-size:9px!important;line-height:1.4}
+.z-account-body .account-shopping-grid .account-card-arrow,.z-account-body .account-row-list .account-card-arrow{display:block!important;color:#84938b!important;font-size:19px!important}
+.z-account-body .account-row-list{display:flex;flex-direction:column;gap:0;overflow:hidden;border:1px solid #e2eae5;border-radius:15px;background:#fff}
+.z-account-body .account-row-list .account-card{min-height:62px!important;display:flex!important;flex-direction:row!important;align-items:center!important;gap:11px!important;padding:10px 12px!important;border:0!important;border-bottom:1px solid #edf1ee!important;border-radius:0!important;background:#fff!important;color:#17231e!important;box-shadow:none!important}
+.z-account-body .account-row-list .account-card:last-child{border-bottom:0!important}
+.z-account-body .account-row-list .account-card:hover{transform:none!important;background:#f8fbf9!important}
+.z-account-body .account-business-title{display:flex;align-items:center;gap:12px;margin-top:12px}
+.z-account-body .account-feature-icon{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;border-radius:13px;background:#e8f4ed;color:#087a55}
+.z-account-body .account-feature-icon svg{width:23px;height:23px}
+.z-account-body .account-business-title h2{margin:0 0 3px;font-size:16px}
+.z-account-body .account-business-title p{font-size:11px}
+.z-account-body .account-panel{padding:16px;border:1px solid #e2eae5;border-radius:17px;background:#fff;box-shadow:0 4px 14px rgba(20,50,35,.035)}
+.z-account-body .account-panel .account-eyebrow{color:#087a55}
+.z-account-body .account-button{min-height:43px;border-radius:11px}
+.z-account-body .account-logout-wrap{margin-top:21px}
+.z-account-body .account-logout-wrap .account-button{min-height:46px}
+@media(max-width:390px){.z-account-body .account-shell{width:calc(100% - 22px)}.z-account-body .account-profile-card{padding:12px;gap:7px}.z-account-body .account-profile-main{gap:9px}.z-account-body .account-profile-card .account-avatar{width:52px;height:52px;flex-basis:52px}.z-account-body .account-profile-card .account-name{font-size:14px}.z-account-body .account-profile-edit{font-size:9px;padding:7px}.z-account-body .account-qr-link{width:34px;height:34px}.z-account-body .account-shopping-grid .account-card{padding:9px!important;gap:8px!important}.z-account-body .account-shopping-grid .account-card-icon{width:34px!important;height:34px!important;flex-basis:34px!important}}
+@media(prefers-reduced-motion:reduce){.z-account-body .account-card{transition:none!important}}
