@@ -1986,7 +1986,7 @@ async function loadProductQuestions(overlay,product){
   if(error)throw error;
   if(!data?.length){host.innerHTML='<p class="z-detail-reviews-empty">'+(language()==="sw"?"Hakuna maswali bado. Kuwa wa kwanza kuuliza.":"No questions yet. Be the first to ask.")+'</p>';return;}
   host.innerHTML=data.map(q=>{
-   const answer=Array.isArray(q.product_question_answers)?q.product_question_answers[0]:null;
+   const answer=Array.isArray(q.product_question_answers)?q.product_question_answers[0]:(q.product_question_answers&&typeof q.product_question_answers==="object"?q.product_question_answers:null);
    const pending=q.moderation_status==="pending";
    const status=pending?'<small class="z-question-pending">'+(language()==="sw"?"Inasubiri idhini ya Admin":"Awaiting admin approval")+'</small>':"";
    const reply=answer?'<div class="z-question-answer"><strong>'+(language()==="sw"?"Jibu la muuzaji":"Seller answer")+'</strong><p>'+safe(answer.answer)+'</p></div>':"";
