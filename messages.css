@@ -14,3 +14,15 @@
 .thread-message img,.thread-message video{display:block;max-width:min(100%,280px);max-height:320px;margin-top:7px;border-radius:10px;object-fit:contain;background:#101915}
 .thread-form #chat-attach{width:42px;flex:0 0 42px;border:1px solid var(--border);border-radius:12px;background:var(--background);color:var(--primary);font-size:23px;line-height:1}
 .thread-form #chat-attach:disabled{opacity:.5}
+
+.messages-view-tabs{display:flex;gap:7px;padding:3px;border-radius:13px;background:var(--background)}
+.messages-view-tabs button{flex:1;border:0;border-radius:10px;padding:10px 12px;background:transparent;color:var(--text-muted);font:inherit;font-size:11px;font-weight:800}
+.messages-view-tabs button.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px #00000012}
+.seller-directory-row{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--border);min-width:0}
+.seller-directory-row:last-child{border-bottom:0}
+.seller-directory-row .message-avatar svg{width:23px;height:23px;fill:none;stroke:var(--primary);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.seller-directory-row .message-row-copy{min-width:0;flex:1}
+.seller-directory-row .message-row-copy strong{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.seller-verified{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#1688e8;color:#fff;font-size:10px;font-weight:900}
+.seller-message-button{flex:0 0 auto;border:0;border-radius:11px;padding:10px 12px;background:var(--primary);color:#fff;font:inherit;font-size:10px;font-weight:850;white-space:nowrap}
+.seller-message-button:disabled{opacity:.55}
