@@ -5,18 +5,19 @@ async function own(table,columns,filter){let rows=[],start=0;for(;;){let q=supab
 async function exportData(){
  const button=document.getElementById("export-account-data"),status=document.getElementById("data-export-status");button.disabled=true;button.textContent="Inaandaa nakala...";
  try{
-  const [p,orders,wishlist,addresses,walletLedger,payments,paymentTransactions,notifications,tickets]=await Promise.all([
+  const [p,orders,wishlist,addresses,wallets,walletLedger,payments,paymentTransactions,notifications,tickets]=await Promise.all([
    own("profiles","id,full_name,phone_number,email,role,is_verified,zune_id,created_at,account_status",["id",user.id]),
    own("orders","id,buyer_id,product_id,quantity,total_price,status,created_at,recipient_name,recipient_phone,delivery_address,payment_method,payment_status,order_number,public_order_id",["buyer_id",user.id]),
    own("wishlists","id,product_id,created_at",["user_id",user.id]),
    own("delivery_addresses","id,recipient_name,phone,country,region,district,ward,street,landmark,is_default,created_at,delivery_notes",["user_id",user.id]),
+   own("wallets","user_id,balance,updated_at",["user_id",user.id]),
    own("wallet_ledger","id,amount,currency,entry_type,reference_type,reference_id,reason,created_at",["user_id",user.id]),
    own("payments","id,order_id,amount,payment_method,transaction_reference,payment_status,created_at",["buyer_id",user.id]),
    own("payment_transactions","id,purpose,network_code,amount,currency,reference_code,status,submitted_at,created_at",["user_id",user.id]),
    own("notifications","id,type,title_sw,title_en,body_sw,body_en,action_url,is_read,created_at,read_at",["user_id",user.id]),
    own("support_tickets","id,category,message,status,admin_reply,created_at,updated_at",["user_id",user.id])
   ]);
-  const payload={product:"ZUNE Marketplace",exported_at:new Date().toISOString(),account:{...p[0],email:user.email},orders,wishlist,delivery_addresses:addresses,wallet_ledger:walletLedger,payments,payment_transactions:paymentTransactions,notifications,support_tickets:tickets};
+  const payload={product:"ZUNE Marketplace",exported_at:new Date().toISOString(),account:{...p[0],email:user.email},orders,wishlist,delivery_addresses:addresses,wallets,wallet_ledger:walletLedger,payments,payment_transactions:paymentTransactions,notifications,support_tickets:tickets};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="zune-account-data-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);status.textContent="Nakala ya data yako imeandaliwa na kupakuliwa.";
  }catch(error){console.error("ZUNE account data export:",error);status.textContent="Imeshindikana kuandaa nakala: "+error.message;}
  finally{button.disabled=false;button.textContent="Pakua data yangu (JSON)";}
