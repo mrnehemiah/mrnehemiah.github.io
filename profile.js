@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+import { supabase } from "./supabase.js?v=phase6-push-token-ownership-20261128";
 import QRCode from "https://esm.sh/qrcode@1.5.4";
 
 const root = document.getElementById("profile-root");

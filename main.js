@@ -6,7 +6,7 @@
    SUPABASE + VANILLA JAVASCRIPT
 ========================================= */
 
-import { supabase, unregisterZunePushToken } from "./supabase.js";
+import { supabase, unregisterZunePushToken } from "./supabase.js?v=phase6-push-token-ownership-20261128";
 
 import {
   registerCustomer,
