@@ -114,7 +114,7 @@ async function init() {
     ${group("☏","Help & Support","Pata msaada kutoka ZUNE",
       '<a href="./support.html">Help Center & Support ›</a><a href="./support.html">Report a Problem ›</a><a href="./support.html">Complaints & Disputes ›</a>')}
     ${group("Ⓩ","About ZUNE","Taarifa na huduma za ZUNE",
-      '<a href="./about.html">About ZUNE ›</a><a href="./index.html">Rudi Marketplace ›</a>')}
+      '<a href="https://whatsapp.com/channel/0029Vb98cx12v1J0skZQ5K36" target="_blank" rel="noopener noreferrer">ZUNE WhatsApp Channel ›</a><a href="./index.html">Rudi Marketplace ›</a>')}
     <p class="account-account-note">Akaunti yako na taarifa zako za Supabase zimehifadhiwa. Vipengele vilivyoandikwa “Inajengwa” vitaunganishwa hatua kwa hatua bila kufuta historia yako.</p>
   `;
 
