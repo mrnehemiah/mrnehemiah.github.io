@@ -2621,6 +2621,16 @@ function renderHomePage() {
               <span class="z-cart-badge" data-cart-count hidden>0</span>
             </button>
 
+            <button
+              type="button"
+              class="z-icon-button"
+              data-open-account
+              aria-label="${language()==="sw"?"Akaunti":"Account"}"
+              title="${language()==="sw"?"Akaunti":"Account"}"
+            >
+              ${zIcon("account")}
+            </button>
+
           </div>
 
         </div>
@@ -2960,6 +2970,7 @@ function bindHomeEvents() {
     ?.addEventListener("click", () => {
       renderMarketplacePage("cart");
     });
+  document.querySelector("[data-open-account]")?.addEventListener("click",()=>renderMarketplacePage("me"));
 
   updateProductArea();
   updateLoadStatus();
