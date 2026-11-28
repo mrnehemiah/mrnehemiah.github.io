@@ -204,8 +204,8 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
     return `
       <section class="z-home z-cart-page">
         <main class="z-home-content z-cart-content">
-          <header class="z-cart-heading">
-            <div><span class="z-cart-eyebrow">ⓏⓊⓃⒺ MARKETPLACE</span><h1 class="z-page-title">${t("title")}</h1><p>${t("subtitle")}</p></div>
+          <header class="z-cart-heading z-cart-hero">
+            <div><span class="z-cart-eyebrow">ⓏⓊⓃⒺ MARKETPLACE</span><h1 class="z-page-title">${t("title")}</h1><p>${t("subtitle")}</p><span class="z-cart-hero-note">Bidhaa zako, sehemu moja salama</span></div>
             <span class="z-cart-heading-icon" aria-hidden="true">🛒</span>
           </header>
           <section class="z-cart-empty">
@@ -220,14 +220,14 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
   return `
     <section class="z-home z-cart-page">
       <main class="z-home-content z-cart-content">
-        <header class="z-cart-heading">
-          <div><span class="z-cart-eyebrow">ⓏⓊⓃⒺ MARKETPLACE</span><h1 class="z-page-title">${t("title")}</h1><p>${count} ${t("items")}</p></div>
+        <header class="z-cart-heading z-cart-hero">
+          <div><span class="z-cart-eyebrow">ⓏⓊⓃⒺ MARKETPLACE</span><h1 class="z-page-title">${t("title")}</h1><p>${count} ${t("items")}</p><span class="z-cart-hero-note">Pitia bidhaa zako kabla ya kulipia</span></div>
           <span class="z-cart-heading-icon" aria-hidden="true">🛒</span>
         </header>
         ${loading ? `<p class="z-cart-status" role="status">${t("loading")}</p>` : ""}
         ${error ? `<p class="z-cart-status error" role="alert">${t("loadError")}</p>
                    <button type="button" class="z-secondary-button" data-cart-retry>${t("retry")}</button>` : ""}
-        <div class="z-cart-selection-bar"><label><input type="checkbox" data-cart-select-all checked> <span>${language === "en" ? "Select all" : "Chagua zote"}</span></label><button type="button" data-cart-remove-selected>${language === "en" ? "Remove selected" : "Ondoa zilizochaguliwa"}</button></div>
+        <div class="z-cart-selection-bar"><label><input type="checkbox" data-cart-select-all checked> <span>${language === "en" ? "Select all items" : "Chagua bidhaa zote"}</span></label><button type="button" data-cart-remove-selected>✕ ${language === "en" ? "Remove selected" : "Ondoa zilizochaguliwa"}</button></div>
         <div class="z-cart-layout">
           <section class="z-cart-items" aria-label="${t("title")}">
             ${groupedRows.map(group => `
