@@ -3630,8 +3630,21 @@ function bindCartEvents() {
       removeCartItem(productId);
       renderMarketplacePage("cart");
     },
+    onRemoveSelected: selectedKeys => {
+      const selected = new Set(selectedKeys || []);
+      homeState.cart = homeState.cart.filter(item => !selected.has(homeCartItemKey(item)));
+      saveCart();
+      homeState.cartProductsKey = "";
+      renderMarketplacePage("cart");
+    },
+    onSelectionChange: () => {},
     onContinueShopping: () => renderMarketplacePage("home"),
-    onCheckout: () => window.location.assign("./checkout.html"),
+    onCheckout: selectedKeys => {
+      const selected = Array.isArray(selectedKeys) ? selectedKeys : [];
+      if (!selected.length) { window.alert(language() === "en" ? "Select at least one item to continue." : "Chagua angalau bidhaa moja kuendelea."); return; }
+      sessionStorage.setItem("zune_checkout_selected_items:" + homeState.user.id, JSON.stringify(selected));
+      window.location.assign("./checkout.html");
+    },
     onRetry: () => {
       homeState.cartProductsKey = "";
       homeState.cartProductsLoading = false;
@@ -4617,7 +4630,7 @@ async function renderMarketplacePage(page) {
       if (!cartModule) {
         app.innerHTML = '<section class="z-cart-loading" role="status" aria-live="polite"><div class="zune-wave"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia kikapu...</p></section>';
         try {
-          cartModule = await import("./cart.js?v=20261128-discounts-1");
+          cartModule = await import("./cart.js?v=20261128-cart-redesign-1");
         } catch (error) {
           console.error("ZUNE cart module could not be loaded:", error);
           app.innerHTML = '<section class="z-cart-loading" role="alert"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><button type="button" id="z-cart-retry">Jaribu tena</button></section>';

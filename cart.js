@@ -194,6 +194,11 @@ function computeTotals(cart, products) {
 export function renderCartPage({ cart = [], products = [], language = "sw", loading = false, error = false } = {}) {
   const t = key => text(language, key);
   const { rows, subtotal, count } = computeTotals(cart, products);
+  const storeLabel = row => row.product?.store_name || row.product?.seller_name || row.product?.vendor_name || "ZUNE Store";
+  const groupedRows = [];
+  const groups = new Map();
+  rows.forEach(row => { const p=row.product||{}; const key=String(p.store_id||p.seller_id||p.user_id||storeLabel(row)); if(!groups.has(key)) groups.set(key,{name:storeLabel(row),rows:[]}); groups.get(key).rows.push(row); });
+  groups.forEach((group,key)=>groupedRows.push({...group,key}));
 
   if (!cart.length) {
     return `
@@ -222,9 +227,13 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
         ${loading ? `<p class="z-cart-status" role="status">${t("loading")}</p>` : ""}
         ${error ? `<p class="z-cart-status error" role="alert">${t("loadError")}</p>
                    <button type="button" class="z-secondary-button" data-cart-retry>${t("retry")}</button>` : ""}
+        <div class="z-cart-selection-bar"><label><input type="checkbox" data-cart-select-all checked> <span>${language === "en" ? "Select all" : "Chagua zote"}</span></label><button type="button" data-cart-remove-selected>${language === "en" ? "Remove selected" : "Ondoa zilizochaguliwa"}</button></div>
         <div class="z-cart-layout">
           <section class="z-cart-items" aria-label="${t("title")}">
-            ${rows.map(row => {
+            ${groupedRows.map(group => `
+              <section class="z-cart-store-group" data-cart-store="${escapeHTML(group.key)}">
+                <header class="z-cart-store-heading"><span class="z-cart-store-icon">▣</span><strong>${escapeHTML(group.name)}</strong><span>${group.rows.length} ${language === "en" ? "items" : "bidhaa"}</span></header>
+                ${group.rows.map(row => {
               const product = row.product;
               const quantity = row.quantity;
               if (!product) return `
@@ -236,6 +245,7 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
               const image = product.image_url || "";
               return `
                 <article class="z-cart-item" data-cart-row="${escapeHTML(row.cartKey)}">
+                  <input class="z-cart-select" type="checkbox" data-cart-select="${escapeHTML(row.cartKey)}" checked aria-label="${language === "en" ? "Select item" : "Chagua bidhaa"}">
                   ${image
                     ? `<img class="z-cart-product-image" src="${escapeHTML(image)}" alt="${escapeHTML(product.title || "Product")}" loading="lazy">`
                     : `<div class="z-cart-item-placeholder" aria-hidden="true">📦</div>`}
@@ -254,6 +264,8 @@ export function renderCartPage({ cart = [], products = [], language = "sw", load
                   </div>
                 </article>`;
             }).join("")}
+              </section>
+            `).join("")}
           </section>
           <aside class="z-cart-summary">
             <h2>${t("summary")}</h2>
@@ -290,13 +302,21 @@ export function bindCartEvents(root = document, handlers = {}) {
     if (remove) return handlers.onRemove?.(remove.dataset.cartRemove);
 
     if (target.closest("[data-cart-continue]")) return handlers.onContinueShopping?.();
-    if (target.closest("[data-cart-checkout]")) return handlers.onCheckout?.();
-    if (target.closest("[data-cart-retry]"))    return handlers.onRetry?.();
+    if (target.closest("[data-cart-checkout]")) return handlers.onCheckout?.([...root.querySelectorAll("[data-cart-select]:checked")].map(el => el.dataset.cartSelect));
+    if (target.closest("[data-cart-remove-selected]")) return handlers.onRemoveSelected?.([...root.querySelectorAll("[data-cart-select]:checked")].map(el => el.dataset.cartSelect));
+    if (target.closest("[data-cart-retry]")) return handlers.onRetry?.();
   };
-
+  const onChange = event => {
+    const target=event.target; if(!(target instanceof Element)) return;
+    if(target.matches("[data-cart-select-all]")) root.querySelectorAll("[data-cart-select]").forEach(el=>{el.checked=target.checked;});
+    if(target.matches("[data-cart-select]")) { const all=[...root.querySelectorAll("[data-cart-select]")]; const master=root.querySelector("[data-cart-select-all]"); if(master) master.checked=all.length>0&&all.every(el=>el.checked); }
+    handlers.onSelectionChange?.();
+  };
   root.addEventListener("click", onClick);
+  root.addEventListener("change", onChange);
   const unbind = () => {
     root.removeEventListener("click", onClick);
+    root.removeEventListener("change", onChange);
     if (boundRoots.get(root) === unbind) boundRoots.delete(root);
   };
   boundRoots.set(root, unbind);
@@ -466,28 +486,21 @@ export async function mountStandaloneCart(root) {
 
     onRemove: id => {
       cart = writeCart(cart.filter(r => cartItemKey(r) !== String(id)), userId);
-
-      if (!cart.length) {
-        productsById.clear();
-        renderFull();
-        return;
-      }
-
-      if (allProductsLoaded()) {
-        const row = root.querySelector(`[data-cart-row="${CSS.escape(String(id))}"]`);
-        if (row) {
-          row.remove();
-          patchSummary();
-        } else {
-          renderFull();
-        }
-      } else {
-        refresh();
-      }
+      if (!cart.length) { productsById.clear(); renderFull(); return; }
+      refresh();
     },
-
+    onRemoveSelected: ids => {
+      const selected = new Set(ids || []);
+      cart = writeCart(cart.filter(item => !selected.has(cartItemKey(item))), userId);
+      refresh();
+    },
     onContinueShopping: () => window.location.assign("./index.html"),
-    onCheckout: () => window.location.assign("./checkout.html"),
+    onCheckout: ids => {
+      const selected = Array.isArray(ids) ? ids : [];
+      if (!selected.length) return;
+      sessionStorage.setItem("zune_checkout_selected_items:" + userId, JSON.stringify(selected));
+      window.location.assign("./checkout.html");
+    },
     onRetry: () => refresh()
   });
 
