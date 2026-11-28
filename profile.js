@@ -66,7 +66,7 @@ function render() {
           ${editing ? '<label class="photo-edit" for="profile-photo" title="Badilisha picha" aria-label="Badilisha picha">✎</label><input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden>' : ""}
         </div>
         <div class="identity-copy">
-          <h3>${verifiedBadge()}${esc(name)}</h3>
+          <h3>${esc(name)}${verifiedBadge()}</h3>
           <p>${esc(user.email || "")}</p>
           <div class="identity-badges">
             <span class="status-pill">${esc(profile.role === "vendor" ? "MUUZAJI" : profile.role === "admin" ? "ADMIN" : "MTEJA")}</span>
