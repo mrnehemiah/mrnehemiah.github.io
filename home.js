@@ -1444,6 +1444,10 @@ async function loadHomeRankingPool(){
   homeState.rankingPoolLoading=true;
   try{
     const {data,error}=await supabase.from("products").select("*")
+      .eq("moderation_status","approved")
+      .not("published_at","is",null)
+      .is("removed_at",null)
+      .is("seller_archived_at",null)
       .order("created_at",{ascending:false}).limit(80);
     if(error)throw error;
     const products=data||[];
@@ -2320,7 +2324,7 @@ function readRankingIds(key){
 function rankingSignals(products){
   const byId=new Map(products.map(p=>[String(p.id),p]));
   const savedIds=new Set((homeState.saved||[]).map(String));
-  const cartIds=new Set((homeState.cart||[]).map(x=>String(x.productId)));
+  const cartIds=new Set((homeState.cart||[]).map(x=>String(x.productId||x.product_id||x.id)));
   const recentIds=readRankingIds(recentlyViewedStorageKey()).slice(0,12);
   const categoryWeights=new Map(),brandWeights=new Map(),storeWeights=new Map();
   const addWeight=(map,key,weight)=>{
