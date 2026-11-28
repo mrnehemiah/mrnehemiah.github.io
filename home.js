@@ -2301,9 +2301,9 @@ function removeCartItem(cartKey) {
 function bindProductCards(root){
   if(!root)return;
   root.querySelectorAll("[data-save-product]").forEach(button=>button.addEventListener("click",event=>{event.stopPropagation();toggleSaved(button.dataset.saveProduct);}));
-  root.querySelectorAll("[data-open-store]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();const id=button.dataset.openStore;const p=homeState.products.find(x=>String(x.vendor_id)===String(id))||homeState.sponsoredProducts.find(x=>String(x.product.vendor_id)===String(id))?.product;openStoreDetails(id,p||null);}));
+  root.querySelectorAll("[data-open-store]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();const id=button.dataset.openStore;const p=homeState.products.find(x=>String(x.vendor_id)===String(id))||homeState.rankingPool.find(x=>String(x.vendor_id)===String(id))||homeState.sponsoredProducts.find(x=>String(x.product.vendor_id)===String(id))?.product;openStoreDetails(id,p||null);}));
   root.querySelectorAll("[data-open-product]").forEach(card=>{
-    const open=()=>{const product=homeState.products.find(item=>String(item.id)===card.dataset.openProduct)||homeState.sponsoredProducts.find(item=>String(item.product.id)===card.dataset.openProduct)?.product;if(product)openProductDetails(product);};
+    const open=()=>{const product=homeState.products.find(item=>String(item.id)===card.dataset.openProduct)||homeState.rankingPool.find(item=>String(item.id)===card.dataset.openProduct)||homeState.sponsoredProducts.find(item=>String(item.product.id)===card.dataset.openProduct)?.product;if(product)openProductDetails(product);};
     card.addEventListener("click",event=>{if(event.target.closest("[data-save-product]"))return;open();});
     card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();open();}});
   });
