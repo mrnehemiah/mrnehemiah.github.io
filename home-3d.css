@@ -618,3 +618,64 @@
 @media(prefers-reduced-motion:reduce){
  #app .z-home-category-icon,#app .z-explore-category-icon,#app .z-category-image-icon{transition:none}
 }
+
+/* 3D SMART SEARCH TOOLS — camera, voice and filter controls */
+#app .z-search-premium .z-search-tool,
+#app .z-search-filter-sheet .z-search-sheet-close{
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  place-items:center;
+  flex:0 0 36px;
+  width:36px;
+  height:36px;
+  border:1px solid #cfe5d7;
+  border-radius:12px;
+  background:linear-gradient(145deg,#fff 0%,#edf8f0 55%,#d9eddf 100%);
+  color:#087a55;
+  box-shadow:0 3px 0 #c4dfce,0 6px 11px rgba(8,82,49,.12),inset 0 1px 0 #fff;
+  text-shadow:0 1px 0 rgba(255,255,255,.7);
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+#app .z-search-premium .z-search-tool:before,
+#app .z-search-filter-sheet .z-search-sheet-close:before{
+  content:"";
+  position:absolute;
+  inset:2px 4px auto;
+  height:42%;
+  border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.85),transparent);
+  pointer-events:none;
+}
+#app .z-search-premium .z-search-tool svg{
+  width:19px;
+  height:19px;
+  filter:drop-shadow(0 1px 1px rgba(5,80,48,.18));
+}
+#app .z-search-premium .z-search-tool:active,
+#app .z-search-filter-sheet .z-search-sheet-close:active{
+  transform:translateY(2px) scale(.96);
+  box-shadow:inset 0 2px 5px rgba(5,73,46,.16);
+}
+#app .z-search-premium .z-search-tool.is-listening{
+  border-color:#7bd7a3;
+  background:linear-gradient(145deg,#eafff0,#bce9cb);
+  box-shadow:0 3px 0 #8fcda3,0 0 0 4px rgba(17,142,77,.10),inset 0 1px 0 #fff;
+}
+#app .z-search-premium .z-search-tool.z-search-filter-trigger{
+  border-color:#b9ddc7;
+  background:linear-gradient(145deg,#fafffb,#dff2e5);
+}
+@media(hover:hover) and (pointer:fine){
+ #app .z-search-premium .z-search-tool:hover,
+ #app .z-search-filter-sheet .z-search-sheet-close:hover{
+  transform:translateY(-2px);
+  box-shadow:0 5px 0 #c4dfce,0 9px 14px rgba(8,82,49,.16),inset 0 1px 0 #fff;
+ }
+}
+@media(max-width:380px){
+ #app .z-search-premium .z-search-tool{flex-basis:33px;width:33px;height:33px;border-radius:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ #app .z-search-premium .z-search-tool,#app .z-search-filter-sheet .z-search-sheet-close{transition:none}
+}
