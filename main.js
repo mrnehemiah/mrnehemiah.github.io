@@ -1368,7 +1368,7 @@ async function renderAccount(knownUser = null) {
       // Ondoa loader ya pili ya full-screen; Home itajionyesha moja kwa moja ikishapakiwa.
       app.setAttribute("aria-busy", "true");
       marketplaceHomeModule = await withStartupTimeout(
-        () => import("./home.js?v=20261128-smart-ranking-4"),
+        () => import("./home.js?v=20261128-mobile-performance-1"),
         7000,
         state.language === "sw"
           ? "Marketplace imechelewa kupakia. Angalia intaneti kisha jaribu tena."
