@@ -4622,7 +4622,7 @@ async function renderMarketplacePage(page) {
 
     case "features":
       try {
-        const featureModule = await import("./marketplace-features.js?v=20261123-3d-suite-v2");
+        const featureModule = await import("./marketplace-features.js?v=20261128-phase2-final-4");
         await featureModule.mountMarketplaceFeatures({
           root: app.querySelector("#z-feature-suite-root"),
           user: homeState.user,
