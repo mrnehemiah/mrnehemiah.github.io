@@ -486,28 +486,21 @@ export async function mountStandaloneCart(root) {
 
     onRemove: id => {
       cart = writeCart(cart.filter(r => cartItemKey(r) !== String(id)), userId);
-
-      if (!cart.length) {
-        productsById.clear();
-        renderFull();
-        return;
-      }
-
-      if (allProductsLoaded()) {
-        const row = root.querySelector(`[data-cart-row="${CSS.escape(String(id))}"]`);
-        if (row) {
-          row.remove();
-          patchSummary();
-        } else {
-          renderFull();
-        }
-      } else {
-        refresh();
-      }
+      if (!cart.length) { productsById.clear(); renderFull(); return; }
+      refresh();
     },
-
+    onRemoveSelected: ids => {
+      const selected = new Set(ids || []);
+      cart = writeCart(cart.filter(item => !selected.has(cartItemKey(item))), userId);
+      refresh();
+    },
     onContinueShopping: () => window.location.assign("./index.html"),
-    onCheckout: () => window.location.assign("./checkout.html"),
+    onCheckout: ids => {
+      const selected = Array.isArray(ids) ? ids : [];
+      if (!selected.length) return;
+      sessionStorage.setItem("zune_checkout_selected_items:" + userId, JSON.stringify(selected));
+      window.location.assign("./checkout.html");
+    },
     onRetry: () => refresh()
   });
 
