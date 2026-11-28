@@ -300,3 +300,57 @@
 @media(prefers-reduced-motion:reduce){
   .account-settings-section .account-list-row,.account-choice-dialog label{transition:none!important}
 }
+
+
+/* STEP 6 — SUPPORT & ABOUT ZUNE: PREMIUM 3D GLASS */
+.account-support-section .account-list-card{
+  position:relative;isolation:isolate;overflow:hidden;
+  border:1px solid rgba(255,255,255,.86);border-radius:25px;
+  background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(231,246,237,.86));
+  box-shadow:0 20px 40px rgba(8,75,47,.11),0 5px 14px rgba(8,75,47,.05),inset 0 1px 0 rgba(255,255,255,.98),inset 0 -1px 0 rgba(189,220,199,.42);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+}
+.account-support-section .account-list-card:before{
+  content:"";position:absolute;z-index:0;pointer-events:none;width:190px;height:190px;right:-115px;top:-125px;
+  border:1px solid rgba(8,122,85,.10);border-radius:50%;
+  box-shadow:0 0 0 18px rgba(8,122,85,.035),0 0 0 39px rgba(8,122,85,.025);
+}
+.account-support-section .account-list-row{position:relative;z-index:1;min-height:78px;padding:13px 16px;border-bottom-color:rgba(185,215,195,.48)}
+.account-support-section .account-row-icon{
+  width:47px;height:47px;flex-basis:47px;border:1px solid rgba(255,255,255,.92);border-radius:17px;
+  background:linear-gradient(145deg,#f4fff7 0%,#d9f4e2 58%,#c3e8d1 100%);
+  box-shadow:0 8px 15px rgba(8,105,69,.12),inset 0 1px 0 #fff,inset 0 -2px 4px rgba(15,100,62,.07);
+  color:#087a55;font-size:20px;
+}
+.account-support-section .account-row-copy b{font-size:12px;font-weight:950}
+.account-support-section .account-row-copy small{font-size:10px;line-height:1.45}
+.account-support-section .account-row-arrow{color:#78a58d;font-size:27px}
+.account-support-section .account-logout-row .account-row-icon{
+  border-color:#ffe4df;background:linear-gradient(145deg,#fff4f1,#ffdcd5);color:#c43d35;
+  box-shadow:0 7px 14px rgba(164,54,44,.10),inset 0 1px 0 #fff;
+}
+[data-account-theme="dark"] .account-support-section .account-list-card{
+  border-color:rgba(115,164,133,.34);background:linear-gradient(145deg,rgba(28,54,40,.96),rgba(18,39,28,.94));
+  box-shadow:0 20px 40px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-account-theme="dark"] .account-support-section .account-list-card:before{
+  border-color:rgba(125,220,157,.10);box-shadow:0 0 0 18px rgba(125,220,157,.035),0 0 0 39px rgba(125,220,157,.025);
+}
+[data-account-theme="dark"] .account-support-section .account-list-row{border-bottom-color:rgba(109,151,122,.22)}
+[data-account-theme="dark"] .account-support-section .account-row-icon{
+  border-color:rgba(149,212,169,.24);background:linear-gradient(145deg,#285c40,#183e2c);color:#b9f1ce;
+  box-shadow:0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.12);
+}
+[data-account-theme="dark"] .account-support-section .account-logout-row .account-row-icon{
+  border-color:rgba(244,153,139,.25);background:linear-gradient(145deg,#60342f,#402521);color:#ffb4a8;
+}
+[data-account-theme="dark"] .account-support-section .account-row-arrow{color:#8fc5a3}
+@media(hover:hover){
+  .account-support-section .account-list-row:hover{background:rgba(224,246,232,.72)}
+  .account-support-section .account-list-row:not(.account-logout-row):hover{transform:translateX(2px)}
+}
+@media(max-width:420px){
+  .account-support-section .account-list-row{min-height:73px;padding:11px 12px}
+  .account-support-section .account-row-icon{width:44px;height:44px;flex-basis:44px}
+}
+@media(prefers-reduced-motion:reduce){.account-support-section .account-list-row{transition:none!important}}

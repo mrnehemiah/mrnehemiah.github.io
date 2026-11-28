@@ -78,7 +78,7 @@ async function init(){
       row("?",t("support"),lang==="sw"?"Pata msaada kutoka ZUNE":"Get help from ZUNE","./support.html"),
       row("Ⓩ",t("about"),lang==="sw"?"Taarifa rasmi za ZUNE":"Official ZUNE information","./about-zune.html"),
       '<button class="account-list-row account-action-row account-logout-row" type="button" data-account-action="logout">'+icon("↗")+'<span class="account-row-copy"><b>'+t("logout")+'</b></span><span class="account-row-arrow">›</span></button>'
-    ]);
+    ],"account-support-section");
   root.querySelector(".account-identity-card")?.addEventListener("click",e=>{
     if(e.target.closest("[data-copy-id]")||e.target.closest("a"))return;
     const card=e.currentTarget,details=card.querySelector(".account-identity-details"),open=card.getAttribute("aria-expanded")==="true";
