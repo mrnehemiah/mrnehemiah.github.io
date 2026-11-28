@@ -31,6 +31,9 @@ function readStorage(key, fallback) {
 
 const homeState = {
   products: [],
+  rankingPool: [],
+  rankingPoolLoaded: false,
+  rankingPoolLoading: false,
   categories: [],
   featuredStores: [],
   statusByStore: {},
@@ -1429,7 +1432,43 @@ async function loadProducts(reset = false) {
       updateLoadStatus();
       updateProductArea();
       if (!homeState.sponsoredAdsLoaded) loadSponsoredCampaigns();
+      if (reset && homeState.activeTab === "home" && !homeState.search && !homeState.selectedCategory && !homeState.selectedBrand && !homeState.selectedVendor && !homeState.rankingPoolLoaded && !homeState.rankingPoolLoading) {
+        loadHomeRankingPool();
+      }
     }
+  }
+}
+
+async function loadHomeRankingPool(){
+  if(homeState.rankingPoolLoaded||homeState.rankingPoolLoading)return;
+  homeState.rankingPoolLoading=true;
+  try{
+    const {data,error}=await supabase.from("products").select("*")
+      .order("created_at",{ascending:false}).limit(80);
+    if(error)throw error;
+    const products=data||[];
+    const vendorIds=[...new Set(products.map(p=>p.vendor_id).filter(Boolean))];
+    if(vendorIds.length){
+      const [storeResult,profileResult]=await Promise.all([
+        supabase.from("stores").select("owner_id,store_name,verification_status,logo_url,description,phone,email,website,region,district,address,storefront_template").in("owner_id",vendorIds),
+        supabase.from("profiles").select("id,is_verified,role").in("id",vendorIds)
+      ]);
+      if(!storeResult.error){
+        const map=new Map((storeResult.data||[]).map(s=>[String(s.owner_id),s]));
+        products.forEach(p=>p.__zuneStore=map.get(String(p.vendor_id))||null);
+      }
+      if(!profileResult.error){
+        const map=new Map((profileResult.data||[]).map(p=>[String(p.id),p]));
+        products.forEach(p=>p.__zuneOwnerProfile=map.get(String(p.vendor_id))||null);
+      }
+    }
+    homeState.rankingPool=products;
+    homeState.rankingPoolLoaded=true;
+    updateProductArea();
+  }catch(error){
+    console.warn("ZUNE Home ranking pool unavailable; using current product page:",error);
+  }finally{
+    homeState.rankingPoolLoading=false;
   }
 }
 
@@ -2363,9 +2402,10 @@ function rankHomeProducts(products,mode="recommended"){
 }
 function updateProductArea() {
   const source=[...homeState.products];
+  const rankingSource=homeState.rankingPool.length?[...homeState.rankingPool]:source;
   const area=document.getElementById("z-product-area");
   const recommendedHost=document.getElementById("z-smart-recommended-products");
-  const recommended=rankHomeProducts(source,"recommended");
+  const recommended=rankHomeProducts(rankingSource,"recommended");
   const feed=rankHomeProducts(source,"feed");
   if(area)area.innerHTML=renderProductCards(feed);
   if(recommendedHost)recommendedHost.innerHTML=renderProductCards(recommended);
@@ -2389,7 +2429,7 @@ function updateProductArea() {
     arrivals.innerHTML=newest.length?newest.map(productCard).join(""):'<div class="z-empty-state">'+tx("empty")+'</div>';
   }
   const trending=document.getElementById("z-trending-products");
-  if(trending)trending.innerHTML=renderProductCards(rankHomeProducts(source,"trending"));
+  if(trending)trending.innerHTML=renderProductCards(rankHomeProducts(rankingSource,"trending"));
   document.querySelectorAll(".z-home-content #z-product-area,.z-home-content #z-smart-recommended-products,.z-home-content #z-new-arrivals,.z-home-content #z-trending-products").forEach(bindProductCards);
 }
 // --------------------------------------------
