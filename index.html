@@ -71,33 +71,44 @@
   <main id="app"></main>
   <script>
     (function () {
-      var splash = document.getElementById("zune-splash");
-      var ready = false;
-      var minimumTimePassed = false;
-      function hideWhenReady() {
-        if (ready && minimumTimePassed && splash) {
-          splash.classList.add("is-hidden");
-          window.setTimeout(function () { if (splash && splash.parentNode) splash.parentNode.removeChild(splash); }, 750);
+      // One authoritative controller: remove the overlay by looking it up fresh
+      // every time, so stale element references or early app-ready events cannot
+      // leave a full-screen layer above an already-rendered Home page.
+      var startedAt = Date.now();
+      var minimumDuration = 4000;
+      var removed = false;
+
+      function removeSplash() {
+        if (Date.now() - startedAt < minimumDuration) return false;
+        var node = document.getElementById("zune-splash");
+        if (node) {
+          node.style.setProperty("display", "none", "important");
+          node.style.setProperty("visibility", "hidden", "important");
+          node.style.setProperty("opacity", "0", "important");
+          node.style.setProperty("pointer-events", "none", "important");
+          node.remove();
         }
+        removed = true;
+        return true;
       }
-      window.addEventListener("zune:app-ready", function () { ready = true; hideWhenReady(); }, { once: true });
-      // Splash is a timed intro, never a permanent page-covering layer.
-      // Hide it after the selected 4 seconds even if app-ready is delayed;
-      // the separate startup watchdog will show an error if the app truly failed.
-      window.setTimeout(function () {
-        minimumTimePassed = true;
-        ready = true;
-        hideWhenReady();
-        // Hard stop: remove the splash node itself; do not rely on CSS classes,
-        // app-ready events, transitions, or the startup module.
-        if (splash) {
-          splash.style.setProperty("display", "none", "important");
-          splash.style.setProperty("visibility", "hidden", "important");
-          splash.style.setProperty("pointer-events", "none", "important");
-          if (splash.parentNode) splash.parentNode.removeChild(splash);
-          splash = null;
-        }
-      }, 4000);
+
+      window.setTimeout(removeSplash, minimumDuration);
+      // Re-check after page restore/background suspension and tolerate a
+      // duplicate/stale splash node being reinserted by an old cached document.
+      window.addEventListener("pageshow", removeSplash);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) removeSplash();
+      });
+      window.addEventListener("zune:app-ready", function () {
+        window.setTimeout(removeSplash, Math.max(0, minimumDuration - (Date.now() - startedAt)));
+      }, { once: true });
+
+      // Short safety window after the four-second intro; stops as soon as gone.
+      var checks = 0;
+      var retry = window.setInterval(function () {
+        checks += 1;
+        if (removeSplash() || checks >= 24) window.clearInterval(retry);
+      }, 300);
     })();
   </script>
 
