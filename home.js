@@ -1873,6 +1873,30 @@ function openProductDetails(product) {
   const close = () => overlay.remove();
   overlay.addEventListener("click", event => { if (event.target === overlay) close(); });
   overlay.querySelector(".z-detail-close")?.addEventListener("click", close);
+  overlay.querySelector(".z-detail-message")?.addEventListener("click", async event => {
+    const button=event.currentTarget;
+    if(!homeState.user?.id){alert(language()==="sw"?"Ingia kwenye akaunti yako ili kuwasiliana na muuzaji.":"Please sign in to message this seller.");return;}
+    if(!product.vendor_id||String(product.vendor_id)===String(homeState.user.id))return;
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent=language()==="sw"?"Inafungua chat...":"Opening chat...";
+    try{
+      let result=await supabase.from("chat_conversations").select("id").eq("buyer_id",homeState.user.id).eq("seller_id",product.vendor_id).eq("product_id",product.id).maybeSingle();
+      if(result.error)throw result.error;
+      let conversationId=result.data?.id;
+      if(!conversationId){
+        const created=await supabase.from("chat_conversations").insert({buyer_id:homeState.user.id,seller_id:product.vendor_id,product_id:product.id}).select("id").single();
+        if(created.error)throw created.error;
+        conversationId=created.data.id;
+      }
+      window.location.assign("./messages.html?conversation="+encodeURIComponent(conversationId));
+    }catch(error){
+      console.error("ZUNE start seller chat:",error);
+      alert(language()==="sw"?"Imeshindikana kuanzisha mazungumzo. Tafadhali jaribu tena.":"Could not start the conversation. Please try again.");
+      button.disabled=false;
+      button.textContent=original;
+    }
+  });
   overlay.querySelector("[data-open-store]")?.addEventListener("click",event=>{event.preventDefault();event.stopPropagation();openStoreDetails(event.currentTarget.dataset.openStore,product);});
   let availableVariants=[];
   let selectedVariant=null;
