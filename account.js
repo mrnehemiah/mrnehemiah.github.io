@@ -68,9 +68,12 @@ async function init(){
   root.innerHTML=
     '<section class="account-identity-card" tabindex="0" role="button" aria-expanded="false" aria-controls="account-identity-details"><span class="account-avatar">'+avatar+'</span><span class="account-identity-main"><small class="account-eyebrow">'+t("eyebrow")+'</small><span class="account-name">'+esc(name)+(verified?verifiedBadge():"")+'</span><small class="account-identity-hint">'+t("profile")+'</small></span><span class="account-expand-icon">⌄</span><span class="account-identity-details" id="account-identity-details" hidden><span><small>'+t("id")+'</small><b>'+esc(profile.zune_id||"—")+'</b><button type="button" class="account-copy-id" data-copy-id="'+esc(profile.zune_id||"")+'">'+t("copy")+'</button></span><span><small>Email / Phone</small><b>'+esc(user.email||user.phone||"—")+'</b></span><span><small>'+t("active")+'</small><b>'+esc(profile.account_status||"active")+'</b></span><span><small>Account type</small><b>'+ (isSeller?t("sellerRole"):t("customer"))+'</b></span><a href="./profile.html">'+t("profile")+' →</a></span></section>'+
     '<section class="account-section account-quick-section"><h2>'+t("quick")+'</h2><div class="account-quick-grid">'+
+      '<a href="./messages.html" aria-label="Chats">'+icon("▣")+'<small>Chats</small></a>'+
+      '<a href="./orders.html">'+icon("⌑")+'<small>'+t("orders")+'</small></a>'+
+      '<a href="./index.html?tab=saved">'+icon("♧")+'<small>'+t("wishlist")+'</small></a>'+
+      '<a href="./index.html?tab=explore">'+icon("⌖")+'<small>'+(lang==="sw"?"Maduka":"Stores")+'</small></a>'+
       '<a href="./profile.html">'+icon("♙")+'<small>'+t("myProfile")+'</small></a>'+
       '<a href="./verification.html">'+icon("⛨")+'<small>'+t("verification")+'</small></a>'+
-      '<a href="./orders.html">'+icon("▣")+'<small>'+t("orders")+'</small></a>'+
     '</div></section>'+
     group(t("shopping"),[
       row("▣",t("cart"),lang==="sw"?"Bidhaa zako za kununua":"Items ready for checkout","./cart.html"),
