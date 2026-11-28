@@ -1,26 +1,28 @@
 <!doctype html>
 <html lang="sw">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#087A55">
-  <title>Wasifu wangu · ZUNE</title>
+  <title>Taarifa Binafsi · ZUNE</title>
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./profile.css?v=modern-account-icons">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./profile.css?v=personal-info-edit-v1">
 </head>
 <body class="z-profile-body">
-  <main class="profile-shell">
-    <header class="profile-topbar">
-      <a href="./account.html" class="profile-back" aria-label="Rudi kwenye akaunti">‹</a>
-      <div><a class="profile-brand" href="./index.html">ⓏⓊⓃⒺ</a><h1>Wasifu wangu</h1><p>Simamia taarifa na utambulisho wako ZUNE</p></div>
-      <a class="profile-home" href="./account.html">Akaunti</a>
+  <main class="personal-shell">
+    <header class="personal-topbar">
+      <a href="./account.html" class="personal-back" aria-label="Rudi kwenye akaunti">‹</a>
+      <div class="personal-topcopy">
+        <div class="personal-brand">ⓏⓊⓃⒺ</div>
+        <h1>Taarifa Binafsi</h1>
+      </div>
+      <a class="personal-toplink" href="./account.html">Akaunti</a>
     </header>
-    <div id="profile-root"><div class="profile-loading">Inapakia wasifu wako...</div></div>
-    <footer class="profile-footer">ⓏⓊⓃⒺ MARKETPLACE · 2.0</footer>
+    <div id="profile-root" aria-live="polite">
+      <div class="load-error">Inapakia taarifa zako...</div>
+    </div>
   </main>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script type="module" src="./profile.js?v=account-navigation-22-edit-profile"></script>
+  <script type="module" src="./profile.js?v=personal-info-edit-v1"></script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
 </html>
