@@ -15,6 +15,7 @@ function addressValues(a={}){return {recipient_name:a.recipient_name||"",phone:a
 function formData(){const form=root.querySelector("#zc-form");const fd=new FormData(form);return Object.fromEntries(fields.map(k=>[k,String(fd.get(k)||"").trim()]));}
 function validAddress(a){return ["recipient_name","phone","country","region","district","street"].every(k=>a[k]);}
 function unitPrice(item){const p=products.find(x=>String(x.id)===String(item.productId));const v=item.variantId?(p?.__zuneVariants||[]).find(x=>String(x.id)===String(item.variantId)):null;const raw=Number(v?.price??p?.price??0);const discount=Math.min(100,Math.max(0,Number(p?.discount_percent||0)));return Math.round(raw*(1-discount/100)*100)/100;}
+function checkoutKeyStorageKey(){return "zune_checkout_key:"+user.id+(buyNowMode?":buy-now":":cart");}
 function subtotal(){return cart.reduce((sum,item)=>sum+unitPrice(item)*item.quantity,0);}
 function render(){
  root.setAttribute("aria-busy","false");
@@ -54,7 +55,7 @@ async function placeOrder(){
   if(error)throw error;
   if(address.save_address){const {error:saveError}=await supabase.from("delivery_addresses").insert({user_id:user.id,recipient_name:address.recipient_name,phone:address.phone,country:address.country,region:address.region,district:address.district,ward:address.ward||'',street:address.street,landmark:address.landmark||null,delivery_notes:address.delivery_notes||null,latitude:address.latitude?Number(address.latitude):null,longitude:address.longitude?Number(address.longitude):null,is_default:addresses.length===0});if(saveError)console.warn("Address was not saved:",saveError.message);}
   if(buyNowMode){sessionStorage.removeItem("zune_buy_now:"+user.id);}else{writeCart([],user.id);syncCartCountBadges([]);}
-  sessionStorage.removeItem("zune_checkout_key:"+user.id);
+  sessionStorage.removeItem(checkoutKeyStorageKey());
   const {data:createdOrderRefs}=await supabase.from("orders").select("public_order_id,order_number").eq("checkout_id",data.checkout_id);
   const visibleOrderRefs=[...new Set((createdOrderRefs||[]).map(x=>x.public_order_id||x.order_number).filter(Boolean))];
   const orderReferenceText=visibleOrderRefs.length?visibleOrderRefs.join(" · "):data.checkout_id;
@@ -75,8 +76,8 @@ async function start(){
  if(a.error)throw a.error;
  if(products.length!==new Set(cart.map(x=>String(x.productId))).size||cart.some(x=>!products.some(p=>String(p.id)===String(x.productId))))throw new Error("Baadhi ya bidhaa hazipatikani tena. Rudi kikapuni uondoe bidhaa hizo.");
  for(const item of cart){const p=products.find(x=>x.id===item.productId);const v=item.variantId?(p?.__zuneVariants||[]).find(x=>String(x.id)===String(item.variantId)):null;if(item.variantId&&!v)throw new Error("Chaguo la bidhaa halipatikani tena: "+p.title);if(Number(v?v.stock_quantity:p.stock_quantity)<item.quantity)throw new Error("Stock haitoshi kwa "+(p.title||"bidhaa")+(v?" · "+v.label:""));}
- signature=JSON.stringify(cart.map(x=>[x.productId,x.variantId||null,x.quantity]).sort());
- const storageKey="zune_checkout_key:"+user.id;let saved={};try{saved=JSON.parse(sessionStorage.getItem(storageKey)||"{}");}catch{}
+ signature=(buyNowMode?"buy-now:":"cart:")+JSON.stringify(cart.map(x=>[x.productId,x.variantId||null,x.quantity]).sort());
+ const storageKey=checkoutKeyStorageKey();let saved={};try{saved=JSON.parse(sessionStorage.getItem(storageKey)||"{}");}catch{}
  if(saved.signature===signature&&saved.key)key=saved.key;else{key=crypto.randomUUID();sessionStorage.setItem(storageKey,JSON.stringify({signature,key}));}
  render();
 }
