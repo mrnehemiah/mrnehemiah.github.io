@@ -805,7 +805,13 @@ async function handleLogin(event) {
 
   try {
     await loginCustomer(state.loginIdentity, state.loginPassword);
-    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const { data: aal, error: aalError } = await withStartupTimeout(
+        () => supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+        5000,
+        state.language === "sw"
+          ? "Ukaguzi wa usalama umechelewa. Jaribu tena."
+          : "Security verification timed out. Please retry."
+      );
     if (aalError) throw aalError;
     if (aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2") {
       state.loading = false; state.loginPassword = ""; await renderMfaLoginChallenge(); return;
@@ -1360,7 +1366,13 @@ async function renderAccount(knownUser = null) {
 
     if (!marketplaceHomeModule) {
       app.innerHTML = '<section class="app-loading" role="status" aria-live="polite"><div class="zune-wave" aria-label="ZUNE"><span>Ⓩ</span><span>Ⓤ</span><span>Ⓝ</span><span>Ⓔ</span></div><p>Inapakia ZUNE Marketplace...</p></section>';
-      marketplaceHomeModule = await import("./home.js?v=20261128-smart-ranking-4");
+      marketplaceHomeModule = await withStartupTimeout(
+        () => import("./home.js?v=20261128-smart-ranking-4"),
+        7000,
+        state.language === "sw"
+          ? "Marketplace imechelewa kupakia. Angalia intaneti kisha jaribu tena."
+          : "Marketplace module timed out. Check your connection and retry."
+      );
     }
 
     await marketplaceHomeModule.renderMarketplaceHome({
@@ -1407,6 +1419,19 @@ async function handleLogout() {
    START APPLICATION
 ========================================= */
 
+// Every network-backed startup step must fail visibly instead of holding the
+// branded splash screen indefinitely on slow mobile connections.
+function withStartupTimeout(task, milliseconds, message) {
+  let timerId;
+  const timeout = new Promise((_, reject) => {
+    timerId = window.setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+  return Promise.race([
+    Promise.resolve().then(() => typeof task === "function" ? task() : task),
+    timeout
+  ]).finally(() => window.clearTimeout(timerId));
+}
+
 function renderStartupError() {
   const sw = state.language === "sw";
   app.innerHTML = `
@@ -1438,18 +1463,23 @@ async function startApp() {
   try {
     // Never leave the branded splash screen running forever if the
     // Supabase session request stalls on a slow or unavailable connection.
-    const session = await Promise.race([
-      getCustomerSession(),
-      new Promise((_, reject) => window.setTimeout(() => {
-        reject(new Error(state.language === "sw"
-          ? "Muunganisho wa akaunti umechelewa. Angalia intaneti kisha jaribu tena."
-          : "Account connection timed out. Check your internet connection and try again."));
-      }, 12000))
-    ]);
+    const session = await withStartupTimeout(
+      () => getCustomerSession(),
+      7000,
+      state.language === "sw"
+        ? "Kuangalia session kumechelewa. Angalia intaneti kisha jaribu tena."
+        : "Session check timed out. Check your connection and retry."
+    );
 
     if (session) {
       // New Google Marketplace accounts default to buyer; preserve existing account types.
-      const authUser = await getCurrentCustomer();
+      const authUser = await withStartupTimeout(
+        () => getCurrentCustomer(),
+        7000,
+        state.language === "sw"
+          ? "Kuthibitisha akaunti kumechelewa. Angalia intaneti kisha jaribu tena."
+          : "Account verification timed out. Check your connection and retry."
+      );
       if (authUser && !authUser.user_metadata?.account_type) {
         const { error: metadataError } = await supabase.auth.updateUser({ data: { account_type: "buyer" } });
         if (metadataError) throw metadataError;
