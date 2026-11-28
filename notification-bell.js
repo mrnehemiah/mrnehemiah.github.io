@@ -298,4 +298,4 @@ window.addEventListener("pagehide", () => {
    START
 ===================================== */
 
-window.addEventListener("zune:app-ready", initialize, { once: true });
+initialize();
