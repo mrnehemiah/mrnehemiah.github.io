@@ -3,14 +3,16 @@ const root=document.getElementById("messages-root");
 const lang=localStorage.getItem("zune_language")==="en"?"en":"sw";
 const tr=(a,b)=>lang==="sw"?a:b;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let user=null,conversations=[],products={},stores={},profiles={},selected=null,poll=null,realtimeChannel=null,presenceChannel=null,activeFilter="all",searchTerm="";
+let user=null,conversations=[],products={},stores={},profiles={},selected=null,poll=null,realtimeChannel=null,presenceChannel=null,activeFilter="all",activeView="chats",searchTerm="",sellerDirectory=[];
 const date=v=>v?new Date(v).toLocaleString(lang==="sw"?"sw-TZ":"en-US",{dateStyle:"short",timeStyle:"short"}):"";
 function empty(){root.innerHTML='<div class="messages-panel"><div class="messages-empty"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><b>'+tr("Bado huna mazungumzo","No conversations yet")+'</b><br>'+tr("Ukiwasiliana na muuzaji kupitia bidhaa, mazungumzo yataonekana hapa.","When you message a seller from a product, the conversation will appear here.")+'</div></div>';}
 async function loadList(){
  const {data,error}=await supabase.from("chat_conversations").select("id,buyer_id,seller_id,product_id,created_at,updated_at").or("buyer_id.eq."+user.id+",seller_id.eq."+user.id).order("updated_at",{ascending:false});
  if(error)throw error;conversations=data||[];
  const pids=[...new Set(conversations.map(x=>x.product_id).filter(Boolean))],sids=[...new Set(conversations.map(x=>x.seller_id).filter(Boolean))],participantIds=[...new Set(conversations.flatMap(x=>[x.buyer_id,x.seller_id]).filter(Boolean))],cids=conversations.map(x=>x.id);
- products={};stores={};profiles={};
+ products={};stores={};profiles={};sellerDirectory=[];
+ const directory=await supabase.from("stores").select("owner_id,store_name,logo_url,category,description,verification_status,is_active").eq("is_active",true).order("store_name",{ascending:true});
+ if(!directory.error){sellerDirectory=directory.data||[];sellerDirectory.forEach(x=>{stores[x.owner_id]=x;});}
  if(pids.length){const q=await supabase.from("products").select("id,title,vendor_id").in("id",pids);if(q.error)throw q.error;(q.data||[]).forEach(x=>products[x.id]=x);}
  if(sids.length){const s=await supabase.from("stores").select("owner_id,store_name,logo_url").in("owner_id",sids);if(!s.error)(s.data||[]).forEach(x=>stores[x.owner_id]=x);}
  if(participantIds.length){const p=await supabase.from("profiles").select("id,full_name,avatar_url").in("id",participantIds);if(!p.error)(p.data||[]).forEach(x=>profiles[x.id]=x);}
@@ -18,7 +20,41 @@ async function loadList(){
  if(cids.length){const q=await supabase.from("chat_messages").select("id,conversation_id,sender_id,message,is_read,created_at").in("conversation_id",cids).order("created_at",{ascending:false}).limit(Math.min(cids.length*30,500));if(q.error)throw q.error;for(const m of q.data||[]){if(!latest[m.conversation_id])latest[m.conversation_id]=m;if(m.sender_id!==user.id&&!m.is_read)unread[m.conversation_id]=(unread[m.conversation_id]||0)+1;}}
  renderList(latest,unread);
 }
+function renderSellerDirectory(){
+ const filtered=sellerDirectory.filter(s=>(s.store_name+" "+(s.category||"")+" "+(s.description||"")).toLowerCase().includes(searchTerm.toLowerCase())&&s.owner_id!==user.id);
+ root.innerHTML='<section class="messages-panel"><div class="messages-toolbar"><label class="messages-search"><span>⌕</span><input id="messages-search" type="search" placeholder="'+tr("Tafuta duka au muuzaji...","Search stores or sellers...")+'" value="'+esc(searchTerm)+'"></label><div class="messages-view-tabs"><button type="button" data-chat-view="chats">'+tr("Mazungumzo","Chats")+'</button><button type="button" data-chat-view="sellers" class="active">'+tr("Tafuta Sellers","Find Sellers")+'</button></div></div><div class="messages-panel-head"><b>'+tr("Maduka na wauzaji","Stores and sellers")+'</b><small>'+tr("Chagua muuzaji umtumie ujumbe moja kwa moja","Choose a seller to message directly")+'</small></div><div class="messages-list">'+(filtered.length?filtered.map(s=>{const title=s.store_name||tr("Duka la ZUNE","ZUNE Store"),verified=["verified","approved"].includes(String(s.verification_status||"").toLowerCase());return '<div class="seller-directory-row"><span class="message-avatar">'+(s.logo_url?'<img loading="lazy" src="'+esc(s.logo_url)+'" alt="">':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M5 10V6l2-3h10l2 3v4M5 10v10h14V10M9 20v-6h6v6"/></svg>')+'</span><span class="message-row-copy"><strong>'+esc(title)+(verified?'<span class="seller-verified">✓</span>':"")+'</strong><p>'+esc(s.category||tr("Muuzaji wa ZUNE","ZUNE Seller"))+'</p></span><button class="seller-message-button" type="button" data-message-seller="'+esc(s.owner_id)+'">'+tr("Tuma ujumbe","Message")+'</button></div>';}).join(""):'<div class="messages-empty">'+tr("Hakuna maduka yanayopatikana kwa sasa.","No active stores are available right now.")+'</div>')+'</div></section>';
+ root.querySelector("#messages-search")?.addEventListener("input",e=>{searchTerm=e.target.value;renderSellerDirectory();const input=root.querySelector("#messages-search");input?.focus();input?.setSelectionRange(searchTerm.length,searchTerm.length);});
+ root.querySelectorAll("[data-chat-view]").forEach(b=>b.addEventListener("click",()=>{activeView=b.dataset.chatView;searchTerm="";loadList().catch(showListError);}));
+ root.querySelectorAll("[data-message-seller]").forEach(b=>b.addEventListener("click",()=>startSellerConversation(b.dataset.messageSeller,b)));
+}
+function showListError(error){console.error("ZUNE Chats:",error);root.innerHTML='<div class="messages-error">'+esc(error.message||tr("Imeshindikana kupakia mazungumzo.","Unable to load chats."))+'</div>';}
+async function startSellerConversation(sellerId,button){
+ if(!sellerId||sellerId===user.id)return;
+ const original=button.textContent;button.disabled=true;button.textContent=tr("Inafungua...","Opening...");
+ try{
+  const existing=await supabase.from("chat_conversations").select("id").eq("buyer_id",user.id).eq("seller_id",sellerId).is("product_id",null).limit(1).maybeSingle();
+  if(existing.error)throw existing.error;
+  let conversationId=existing.data?.id;
+  if(!conversationId){
+   const created=await supabase.from("chat_conversations").insert({buyer_id:user.id,seller_id:sellerId,product_id:null}).select("id").single();
+   if(created.error)throw created.error;
+   conversationId=created.data.id;
+  }
+  activeView="chats";searchTerm="";
+  await loadList();
+  const conversation=conversations.find(x=>x.id===conversationId);
+  if(!conversation)throw new Error(tr("Mazungumzo hayakupatikana. Jaribu tena.","Conversation could not be opened. Please try again."));
+  await openThread(conversationId);
+ }catch(error){
+  if(error.code==="23505"){
+   const retry=await supabase.from("chat_conversations").select("id").eq("buyer_id",user.id).eq("seller_id",sellerId).is("product_id",null).limit(1).maybeSingle();
+   if(!retry.error&&retry.data){activeView="chats";await loadList();await openThread(retry.data.id);return;}
+  }
+  console.error("ZUNE seller directory chat:",error);alert(error.message||tr("Imeshindikana kuanzisha chat.","Could not start chat."));button.disabled=false;button.textContent=original;
+ }
+}
 function renderList(latest,unread){
+ if(activeView==="sellers"){renderSellerDirectory();return;}
  document.getElementById("messages-title").textContent="ZUNE Chats";
  document.getElementById("messages-subtitle").textContent=tr("Mazungumzo yako na wanunuzi na wauzaji","Your buyer and seller conversations");
  if(!conversations.length){empty();return;}
