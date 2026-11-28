@@ -133,3 +133,67 @@
 [data-account-theme="dark"] .account-quick-grid a.is-disabled>span{background:linear-gradient(145deg,#637d70,#405b4d)}
 @media(max-width:420px){.account-quick-grid{gap:8px}.account-quick-grid a{min-height:108px;padding:12px 3px 10px;border-radius:19px}.account-quick-grid a>span{width:44px;height:44px;border-radius:15px}.account-quick-grid small{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.account-quick-grid a,.account-quick-grid a>span{transition:none!important;transform:none!important}}
+
+
+/* STEP 3 — PREMIUM 3D GLASS SHOPPING & DELIVERY */
+.account-shopping-section .account-list-card{
+  position:relative;isolation:isolate;overflow:hidden;
+  border:1px solid rgba(255,255,255,.92);
+  border-radius:24px;
+  background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(226,245,234,.76));
+  box-shadow:10px 14px 28px rgba(14,73,45,.09),inset 1px 1px 0 rgba(255,255,255,.98),inset -1px -1px 0 rgba(190,222,202,.52);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  backdrop-filter:blur(18px) saturate(140%);
+}
+.account-shopping-section .account-list-card:before{
+  content:"";position:absolute;z-index:-1;right:-70px;top:-95px;
+  width:190px;height:190px;border:1px solid rgba(8,122,85,.12);border-radius:50%;
+  box-shadow:0 0 0 17px rgba(8,122,85,.035),0 0 0 38px rgba(8,122,85,.022);
+  pointer-events:none;
+}
+.account-shopping-section .account-list-row{
+  position:relative;min-height:76px;padding:12px 16px;
+  border-color:rgba(8,122,85,.10);
+  transition:background .2s ease,transform .2s ease;
+}
+.account-shopping-section .account-list-row:not(.is-disabled):active{
+  background:rgba(8,122,85,.09);transform:scale(.99);
+}
+.account-shopping-section .account-row-icon{
+  width:43px;height:43px;border:1px solid rgba(255,255,255,.86);
+  border-radius:15px;
+  background:linear-gradient(145deg,#25bb85,#087a55 62%,#04583e);
+  box-shadow:0 8px 15px rgba(8,122,85,.22),inset 0 1px 1px rgba(255,255,255,.72),inset 0 -3px 7px rgba(0,55,37,.14);
+  color:#fff;
+}
+.account-shopping-section .account-row-copy b{font-weight:900;letter-spacing:.05px}
+.account-shopping-section .account-row-copy small{line-height:1.45}
+.account-shopping-section .account-row-arrow{font-size:24px;color:#16845f}
+.account-shopping-section .account-list-row.is-disabled{opacity:.57}
+[data-account-theme="dark"] .account-shopping-section .account-list-card{
+  border-color:rgba(113,159,132,.42);
+  background:linear-gradient(145deg,rgba(36,67,49,.96),rgba(21,48,34,.92));
+  box-shadow:8px 12px 25px rgba(0,0,0,.25),inset 1px 1px 0 rgba(255,255,255,.09),inset -1px -1px 0 rgba(0,0,0,.12);
+}
+[data-account-theme="dark"] .account-shopping-section .account-list-card:before{
+  border-color:rgba(135,226,174,.13);
+  box-shadow:0 0 0 17px rgba(135,226,174,.03),0 0 0 38px rgba(135,226,174,.02);
+}
+[data-account-theme="dark"] .account-shopping-section .account-list-row{border-color:rgba(135,190,153,.13)}
+[data-account-theme="dark"] .account-shopping-section .account-row-icon{
+  border-color:rgba(255,255,255,.2);
+  background:linear-gradient(145deg,#28694b,#17432f);
+  color:#c8f5d9;
+}
+[data-account-theme="dark"] .account-shopping-section .account-row-arrow{color:#8be0b2}
+@media(hover:hover){
+ .account-shopping-section .account-list-row:not(.is-disabled):hover{background:rgba(8,122,85,.065)}
+}
+@media(max-width:420px){
+ .account-shopping-section .account-list-card{border-radius:21px}
+ .account-shopping-section .account-list-row{min-height:70px;padding:10px 12px}
+ .account-shopping-section .account-row-icon{width:40px;height:40px;border-radius:14px}
+}
+@media(prefers-reduced-motion:reduce){
+ .account-shopping-section .account-list-row{transition:none!important}
+}
