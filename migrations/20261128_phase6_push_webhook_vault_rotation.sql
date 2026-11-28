@@ -69,7 +69,7 @@ begin
 end;
 $function$;
 
-revoke all on function public.zune_dispatch_push_notification() from public, anon, authenticated;
+revoke all on function public.zune_dispatch_push_notification() from public, anon, authenticated, service_role;
 drop trigger if exists "zune-push-notifications" on public.notifications;
 create trigger "zune-push-notifications"
 after insert on public.notifications
