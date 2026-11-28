@@ -197,3 +197,24 @@
 @media(prefers-reduced-motion:reduce){
  .account-shopping-section .account-list-row{transition:none!important}
 }
+
+
+/* STEP 4 — PREMIUM 3D GLASS PAYMENTS & WALLET */
+.account-wallet-glass .account-wallet-card{position:relative;isolation:isolate;overflow:hidden;min-height:190px;padding:22px;border:1px solid rgba(255,255,255,.58);border-radius:27px;background:linear-gradient(128deg,#063d2d 0%,#087a55 52%,#19a978 100%);box-shadow:0 22px 42px rgba(3,61,42,.22),0 7px 17px rgba(8,122,85,.13),inset 0 1px 0 rgba(255,255,255,.64),inset 0 -1px 0 rgba(255,255,255,.12);-webkit-backdrop-filter:blur(20px) saturate(145%);backdrop-filter:blur(20px) saturate(145%);transform:translateZ(0);transition:transform .22s ease,box-shadow .22s ease}
+.account-wallet-glass .account-wallet-card:before{content:"";position:absolute;z-index:-1;right:-68px;top:-116px;width:230px;height:230px;border:1px solid rgba(255,255,255,.28);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.075),0 0 0 42px rgba(255,255,255,.045),0 0 0 70px rgba(255,255,255,.025);pointer-events:none}
+.account-wallet-glass .account-wallet-card:after{content:"";position:absolute;z-index:-1;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.78),transparent);pointer-events:none}
+.account-wallet-glass .account-wallet-mark{display:grid;place-items:center;width:45px;height:45px;margin-bottom:17px;border:1px solid rgba(255,255,255,.58);border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.10));box-shadow:0 9px 18px rgba(0,30,20,.18),inset 0 1px 0 rgba(255,255,255,.62);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#fff;font-size:24px}
+.account-wallet-glass .account-wallet-label{color:rgba(255,255,255,.78);font-size:11px;font-weight:800;letter-spacing:.35px}
+.account-wallet-glass .account-wallet-card>strong{display:block;margin-top:5px;color:#fff;font-size:clamp(25px,7vw,34px);font-weight:950;letter-spacing:-.8px;font-variant-numeric:tabular-nums;text-shadow:0 3px 12px rgba(0,30,20,.18)}
+.account-wallet-glass .account-wallet-card>small{display:block;margin-top:5px;color:rgba(255,255,255,.72);font-size:10px}
+.account-wallet-glass .account-wallet-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:21px;padding-top:14px;border-top:1px solid rgba(255,255,255,.23)}
+.account-wallet-glass .account-wallet-stats>span{display:grid;gap:5px;min-width:0;padding:10px 12px;border:1px solid rgba(255,255,255,.19);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.18);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.account-wallet-glass .account-wallet-stats small{color:rgba(255,255,255,.73);font-size:9px;font-weight:750}
+.account-wallet-glass .account-wallet-stats b{color:#fff;font-size:12px;font-weight:900;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.account-wallet-glass .account-section-title a{color:#087a55;font-size:11px;font-weight:900;text-decoration:none}
+[data-account-theme="dark"] .account-wallet-glass .account-wallet-card{border-color:rgba(162,230,190,.35);background:linear-gradient(128deg,#102d21 0%,#145b3e 54%,#16734d 100%);box-shadow:0 22px 42px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,255,255,.07)}
+[data-account-theme="dark"] .account-wallet-glass .account-section-title a{color:#8be0b2}
+@media(hover:hover){.account-wallet-glass .account-wallet-card:hover{transform:translateY(-3px);box-shadow:0 28px 48px rgba(3,61,42,.28),0 8px 18px rgba(8,122,85,.16),inset 0 1px 0 rgba(255,255,255,.64)}}
+.account-wallet-glass .account-wallet-card:focus-visible{outline:3px solid #f0a23a;outline-offset:4px}
+@media(max-width:420px){.account-wallet-glass .account-wallet-card{min-height:180px;padding:18px;border-radius:24px}.account-wallet-glass .account-wallet-stats{gap:7px}.account-wallet-glass .account-wallet-stats>span{padding:9px;border-radius:13px}}
+@media(prefers-reduced-motion:reduce){.account-wallet-glass .account-wallet-card{transition:none!important}}
