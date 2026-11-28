@@ -24,7 +24,7 @@ async function boot(){
   const b=e.target.closest("[data-z3-save-later]");if(!b)return;const key=b.dataset.z3SaveLater,[pid,vid]=key.split("::"),cart=read(cartKey),item=cart.find(x=>String(x.productId)+"::"+String(x.variantId||"")===key);if(!item)return;
   const saved=read(savedKey);if(!saved.some(x=>String(x.productId)+"::"+String(x.variantId||"")===key))saved.push({...item,savedAt:new Date().toISOString()});localStorage.setItem(savedKey,JSON.stringify(saved));
   localStorage.setItem(cartKey,JSON.stringify(cart.filter(x=>String(x.productId)+"::"+String(x.variantId||"")!==key)));
-  const del=await supabase.from("cart_items").delete().eq("user_id",uid).eq("product_id",pid);if(del.error)console.warn("Saved item cloud sync:",del.error.message);location.reload();
+  let delQuery=supabase.from("cart_items").delete().eq("user_id",uid).eq("product_id",pid);delQuery=vid?delQuery.eq("variant_id",vid):delQuery.is("variant_id",null);const del=await delQuery;if(del.error)console.warn("Saved item cloud sync:",del.error.message);location.reload();
  });
  const scan=()=>document.querySelectorAll(".z3-cart").forEach(root=>void mount(root));scan();new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
 }
