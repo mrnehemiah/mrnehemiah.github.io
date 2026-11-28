@@ -2841,33 +2841,6 @@ function renderHomePage() {
 
         ${renderHomeCarousel()}
 
-        <section class="z-quick-access" aria-label="${language()==="sw"?"Ufikiaji wa haraka":"Quick Access"}">
-          <div class="z-section-heading"><h2>${language()==="sw"?"Ufikiaji wa Haraka":"Quick Access"}</h2></div>
-          <div class="z-quick-access-grid">
-            <a class="z-quick-access-item" href="./messages.html" aria-label="${language()==="sw"?"Fungua mazungumzo":"Open chats"}">
-              <span class="z-quick-access-icon">${zIcon("chat")}</span>
-              <strong>Chats</strong>
-              <small>${language()==="sw"?"Mnunuzi na Muuzaji":"Buyer & Seller"}</small>
-              <span class="z-quick-access-unread" id="z-quick-chat-unread" hidden>0</span>
-            </a>
-            <a class="z-quick-access-item" href="./orders.html">
-              <span class="z-quick-access-icon">${zIcon("cart")}</span>
-              <strong>${language()==="sw"?"Oda":"Orders"}</strong>
-              <small>${language()==="sw"?"Oda zako":"Your orders"}</small>
-            </a>
-            <button class="z-quick-access-item" type="button" data-quick-saved>
-              <span class="z-quick-access-icon">${zIcon("saved")}</span>
-              <strong>${language()==="sw"?"Zilizohifadhiwa":"Saved"}</strong>
-              <small>${language()==="sw"?"Bidhaa uzipendazo":"Your favourites"}</small>
-            </button>
-            <button class="z-quick-access-item" type="button" data-quick-stores>
-              <span class="z-quick-access-icon">${zIcon("store")}</span>
-              <strong>${language()==="sw"?"Maduka":"Stores"}</strong>
-              <small>${language()==="sw"?"Gundua maduka":"Discover stores"}</small>
-            </button>
-          </div>
-        </section>
-
         <section id="z-home-categories-section">
           <div class="z-section-heading"><h2>${language()==="sw"?"Makundi ya Bidhaa":"Shop by Category"}</h2><button type="button" class="z-all-categories" data-open-categories>${language()==="sw"?"Yote":"View All"} →</button></div>
           <div id="z-category-area">${renderCategories()}</div>
@@ -3187,15 +3160,12 @@ async function updateQuickChatUnreadBadge(){
 }
 
 function bindHomeEvents() {
-  updateQuickChatUnreadBadge();
   bindCategoryEvents();
   loadRecentlyViewedProducts().catch(error=>console.warn("ZUNE recently viewed:",error));
   bindSearchEvents();
   bindCarouselEvents();
   startCarouselAutoplay();
   loadLiveStoreStatuses();
-  document.querySelector("[data-quick-saved]")?.addEventListener("click", () => renderMarketplacePage("saved"));
-  document.querySelector("[data-quick-stores]")?.addEventListener("click", () => document.getElementById("z-featured-stores-section")?.scrollIntoView({behavior:"smooth",block:"start"}));
   document.querySelector("[data-open-categories]")?.addEventListener("click", () => renderMarketplacePage("categories"));
   document.querySelector("[data-view-all-products]")?.addEventListener("click",()=>renderMarketplacePage("explore"));
   // Delegate clicks from the stable section so async status refreshes can
@@ -3373,26 +3343,30 @@ function renderBottomNavigation() {
 // --------------------------------------------
 
 function bindNavigation() {
-  document.querySelectorAll("[data-nav]").forEach(button => {
-    button.addEventListener("click", () => {
-      const page = button.dataset.nav;
+  const app = homeState.app;
+  if (!app || app.dataset.navigationBound === "1") return;
+  app.dataset.navigationBound = "1";
+  app.addEventListener("click", event => {
+    const button = event.target.closest("[data-nav]");
+    if (!button || !app.contains(button)) return;
+    event.preventDefault();
+    const page = button.dataset.nav;
+    if (!page) return;
 
-      // Account is a dedicated standalone page.
-      if (page === "me") {
-        window.location.assign("./account.html");
-        return;
-      }
-      if (page === "live" && !window.location.pathname.endsWith("/live.html")) {
-        window.location.assign("./live.html?tab=live");
-        return;
-      }
-      if (page !== "live" && window.location.pathname.endsWith("/live.html")) {
-        window.location.assign("./index.html?tab=" + encodeURIComponent(page));
-        return;
-      }
-
-      renderMarketplacePage(page);
-    });
+    // Account is a dedicated standalone page.
+    if (page === "me") {
+      window.location.assign("./account.html");
+      return;
+    }
+    if (page === "live" && !window.location.pathname.endsWith("/live.html")) {
+      window.location.assign("./live.html?tab=live");
+      return;
+    }
+    if (page !== "live" && window.location.pathname.endsWith("/live.html")) {
+      window.location.assign("./index.html?tab=" + encodeURIComponent(page));
+      return;
+    }
+    void renderMarketplacePage(page);
   });
 }
 
