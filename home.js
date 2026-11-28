@@ -4825,16 +4825,20 @@ export async function renderMarketplaceHome({
   // Onyesha ukurasa ulioombwa mara moja.
   renderMarketplacePage(initialTab);
 
-  // Pakia categories na bidhaa.
-  await Promise.all([
+  // Marketplace shell iko tayari. Ficha splash sasa; data ipakiwe bila kuzuia app.
+  window.dispatchEvent(new Event("zune:app-ready"));
+
+  // Pakia categories na bidhaa nyuma. Mtumiaji anaweza kutumia app wakati huo.
+  void Promise.all([
     loadCategories(),
     loadProducts(true)
-  ]);
-
-  // Sasisha tab ileile baada ya data kupatikana.
-  if (homeState.activeTab === initialTab) {
-    renderMarketplacePage(initialTab);
-  }
+  ]).then(() => {
+    if (homeState.app && homeState.activeTab === initialTab) {
+      renderMarketplacePage(initialTab);
+    }
+  }).catch(error => {
+    console.warn("ZUNE: bidhaa au categories hazijapakiwa bado:", error?.message || error);
+  });
 }
 
 // ============================================
