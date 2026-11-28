@@ -1,5 +1,5 @@
 
-import { supabase } from "./supabase.js";
+import { supabase, unregisterZunePushToken } from "./supabase.js";
 
 /* =================================
    ZUNE AUTHENTICATION
@@ -143,6 +143,8 @@ export async function getCurrentCustomer() {
 // LOGOUT
 
 export async function logoutCustomer() {
+  try { await unregisterZunePushToken(); }
+  catch (error) { console.warn("ZUNE push token cleanup:", error); }
   const { error } =
     await supabase.auth.signOut({ scope: "local" });
 
