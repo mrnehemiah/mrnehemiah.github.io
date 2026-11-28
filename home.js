@@ -2402,7 +2402,7 @@ function rankHomeProducts(products,mode="recommended"){
       :m.personalization*1.7+m.quality*1.15+m.popularity*0.65+m.recency*0.55;
     return {product,score};
   }).sort((a,b)=>b.score-a.score);
-  return diversifyProducts(scored.map(x=>x.product),mode==="feed"?24:8,2);
+  return diversifyProducts(scored.map(x=>x.product),mode==="feed"?scored.length:8,2);
 }
 function updateProductArea() {
   const source=[...homeState.products];
