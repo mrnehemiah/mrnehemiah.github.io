@@ -721,3 +721,40 @@
 @media(prefers-reduced-motion:reduce){
  #app .z-product-card .z-product-media .z-save-product{transition:none}
 }
+
+/* MOBILE READABILITY + TOUCH PERFORMANCE
+   Keep header controls clearly visible and avoid costly 3D effects on phones. */
+#app .z-home .z-home-actions .z-icon-button {
+  color: #087a55 !important;
+  opacity: 1 !important;
+  border-color: #c9e1d3 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #eaf5ee 100%) !important;
+}
+#app .z-home .z-home-actions .z-icon-button svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke: #087a55 !important;
+  fill: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+#app .z-home .z-home-actions .z-icon-button svg * {
+  stroke: #087a55 !important;
+}
+@media (hover: none) and (pointer: coarse) {
+  #app .z-home .z-home-header,
+  #app .z-home .z-search-premium-box,
+  #app .z-home .z-bottom-nav {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  #app .z-home .z-icon-button,
+  #app .z-home .z-search-tool,
+  #app .z-home .z-home-carousel,
+  #app .z-home .z-product-card,
+  #app .z-home .z-featured-store {
+    box-shadow: 0 3px 9px rgba(20,65,43,.09) !important;
+    transition-duration: .08s !important;
+  }
+}
+
