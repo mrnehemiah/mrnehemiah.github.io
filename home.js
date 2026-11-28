@@ -1280,12 +1280,12 @@ async function loadCategories() {
       .from("product_categories")
       .select("id,name,parent_id,sort_order")
       .eq("is_active", true)
-      .is("parent_id", null)
       .order("sort_order", { ascending: true });
 
     if (error) throw error;
 
-    homeState.categories = data || [];
+    homeState.categories = (data || []).filter(category => !category.parent_id);
+    homeState.subcategories = (data || []).filter(category => !!category.parent_id);
 
   } catch (error) {
     console.error("ZUNE categories error:", error);
@@ -1794,6 +1794,7 @@ async function openStoreDetails(ownerId, product = null) {
 }
 
 function openProductDetails(product) {
+  trackRecentlyViewed(product);
   document.getElementById("z-product-detail-overlay")?.remove();
   const store = product.__zuneStore || null;
   const ownerProfile = product.__zuneOwnerProfile || null;
@@ -1832,6 +1833,16 @@ function openProductDetails(product) {
         <section class="z-detail-reviews" aria-labelledby="z-detail-reviews-title">
           <div class="z-detail-reviews-heading"><h3 id="z-detail-reviews-title">${language()==="sw"?"Tathmini za wanunuzi":"Buyer reviews"}</h3><button type="button" data-detail-all-reviews>${language()==="sw"?"Zote":"See all"}</button></div>
           <div id="z-detail-reviews-list"><p class="z-detail-reviews-empty">${language()==="sw"?"Inapakia tathmini...":"Loading reviews..."}</p></div>
+        </section>
+        <section class="z-detail-questions" aria-labelledby="z-detail-questions-title">
+          <div class="z-detail-reviews-heading"><h3 id="z-detail-questions-title">${language()==="sw"?"Maswali na Majibu":"Questions & Answers"}</h3></div>
+          <div id="z-detail-questions-list"><p class="z-detail-reviews-empty">${language()==="sw"?"Inapakia maswali...":"Loading questions..."}</p></div>
+          <form id="z-product-question-form" class="z-product-question-form">
+            <label for="z-product-question-input">${language()==="sw"?"Uliza kuhusu bidhaa hii":"Ask about this product"}</label>
+            <textarea id="z-product-question-input" maxlength="1500" minlength="5" required placeholder="${language()==="sw"?"Andika swali lako hapa...":"Write your question here..."}></textarea>
+            <button type="submit" class="z-primary-button">${language()==="sw"?"Tuma swali":"Submit question"}</button>
+            <small id="z-product-question-status" aria-live="polite"></small>
+          </form>
         </section>
         ${product.vendor_id && String(product.vendor_id)!==String(homeState.user?.id) ? `<button type="button" class="z-primary-button z-detail-message" style="margin-top:9px;background:transparent;color:var(--primary);border:1px solid var(--border)">${language()==="sw"?"Wasiliana na Seller":"Message Seller"}</button>` : ""}
       </div>
@@ -1934,6 +1945,7 @@ function openProductDetails(product) {
     requestAnimationFrame(()=>document.getElementById("z-feature-reviews")?.scrollIntoView({behavior:"smooth",block:"start"}));
   });
   loadProductReviewPreview(overlay,product).catch(error=>console.warn("ZUNE product reviews:",error));
+  loadProductQuestions(overlay,product).catch(error=>console.warn("ZUNE product questions:",error));
   overlay.querySelector(".z-detail-message")?.addEventListener("click",()=>openBuyerSellerChat(product));
   const onKey = event => { if (event.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
   document.addEventListener("keydown", onKey);
@@ -1948,6 +1960,99 @@ async function loadProductReviewPreview(overlay,product){
  if(error)throw error;
  if(!data?.length){host.innerHTML='<p class="z-detail-reviews-empty">'+(language()==="sw"?"Bado hakuna tathmini zilizoidhinishwa kwa bidhaa hii.":"No approved reviews for this product yet.")+'</p>';return;}
  host.innerHTML=data.map(review=>'<article class="z-detail-review"><div class="z-detail-review-stars" aria-label="'+Number(review.rating)+' out of 5 stars">'+"★".repeat(Math.max(0,Math.min(5,Number(review.rating)||0)))+'</div><p>'+safe(review.review_text||"")+'</p><small>'+safe(review.created_at?new Intl.DateTimeFormat(language()==="sw"?"sw-TZ":"en-TZ",{dateStyle:"medium"}).format(new Date(review.created_at)):"")+'</small></article>').join("");
+}
+
+async function loadProductQuestions(overlay,product){
+ const host=overlay.querySelector("#z-detail-questions-list"),form=overlay.querySelector("#z-product-question-form");
+ if(!host)return;
+ const isSeller=!!homeState.user?.id&&String(homeState.user.id)===String(product.vendor_id);
+ const render=async()=>{
+  const {data,error}=await supabase.from("product_questions")
+   .select("id,question,moderation_status,created_at,product_question_answers(answer,seller_id,created_at)")
+   .eq("product_id",product.id).order("created_at",{ascending:false}).limit(30);
+  if(error)throw error;
+  if(!data?.length){host.innerHTML='<p class="z-detail-reviews-empty">'+(language()==="sw"?"Hakuna maswali bado. Kuwa wa kwanza kuuliza.":"No questions yet. Be the first to ask.")+'</p>';return;}
+  host.innerHTML=data.map(q=>{
+   const answer=Array.isArray(q.product_question_answers)?q.product_question_answers[0]:null;
+   const pending=q.moderation_status==="pending";
+   const status=pending?'<small class="z-question-pending">'+(language()==="sw"?"Inasubiri idhini ya Admin":"Awaiting admin approval")+'</small>':"";
+   const reply=answer?'<div class="z-question-answer"><strong>'+(language()==="sw"?"Jibu la muuzaji":"Seller answer")+'</strong><p>'+safe(answer.answer)+'</p></div>':"";
+   const answerForm=isSeller&&!answer?'<form class="z-question-answer-form" data-answer-question="'+safe(q.id)+'"><textarea maxlength="2000" minlength="2" required placeholder="'+(language()==="sw"?"Andika jibu la duka lako...":"Write your store answer...")+'"></textarea><button type="submit" class="z-primary-button">'+(language()==="sw"?"Jibu swali":"Answer question")+'</button></form>':"";
+   return '<article class="z-product-question"><p>'+safe(q.question)+'</p>'+status+reply+answerForm+'</article>';
+  }).join("");
+ };
+ await render();
+ if(form&&!form.dataset.bound){
+  form.dataset.bound="1";
+  form.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const status=overlay.querySelector("#z-product-question-status"),button=form.querySelector('button[type="submit"]'),input=form.querySelector("textarea");
+   if(!homeState.user?.id){if(status)status.textContent=language()==="sw"?"Ingia kwenye akaunti yako kwanza.":"Please sign in first.";return;}
+   const question=String(input?.value||"").trim();
+   if(question.length<5||question.length>1500){if(status)status.textContent=language()==="sw"?"Swali liwe na herufi 5 hadi 1500.":"Question must be 5–1500 characters.";return;}
+   button.disabled=true;if(status)status.textContent=language()==="sw"?"Inatuma...":"Submitting...";
+   try{
+    const {error}=await supabase.from("product_questions").insert({product_id:product.id,asker_id:homeState.user.id,question,moderation_status:"pending"});
+    if(error)throw error;
+    input.value="";
+    if(status)status.textContent=language()==="sw"?"Swali limetumwa. Litaonekana baada ya idhini ya Admin.":"Question submitted. It will appear after admin approval.";
+    await render();
+   }catch(error){console.error("ZUNE question submit:",error);if(status)status.textContent=language()==="sw"?"Imeshindikana kutuma swali. Jaribu tena.":"Could not submit the question. Please try again.";}
+   finally{button.disabled=false;}
+  });
+ }
+ if(host&&!host.dataset.answerBound){
+  host.dataset.answerBound="1";
+  host.addEventListener("submit",async event=>{
+   const answerForm=event.target.closest("[data-answer-question]");if(!answerForm)return;
+   event.preventDefault();
+   if(!isSeller||!homeState.user?.id)return;
+   const button=answerForm.querySelector("button"),input=answerForm.querySelector("textarea"),answer=String(input?.value||"").trim();
+   if(answer.length<2||answer.length>2000)return;
+   button.disabled=true;
+   try{
+    const {error}=await supabase.from("product_question_answers").insert({question_id:answerForm.dataset.answerQuestion,seller_id:homeState.user.id,answer});
+    if(error)throw error;
+    await render();
+   }catch(error){console.error("ZUNE seller answer:",error);alert(language()==="sw"?"Imeshindikana kutuma jibu. Hakikisha swali ni la duka lako.":"Could not submit answer. Confirm this question belongs to your store.");button.disabled=false;}
+  });
+ }
+}
+
+function recentlyViewedStorageKey(){
+ return "zune_recently_viewed:"+(homeState.user?.id||"guest");
+}
+function trackRecentlyViewed(product){
+ if(!product?.id)return;
+ const key=recentlyViewedStorageKey();
+ let ids=[];try{ids=JSON.parse(localStorage.getItem(key)||"[]");}catch(_){}
+ if(!Array.isArray(ids))ids=[];
+ ids=[String(product.id),...ids.map(String).filter(id=>id!==String(product.id))].slice(0,12);
+ try{localStorage.setItem(key,JSON.stringify(ids));}catch(_){}
+ const host=document.getElementById("z-recently-viewed-products");
+ if(host)loadRecentlyViewedProducts().catch(error=>console.warn("ZUNE recently viewed:",error));
+}
+async function loadRecentlyViewedProducts(){
+ const section=document.getElementById("z-recently-viewed-section"),host=document.getElementById("z-recently-viewed-products");
+ if(!section||!host)return;
+ let ids=[];try{ids=JSON.parse(localStorage.getItem(recentlyViewedStorageKey())||"[]");}catch(_){}
+ ids=Array.isArray(ids)?ids.map(String).slice(0,12):[];
+ if(!ids.length){section.hidden=true;return;}
+ const {data,error}=await supabase.from("products").select("*").in("id",ids);
+ if(error)throw error;
+ const byId=new Map((data||[]).map(p=>[String(p.id),p]));
+ const products=ids.map(id=>byId.get(id)).filter(Boolean);
+ if(!products.length){section.hidden=true;return;}
+ const vendorIds=[...new Set(products.map(p=>p.vendor_id).filter(Boolean))];
+ if(vendorIds.length){
+  const {data:stores,error:storeError}=await supabase.from("stores").select("owner_id,store_name,verification_status,logo_url").in("owner_id",vendorIds);
+  if(!storeError){const map=new Map((stores||[]).map(st=>[String(st.owner_id),st]));products.forEach(p=>p.__zuneStore=map.get(String(p.vendor_id))||null);}
+  const {data:profiles,error:profileError}=await supabase.from("profiles").select("id,is_verified").in("id",vendorIds);
+  if(!profileError){const map=new Map((profiles||[]).map(x=>[String(x.id),x]));products.forEach(p=>p.__zuneOwnerProfile=map.get(String(p.vendor_id))||null);}
+ }
+ section.hidden=false;
+ host.innerHTML=products.map(productCard).join("");
+ bindProductCards(host);
 }
 
 async function loadProductSponsoredRecommendations(overlay,currentProduct){
@@ -2534,6 +2639,10 @@ function renderHomePage() {
           <div class="z-featured-stores" id="z-featured-stores">${renderFeaturedStores()}</div>
         </section>
 
+        <section id="z-recently-viewed-section" hidden>
+          <div class="z-section-heading"><h2>${language()==="sw"?"Ulizotazama Hivi Karibuni":"Recently Viewed"}</h2></div>
+          <div id="z-recently-viewed-products" class="z-product-row"></div>
+        </section>
         <section id="z-sponsored-stores-section"><div class="z-section-heading"><h2>${language()==="sw"?"Maduka Yaliyodhaminiwa":"Sponsored Stores"}</h2></div><div id="z-sponsored-stores" class="z-sponsored-stores"></div></section>
 
         <section id="z-sponsored-products-section">
@@ -2809,6 +2918,7 @@ function bindSearchEvents() {
 
 function bindHomeEvents() {
   bindCategoryEvents();
+  loadRecentlyViewedProducts().catch(error=>console.warn("ZUNE recently viewed:",error));
   bindSearchEvents();
   bindCarouselEvents();
   startCarouselAutoplay();
@@ -3130,12 +3240,17 @@ function renderCategoriesPage() {
         </div>
         <div class="z-categories-image-grid" id="z-all-categories-grid">
           ${categories.map((category,index) => `
-            <button type="button" class="z-category-image-card" data-category-page="${safe(category.name)}" data-category-name="${safe(category.name.toLowerCase())}">
-              <img src="${categoryImage(category.name,index)}" alt="${safe(category.name)}" loading="lazy" decoding="async">
-              <span class="z-category-image-shade"></span>
-              <strong>${safe(category.name)}</strong>
-              <span class="z-category-image-arrow">↗</span>
-            </button>
+            <div class="z-category-group">
+              <button type="button" class="z-category-image-card" data-category-page="${safe(category.name)}" data-category-name="${safe(category.name.toLowerCase())}">
+                <img src="${categoryImage(category.name,index)}" alt="${safe(category.name)}" loading="lazy" decoding="async">
+                <span class="z-category-image-shade"></span>
+                <strong>${safe(category.name)}</strong>
+                <span class="z-category-image-arrow">↗</span>
+              </button>
+              <div class="z-category-subcategory-list">
+                ${(homeState.subcategories||[]).filter(sub=>String(sub.parent_id)===String(category.id)).map(sub=>`<button type="button" class="z-category-subcategory" data-category-page="${safe(sub.name)}">${safe(sub.name)}</button>`).join("")}
+              </div>
+            </div>
           `).join("")}
         </div>
         ${categories.length ? "" : `<div class="z-empty-state" style="margin-top:14px">${tx("empty")}</div>`}
