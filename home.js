@@ -88,6 +88,7 @@ const homeState = {
   accountNavigating: false,
 
   observer: null,
+  lastInfiniteLoadAt: 0,
   requestId: 0,
   carouselIndex: 0,
   carouselTimer: null
@@ -1433,10 +1434,19 @@ async function loadProducts(reset = false) {
       updateProductArea();
       if (!homeState.sponsoredAdsLoaded) loadSponsoredCampaigns();
       if (reset && homeState.activeTab === "home" && !homeState.search && !homeState.selectedCategory && !homeState.selectedBrand && !homeState.selectedVendor && !homeState.rankingPoolLoaded && !homeState.rankingPoolLoading) {
-        loadHomeRankingPool();
+        scheduleHomeRankingPool();
       }
     }
   }
+}
+
+function scheduleHomeRankingPool(){
+  if(homeState.rankingPoolLoaded||homeState.rankingPoolLoading)return;
+  const run=()=>{
+    if(homeState.activeTab==="home"&&!document.hidden)loadHomeRankingPool();
+  };
+  if(typeof window.requestIdleCallback==="function")window.requestIdleCallback(run,{timeout:2500});
+  else window.setTimeout(run,900);
 }
 
 async function loadHomeRankingPool(){
@@ -1448,7 +1458,7 @@ async function loadHomeRankingPool(){
       .not("published_at","is",null)
       .is("removed_at",null)
       .is("seller_archived_at",null)
-      .order("created_at",{ascending:false}).limit(80);
+      .order("created_at",{ascending:false}).limit(36);
     if(error)throw error;
     const products=data||[];
     const vendorIds=[...new Set(products.map(p=>p.vendor_id).filter(Boolean))];
@@ -3389,18 +3399,21 @@ function observeInfiniteScroll() {
   homeState.observer = new IntersectionObserver(entries => {
     const entry = entries[0];
 
+    const now=Date.now();
     if (
       entry.isIntersecting &&
       !homeState.loading &&
       homeState.hasMore &&
-      !homeState.loadError
+      !homeState.loadError &&
+      now-homeState.lastInfiniteLoadAt>=900
     ) {
+      homeState.lastInfiniteLoadAt=now;
       loadProducts(false);
     }
 
   }, {
     root: null,
-    rootMargin: "350px",
+    rootMargin: "140px 0px",
     threshold: 0
   });
 
