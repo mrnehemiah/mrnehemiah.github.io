@@ -4500,16 +4500,9 @@ async function loadAccountDetails() {
 function navigateWithZuneWave(destination) {
   if (homeState.accountNavigating) return;
   homeState.accountNavigating = true;
-  const overlay = document.createElement("div");
-  overlay.className = "zune-wave-transition active";
-  overlay.setAttribute("role","status");
-  overlay.setAttribute("aria-label",language()==="sw"?"Inafungua ukurasa":"Opening page");
-  overlay.innerHTML = '<div class="zune-wave-wordmark" aria-hidden="true"><span style="--letter-index:0">Ⓩ</span><span style="--letter-index:1">Ⓤ</span><span style="--letter-index:2">Ⓝ</span><span style="--letter-index:3">Ⓔ</span></div><div class="zune-wave-caption">ZUNE MARKETPLACE</div>';
-  document.body.appendChild(overlay);
-  window.setTimeout(() => {
-    try { destination(); }
-    finally { overlay.remove(); homeState.accountNavigating = false; }
-  }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 180 : 850);
+  // Ondoa transition overlay ya pili; fungua ukurasa husika moja kwa moja.
+  try { destination(); }
+  finally { homeState.accountNavigating = false; }
 }
 
 function bindAccountEvents() {
