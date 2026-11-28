@@ -3,7 +3,7 @@ const root=document.getElementById("messages-root");
 const lang=localStorage.getItem("zune_language")==="en"?"en":"sw";
 const tr=(a,b)=>lang==="sw"?a:b;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let user=null,conversations=[],products={},stores={},profiles={},selected=null,poll=null,realtimeChannel=null,activeFilter="all",searchTerm="";
+let user=null,conversations=[],products={},stores={},profiles={},selected=null,poll=null,realtimeChannel=null,presenceChannel=null,activeFilter="all",searchTerm="";
 const date=v=>v?new Date(v).toLocaleString(lang==="sw"?"sw-TZ":"en-US",{dateStyle:"short",timeStyle:"short"}):"";
 function empty(){root.innerHTML='<div class="messages-panel"><div class="messages-empty"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><b>'+tr("Bado huna mazungumzo","No conversations yet")+'</b><br>'+tr("Ukiwasiliana na muuzaji kupitia bidhaa, mazungumzo yataonekana hapa.","When you message a seller from a product, the conversation will appear here.")+'</div></div>';}
 async function loadList(){
@@ -36,11 +36,23 @@ function renderList(latest,unread){
  root.querySelectorAll("[data-chat-filter]").forEach(b=>b.addEventListener("click",()=>{activeFilter=b.dataset.chatFilter;renderList(latest,unread);}));
  root.querySelectorAll("[data-conversation]").forEach(b=>b.addEventListener("click",()=>openThread(b.dataset.conversation)));
 }
+async function watchChatPresence(conversationId,counterpartId){
+ if(presenceChannel)await supabase.removeChannel(presenceChannel);
+ const channel=supabase.channel("zune-chat-presence-"+conversationId,{config:{presence:{key:user.id}}});
+ channel.on("presence",{event:"sync"},()=>{
+  const online=Object.prototype.hasOwnProperty.call(channel.presenceState(),counterpartId);
+  const node=document.getElementById("chat-online-status");
+  if(node)node.textContent=online?tr("Online","Online"):tr("Haipo mtandaoni","Offline");
+ });
+ channel.subscribe(async status=>{if(status==="SUBSCRIBED")await channel.track({user_id:user.id,online_at:new Date().toISOString()});});
+ presenceChannel=channel;
+}
 async function openThread(id){
  selected=conversations.find(x=>x.id===id);if(!selected)return;
  const isBuyer=selected.buyer_id===user.id;const counterpartId=isBuyer?selected.seller_id:selected.buyer_id;const seller=isBuyer?(stores[selected.seller_id]?.store_name||profiles[counterpartId]?.full_name||tr("Muuzaji","Seller")):(profiles[counterpartId]?.full_name||tr("Mnunuzi","Buyer"));
  const product=products[selected.product_id]?.title||tr("Bidhaa","Product");
- root.innerHTML='<section class="messages-panel"><div class="thread-top"><button type="button" id="thread-back">‹ '+tr("Rudi","Back")+'</button><div><strong>'+esc(seller)+'</strong><small>'+esc(product)+'</small></div></div><div class="thread-history" id="thread-history"><div class="messages-loading">'+tr("Inapakia ujumbe...","Loading messages...")+'</div></div><form class="thread-form" id="thread-form"><button type="button" id="chat-attach" aria-label="'+tr("Ambatisha picha au video","Attach photo or video")+'">＋</button><input type="file" id="chat-media-file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" hidden><input name="message" maxlength="4000" autocomplete="off" placeholder="'+tr("Andika ujumbe...","Write a message...")+'" required><button type="submit">'+tr("Tuma","Send")+'</button></form></section>';
+ watchChatPresence(id,counterpartId);
+ root.innerHTML='<section class="messages-panel"><div class="thread-top"><button type="button" id="thread-back">‹ '+tr("Rudi","Back")+'</button><div><strong>'+esc(seller)+'</strong><small>'+esc(product)+' · <span id="chat-online-status">'+tr("Haipo mtandaoni","Offline")+'</span></small></div></div><div class="thread-history" id="thread-history"><div class="messages-loading">'+tr("Inapakia ujumbe...","Loading messages...")+'</div></div><form class="thread-form" id="thread-form"><button type="button" id="chat-attach" aria-label="'+tr("Ambatisha picha au video","Attach photo or video")+'">＋</button><input type="file" id="chat-media-file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" hidden><input name="message" maxlength="4000" autocomplete="off" placeholder="'+tr("Andika ujumbe...","Write a message...")+'" required><button type="submit">'+tr("Tuma","Send")+'</button></form></section>';
  document.getElementById("thread-back").onclick=async()=>{selected=null;await loadList();};
  await refreshThread();
  const mediaInput=document.getElementById("chat-media-file");
@@ -81,4 +93,4 @@ function subscribeToMessages(){
 }
 async function init(){const s=await supabase.auth.getSession();if(s.error)throw s.error;if(!s.data.session?.user){root.innerHTML='<div class="messages-error">'+tr("Ingia kwanza ili kuona ujumbe wako.","Please sign in to view your messages.")+' <a href="./index.html">Login</a></div>';return;}user=s.data.session.user;await loadList();subscribeToMessages();const id=new URLSearchParams(location.search).get("conversation");if(id&&conversations.some(x=>x.id===id))await openThread(id);poll=setInterval(async()=>{try{if(selected)await refreshThread();else await loadList();}catch(e){console.warn("Message fallback refresh:",e.message);}},30000);}
 init().catch(e=>{console.error("ZUNE Messages:",e);root.innerHTML='<div class="messages-error">'+esc(e.message||tr("Imeshindikana kupakia ujumbe.","Unable to load messages."))+'</div>';});
-window.addEventListener("pagehide",()=>{if(poll)clearInterval(poll);if(realtimeChannel)supabase.removeChannel(realtimeChannel);});
+window.addEventListener("pagehide",()=>{if(poll)clearInterval(poll);if(realtimeChannel)supabase.removeChannel(realtimeChannel);if(presenceChannel)supabase.removeChannel(presenceChannel);});
