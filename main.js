@@ -1384,6 +1384,18 @@ async function renderAccount(knownUser = null) {
         await handleLogout();
       }
     });
+
+    // The Home shell (including its bottom navigation) is now on screen.
+    // Remove the branded overlay directly instead of relying only on the
+    // app-ready event, which can be delayed by other startup listeners.
+    const splash = document.getElementById("zune-splash");
+    if (splash) {
+      splash.style.setProperty("display", "none", "important");
+      splash.style.setProperty("visibility", "hidden", "important");
+      splash.style.setProperty("opacity", "0", "important");
+      splash.style.setProperty("pointer-events", "none", "important");
+      splash.remove();
+    }
     app.removeAttribute("aria-busy");
 
   } catch (error) {
