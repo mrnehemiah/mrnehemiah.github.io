@@ -1,4 +1,4 @@
-import "./cart-smart-features.js?v=20261128-smart-3d";
+import "./cart-smart-features.js?v=20261128-smart-3d-fix1";
 import { supabase } from "./supabase.js?v=phase6-push-token-ownership-20261128";
 
 const CART_KEY   = "zune_cart";
