@@ -35,7 +35,7 @@
 .z3-loader-layer{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:rgba(248,251,249,.94);backdrop-filter:blur(9px)}
 .z3-loader-logo{display:flex;align-items:center;justify-content:center;gap:9px}
 .z3-loader-letter{--fill:#2584E8;--delay:0s;width:48px;height:48px;border:2px solid var(--fill);border-radius:50%;display:grid;place-items:center;overflow:hidden;color:var(--fill);font-size:22px;font-weight:950;line-height:1;background:linear-gradient(to top,var(--fill) 50%,#fff 50%);background-size:100% 200%;background-position:0 100%;animation:z3-letter-fill 2.8s ease-in-out infinite;animation-delay:var(--delay);box-shadow:0 5px 14px color-mix(in srgb,var(--fill) 20%,transparent)}
-@keyframes z3-letter-fill{0%,5%{background-position:0 100%;color:var(--fill);transform:translateY(0)}22%,43%{background-position:0 0;color:#fff;transform:translateY(-3px)}58%,100%{background-position:0 100%;color:var(--fill);transform:translateY(0)}}
+@keyframes z3-letter-fill{0%,5%{background-position:0 0;color:var(--fill);transform:translateY(0)}22%,43%{background-position:0 100%;color:#fff;transform:translateY(-3px)}58%,100%{background-position:0 0;color:var(--fill);transform:translateY(0)}}
 .z3-login .z3-loader-logo{margin:0 auto 18px}
 @media(max-width:390px){.z3-loader-logo{gap:7px}.z3-loader-letter{width:43px;height:43px;font-size:20px}}
-@media(prefers-reduced-motion:reduce){.z3-loader-letter{animation:none;background-position:0 0;color:#fff}}
+@media(prefers-reduced-motion:reduce){.z3-loader-letter{animation:none;background-position:0 100%;color:#fff}}
