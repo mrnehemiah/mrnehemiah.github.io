@@ -8,14 +8,14 @@
   <title>Kikapu Changu | ZUNE</title>
   <link rel="icon" href="./favicon.ico" sizes="any">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./cart.css?v=20261128-premium-3d">
+  <link rel="stylesheet" href="./cart.css?v=20261128-smart-3d">
 </head>
 <body>
   <main id="cart-app" aria-busy="true">
     <div class="z3-login"><div class="z3-empty-orb">Ⓩ</div><p>Inafungua kikapu...</p></div>
   </main>
   <script type="module">
-    import { mountStandaloneCart } from "./cart.js?v=20261128-premium-3d";
+    import { mountStandaloneCart } from "./cart.js?v=20261128-smart-3d";
     const app=document.getElementById("cart-app");
     try { await mountStandaloneCart(app); }
     catch(error) { console.error("ZUNE Cart:",error); app.innerHTML='<div class="z3-login"><h2>Kikapu hakijafunguka</h2><p>Tafadhali jaribu tena.</p><a class="z3-primary" href="./index.html">Rudi sokoni</a></div>'; }
