@@ -1434,7 +1434,16 @@ async function startApp() {
   }
 
   try {
-    const session = await getCustomerSession();
+    // Never leave the branded splash screen running forever if the
+    // Supabase session request stalls on a slow or unavailable connection.
+    const session = await Promise.race([
+      getCustomerSession(),
+      new Promise((_, reject) => window.setTimeout(() => {
+        reject(new Error(state.language === "sw"
+          ? "Muunganisho wa akaunti umechelewa. Angalia intaneti kisha jaribu tena."
+          : "Account connection timed out. Check your internet connection and try again."));
+      }, 12000))
+    ]);
 
     if (session) {
       // New Google Marketplace accounts default to buyer; preserve existing account types.
