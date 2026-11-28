@@ -12,7 +12,8 @@ async function loadList(){
  const pids=[...new Set(conversations.map(x=>x.product_id).filter(Boolean))],sids=[...new Set(conversations.map(x=>x.seller_id).filter(Boolean))],participantIds=[...new Set(conversations.flatMap(x=>[x.buyer_id,x.seller_id]).filter(Boolean))],cids=conversations.map(x=>x.id);
  products={};stores={};profiles={};
  if(pids.length){const q=await supabase.from("products").select("id,title,vendor_id").in("id",pids);if(q.error)throw q.error;(q.data||[]).forEach(x=>products[x.id]=x);}
- if(sids.length){const s=await supabase.from("stores").select("owner_id,store_name,logo_url").in("owner_id",sids);if(!s.error)(s.data||[]).forEach(x=>stores[x.owner_id]=x);}\n if(participantIds.length){const p=await supabase.from("profiles").select("id,full_name,avatar_url").in("id",participantIds);if(!p.error)(p.data||[]).forEach(x=>profiles[x.id]=x);}
+ if(sids.length){const s=await supabase.from("stores").select("owner_id,store_name,logo_url").in("owner_id",sids);if(!s.error)(s.data||[]).forEach(x=>stores[x.owner_id]=x);}
+ if(participantIds.length){const p=await supabase.from("profiles").select("id,full_name,avatar_url").in("id",participantIds);if(!p.error)(p.data||[]).forEach(x=>profiles[x.id]=x);}
  let latest={},unread={};
  if(cids.length){const q=await supabase.from("chat_messages").select("id,conversation_id,sender_id,message,is_read,created_at").in("conversation_id",cids).order("created_at",{ascending:false}).limit(Math.min(cids.length*30,500));if(q.error)throw q.error;for(const m of q.data||[]){if(!latest[m.conversation_id])latest[m.conversation_id]=m;if(m.sender_id!==user.id&&!m.is_read)unread[m.conversation_id]=(unread[m.conversation_id]||0)+1;}}
  renderList(latest,unread);
