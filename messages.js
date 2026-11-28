@@ -3,25 +3,36 @@ const root=document.getElementById("messages-root");
 const lang=localStorage.getItem("zune_language")==="en"?"en":"sw";
 const tr=(a,b)=>lang==="sw"?a:b;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let user=null,conversations=[],products={},stores={},profiles={},selected=null,poll=null,realtimeChannel=null;
+let user=null,conversations=[],products={},stores={},profiles={},selected=null,poll=null,realtimeChannel=null,activeFilter="all",searchTerm="";
 const date=v=>v?new Date(v).toLocaleString(lang==="sw"?"sw-TZ":"en-US",{dateStyle:"short",timeStyle:"short"}):"";
 function empty(){root.innerHTML='<div class="messages-panel"><div class="messages-empty"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><b>'+tr("Bado huna mazungumzo","No conversations yet")+'</b><br>'+tr("Ukiwasiliana na muuzaji kupitia bidhaa, mazungumzo yataonekana hapa.","When you message a seller from a product, the conversation will appear here.")+'</div></div>';}
 async function loadList(){
- const {data,error}=await supabase.from("chat_conversations").select("id,buyer_id,seller_id,product_id,created_at,updated_at").eq("buyer_id",user.id).order("updated_at",{ascending:false});
+ const {data,error}=await supabase.from("chat_conversations").select("id,buyer_id,seller_id,product_id,created_at,updated_at").or("buyer_id.eq."+user.id+",seller_id.eq."+user.id).order("updated_at",{ascending:false});
  if(error)throw error;conversations=data||[];
- const pids=[...new Set(conversations.map(x=>x.product_id).filter(Boolean))],sids=[...new Set(conversations.map(x=>x.seller_id).filter(Boolean))],cids=conversations.map(x=>x.id);
+ const pids=[...new Set(conversations.map(x=>x.product_id).filter(Boolean))],sids=[...new Set(conversations.map(x=>x.seller_id).filter(Boolean))],participantIds=[...new Set(conversations.flatMap(x=>[x.buyer_id,x.seller_id]).filter(Boolean))],cids=conversations.map(x=>x.id);
  products={};stores={};profiles={};
  if(pids.length){const q=await supabase.from("products").select("id,title,vendor_id").in("id",pids);if(q.error)throw q.error;(q.data||[]).forEach(x=>products[x.id]=x);}
- if(sids.length){const [s,p]=await Promise.all([supabase.from("stores").select("owner_id,store_name,logo_url").in("owner_id",sids),supabase.from("profiles").select("id,full_name").in("id",sids)]);if(!s.error)(s.data||[]).forEach(x=>stores[x.owner_id]=x);if(!p.error)(p.data||[]).forEach(x=>profiles[x.id]=x);}
+ if(sids.length){const s=await supabase.from("stores").select("owner_id,store_name,logo_url").in("owner_id",sids);if(!s.error)(s.data||[]).forEach(x=>stores[x.owner_id]=x);}\n if(participantIds.length){const p=await supabase.from("profiles").select("id,full_name,avatar_url").in("id",participantIds);if(!p.error)(p.data||[]).forEach(x=>profiles[x.id]=x);}
  let latest={},unread={};
  if(cids.length){const q=await supabase.from("chat_messages").select("id,conversation_id,sender_id,message,is_read,created_at").in("conversation_id",cids).order("created_at",{ascending:false}).limit(Math.min(cids.length*30,500));if(q.error)throw q.error;for(const m of q.data||[]){if(!latest[m.conversation_id])latest[m.conversation_id]=m;if(m.sender_id!==user.id&&!m.is_read)unread[m.conversation_id]=(unread[m.conversation_id]||0)+1;}}
  renderList(latest,unread);
 }
 function renderList(latest,unread){
- document.getElementById("messages-title").textContent=tr("Ujumbe","Messages");
- document.getElementById("messages-subtitle").textContent=tr("Mawasiliano yako na wauzaji","Your conversations with sellers");
+ document.getElementById("messages-title").textContent="ZUNE Chats";
+ document.getElementById("messages-subtitle").textContent=tr("Mazungumzo yako na wanunuzi na wauzaji","Your buyer and seller conversations");
  if(!conversations.length){empty();return;}
- root.innerHTML='<section class="messages-panel"><div class="messages-panel-head"><b>'+tr("Mazungumzo yako","Your conversations")+'</b><small>'+tr("Chagua duka ili kuendelea na mazungumzo","Select a store to continue chatting")+'</small></div><div class="messages-list">'+conversations.map(c=>{const store=stores[c.seller_id],seller=store?.store_name||profiles[c.seller_id]?.full_name||tr("Muuzaji wa ZUNE","ZUNE Seller"),product=products[c.product_id]?.title||tr("Bidhaa ya ZUNE","ZUNE product"),m=latest[c.id],count=unread[c.id]||0;return '<button class="message-row" type="button" data-conversation="'+esc(c.id)+'"><span class="message-avatar">'+esc(seller.trim().slice(0,1).toUpperCase())+'</span><span class="message-row-copy"><strong>'+esc(seller)+'</strong><p>'+(m?esc(m.message):esc(product))+'</p></span><span class="message-row-meta"><time>'+esc(date(m?.created_at||c.updated_at||c.created_at))+'</time>'+(count?'<span class="message-unread">'+count+'</span>':'')+'</span></button>';}).join("")+'</div></section>';
+ const unreadTotal=Object.values(unread).reduce((a,b)=>a+b,0);
+ const filtered=conversations.filter(c=>{
+  const isBuyer=c.buyer_id===user.id;
+  const counterpartId=isBuyer?c.seller_id:c.buyer_id;
+  const title=isBuyer?(stores[c.seller_id]?.store_name||profiles[counterpartId]?.full_name||tr("Muuzaji wa ZUNE","ZUNE Seller")):(profiles[counterpartId]?.full_name||tr("Mnunuzi wa ZUNE","ZUNE Buyer"));
+  const matchesSearch=(title+" "+(products[c.product_id]?.title||"")).toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesFilter=activeFilter==="all"||(activeFilter==="unread"&&(unread[c.id]||0)>0)||(activeFilter==="buyers"&&!isBuyer)||(activeFilter==="sellers"&&isBuyer);
+  return matchesSearch&&matchesFilter;
+ });
+ root.innerHTML='<section class="messages-panel"><div class="messages-toolbar"><label class="messages-search"><span>⌕</span><input id="messages-search" type="search" placeholder="'+tr("Tafuta mazungumzo...","Search conversations...")+'" value="'+esc(searchTerm)+'"></label><div class="messages-filters"><button type="button" data-chat-filter="all" class="'+(activeFilter==="all"?"active":"")+'">'+tr("Yote","All")+'</button><button type="button" data-chat-filter="unread" class="'+(activeFilter==="unread"?"active":"")+'">'+tr("Hayajasomwa","Unread")+(unreadTotal?' · '+unreadTotal:"")+'</button><button type="button" data-chat-filter="buyers" class="'+(activeFilter==="buyers"?"active":"")+'">'+tr("Wanunuzi","Buyers")+'</button><button type="button" data-chat-filter="sellers" class="'+(activeFilter==="sellers"?"active":"")+'">'+tr("Wauzaji","Sellers")+'</button></div></div><div class="messages-panel-head"><b>'+tr("Mazungumzo yako","Your conversations")+'</b><small>'+tr("Chagua mazungumzo ili kuendelea","Choose a conversation to continue")+'</small></div><div class="messages-list">'+(filtered.length?filtered.map(c=>{const isBuyer=c.buyer_id===user.id,store=stores[c.seller_id],counterpartId=isBuyer?c.seller_id:c.buyer_id,title=isBuyer?(store?.store_name||profiles[counterpartId]?.full_name||tr("Muuzaji wa ZUNE","ZUNE Seller")):(profiles[counterpartId]?.full_name||tr("Mnunuzi wa ZUNE","ZUNE Buyer")),product=products[c.product_id]?.title||tr("Mazungumzo ya ZUNE","ZUNE Chat"),m=latest[c.id],count=unread[c.id]||0,avatar=profiles[counterpartId]?.avatar_url||(isBuyer?store?.logo_url:"");return '<button class="message-row" type="button" data-conversation="'+esc(c.id)+'"><span class="message-avatar">'+(avatar?'<img src="'+esc(avatar)+'" alt="">':esc(title.trim().slice(0,1).toUpperCase()))+'</span><span class="message-row-copy"><strong>'+esc(title)+'</strong><p>'+(m?esc(m.message):esc(product))+'</p></span><span class="message-row-meta"><time>'+esc(date(m?.created_at||c.updated_at||c.created_at))+'</time>'+(count?'<span class="message-unread">'+count+'</span>':'')+'</span></button>';}).join(""):'<div class="messages-empty">'+tr("Hakuna mazungumzo kwenye kichujio hiki.","No conversations match this filter.")+'</div>')+'</div></section>';
+ root.querySelector("#messages-search")?.addEventListener("input",e=>{searchTerm=e.target.value;renderList(latest,unread);const input=root.querySelector("#messages-search");input?.focus();input?.setSelectionRange(searchTerm.length,searchTerm.length);});
+ root.querySelectorAll("[data-chat-filter]").forEach(b=>b.addEventListener("click",()=>{activeFilter=b.dataset.chatFilter;renderList(latest,unread);}));
  root.querySelectorAll("[data-conversation]").forEach(b=>b.addEventListener("click",()=>openThread(b.dataset.conversation)));
 }
 async function openThread(id){
