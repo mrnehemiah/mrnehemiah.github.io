@@ -26,7 +26,7 @@ function bindAccountWaveLinks(){
   link.addEventListener("click",event=>{
    if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||event.button!==0)return;
    const url=link.getAttribute("href");
-   if(!url||url==="#"||url.startsWith("mailto:")||url.startsWith("tel:"))return;
+   if(!url||url==="#"||url.startsWith("#")||url.startsWith("mailto:")||url.startsWith("tel:"))return;
    event.preventDefault();navigateWithZuneWave(url);
   });
  });
@@ -41,13 +41,43 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const badge=()=>'<svg viewBox="-30 -30 60 60" role="img" aria-label="Verified"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const accountIcon=(name)=>{const paths={orders:'<path d="M8 3h8l4 4v14H4V3h4Z"/><path d="M8 3v5h8V3M8 13h8M8 17h6"/>',saved:'<path d="M20.8 8.7c0 5.2-8.8 10.1-8.8 10.1S3.2 13.9 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z"/>',cart:'<path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 1.9-1.5L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/>',messages:'<path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3h.5a8.5 8.5 0 0 1 8 8v.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/>',personal:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',security:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v3"/>',notifications:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',verification:'<path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/>',address:'<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.3 1.8c-1.2 1.1-1.9 1.4-1.9 3M12 17.5h.01"/>',about:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9h.01"/>',qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v2m-3 3h3v2h-3m-3-1v1"/>',store:'<path d="M3 10h18l-2-7H5l-2 7Z"/><path d="M5 10v11h14V10M9 21v-7h6v7M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>',language:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',theme:'<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4h4a4 4 0 0 0 4-4"/>',privacy:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'};return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(paths[name]||paths.about)+'</svg>';};
 function card(icon,title,desc,href,disabled=false){return '<a class="account-card" href="'+href+'" '+(disabled?'aria-disabled="true" data-coming-soon="true"':'')+'><span class="account-card-icon">'+accountIcon(icon)+'</span><span class="account-card-copy"><strong>'+title+'</strong><small>'+desc+'</small></span><span class="account-card-arrow">›</span></a>';}
+function accountProMarkup(){
+ const sw=lang==="sw",fields=[profile.full_name,profile.phone_number,profile.avatar_path,profile.zune_id].filter(Boolean).length,score=Math.round(fields/4*100);
+ const isSeller=profile.role==="vendor",heading="ZUNE Account Pro",sub=sw?"Vipengele vyote vya akaunti viko wazi bure.":"Every account feature is included for free.";
+ const items=[
+  ["orders",sw?"Ununuzi na Oda":"Shopping & Orders",sw?"Oda, anwani, wishlist na ujumbe":"Orders, addresses, wishlist and messages","./orders.html"],
+  ["about",sw?"Wallet na Malipo":"Wallet & Payments",sw?"Salio halisi na historia ya miamala":"Real balance and transaction history","./wallet.html"],
+  ["personal",sw?"Utambulisho na Wasifu":"Identity & Profile",sw?"Taarifa, ZUNE ID na QR Code":"Profile details, ZUNE ID and QR Code","./profile.html"],
+  ["security",sw?"Kituo cha Usalama":"Security Center",sw?"Nenosiri, 2FA na vifaa vilivyoingia":"Password, 2FA and signed-in devices","./settings.html?section=security-history"],
+  ["privacy",sw?"Faragha na Data":"Privacy & Data",sw?"Mapendeleo ya faragha na mwonekano":"Privacy and visibility preferences","./settings.html?section=privacy"],
+  ["theme",sw?"Personalization Studio":"Personalization Studio",sw?"Lugha, theme na mapendeleo":"Language, themes and preferences","./settings.html?section=appearance"],
+  ["about",sw?"ZUNE Smart Assistant":"ZUNE Smart Assistant",sw?"Fungua marketplace na ZUNE AI":"Open the marketplace and ZUNE AI","./index.html"],
+  ["store",sw?"Akaunti ya Muuzaji":"Seller Account Pro",sw?"Dhibiti duka lako au omba kuwa Seller":"Manage your store or apply to sell",isSeller?"https://mrnehemiah.github.io/zuneacts/":"#account-business"],
+  ["notifications",sw?"Arifa Zangu":"My Notifications",sw?"Taarifa za oda, malipo na akaunti":"Order, payment and account updates","./notifications.html"],
+  ["help",sw?"Help & Support":"Help & Support",sw?"Fungua ticket na fuatilia majibu":"Create a ticket and track replies","./support.html"]
+ ];
+ return '<section class="account-pro-overview"><div class="account-pro-top"><div><span class="account-eyebrow">ⓏⓊⓃⒺ MARKETPLACE 2.0</span><h2>'+heading+'</h2><p>'+sub+'</p></div><span class="account-pro-pill">✦ PRO · FREE</span></div><div class="account-pro-stats"><div class="account-pro-stat"><strong id="account-pro-orders">—</strong><small>'+(sw?"Oda zangu":"My orders")+'</small></div><div class="account-pro-stat"><strong id="account-pro-saved">—</strong><small>Wishlist</small></div><div class="account-pro-stat"><strong id="account-pro-unread">—</strong><small>'+(sw?"Arifa ambazo hazijasomwa":"Unread alerts")+'</small></div><div class="account-pro-stat"><strong id="account-pro-wallet">—</strong><small>Wallet (TZS)</small></div></div><div class="account-pro-progress"><span style="width:'+score+'%"></span></div><div class="account-pro-progress-copy"><span>'+(sw?"Ukamilifu wa wasifu":"Profile completion")+'</span><b>'+score+'%</b></div></section><div class="account-pro-section-title">'+(sw?"VITUO VYOTE VYA AKAUNTI":"ALL ACCOUNT CENTERS")+'</div><div class="account-pro-grid">'+items.map(x=>card(x[0],x[1],x[2],x[3])).join("")+'</div><div class="account-pro-section-title">'+(sw?"HARAKA KWENDA":"QUICK ACCESS")+'</div><div class="account-pro-grid">'+card("saved",sw?"Zilizohifadhiwa":"Saved items",sw?"Bidhaa zako ulizopenda":"Your saved products","./index.html?tab=saved")+card("address",sw?"Anwani Zangu":"My Addresses",sw?"Sehemu za kupokea oda":"Delivery locations","./addresses.html")+card("messages",sw?"Ujumbe":"Messages",sw?"Mazungumzo na wauzaji":"Seller conversations","./messages.html")+card("qr",sw?"Shiriki ZUNE ID":"Share ZUNE ID",sw?"QR Code ya wasifu wako":"Your profile QR Code","./qr-code.html")+'</div>';
+}
+async function loadAccountProStats(){
+ const safeCount=async query=>{try{const {count,error}=await query;if(error)throw error;return Number(count||0);}catch(error){console.warn("Account Pro metric unavailable:",error.message);return null;}};
+ const [orders,saved,unread,wallet]=await Promise.all([
+  safeCount(supabase.from("orders").select("id",{count:"exact",head:true}).eq("buyer_id",user.id)),
+  safeCount(supabase.from("wishlists").select("id",{count:"exact",head:true}).eq("user_id",user.id)),
+  safeCount(supabase.from("notifications").select("id",{count:"exact",head:true}).eq("user_id",user.id).eq("is_read",false)),
+  supabase.from("wallets").select("balance").eq("user_id",user.id).maybeSingle()
+ ]);
+ const put=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value===null?"—":String(value);};
+ put("account-pro-orders",orders);put("account-pro-saved",saved);put("account-pro-unread",unread);
+ if(wallet.error){console.warn("Account Pro wallet metric:",wallet.error.message);put("account-pro-wallet","—");}
+ else put("account-pro-wallet",wallet.data?new Intl.NumberFormat("sw-TZ",{maximumFractionDigits:0}).format(Number(wallet.data.balance)||0):"—");
+}
 function render(){
  const name=profile.full_name||user.user_metadata?.full_name||user.email?.split("@")[0]||"ZUNE Customer";
  const initials=name.trim().split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()||"Z";
  const role=profile.role||"buyer",isSeller=role==="vendor",verified=!!profile.is_verified;
  let business="";
  if(isSeller){
-  business='<section class="account-section account-business-section"><div class="account-panel account-seller-ready"><span class="account-eyebrow">'+t("business")+'</span><div class="account-business-title"><span class="account-feature-icon">'+accountIcon("store")+'</span><div><h2>'+t("sellerReady")+'</h2><p>'+t("sellerReadyD")+'</p></div></div><div class="account-actions"><a class="account-button" href="https://mrnehemiah.github.io/zuneacts/">'+t("openDashboard")+' →</a></div></div></section>';
+  business='<section class="account-section account-business-section" id="account-business"><div class="account-panel account-seller-ready"><span class="account-eyebrow">'+t("business")+'</span><div class="account-business-title"><span class="account-feature-icon">'+accountIcon("store")+'</span><div><h2>'+t("sellerReady")+'</h2><p>'+t("sellerReadyD")+'</p></div></div><div class="account-actions"><a class="account-button" href="https://mrnehemiah.github.io/zuneacts/">'+t("openDashboard")+' →</a></div></div></section>';
  }else if(application){
   const status=String(application.status||"pending").toLowerCase();
   const title=status==="approved"?t("approved"):status==="rejected"?t("rejected"):["more_info_required","needs_information","more_information"].includes(status)?t("more"):t("submitted");
@@ -65,6 +95,8 @@ function render(){
  business+
  '<section class="account-section account-preferences-section"><div class="account-section-head"><div><span class="account-eyebrow">'+(lang==="sw"?"MAPENDELEO NA MSAADA":"PREFERENCES & SUPPORT")+'</span><h2>'+(lang==="sw"?"Mipangilio na Usaidizi":"Settings & Support")+'</h2></div></div><div class="account-row-list">'+card("notifications",t("notifications"),lang==="sw"?"Dhibiti taarifa na arifa":"Manage alerts and updates","./settings.html?section=notifications")+card("language",lang==="sw"?"Lugha":"Language",lang==="sw"?"Badilisha Kiswahili au English":"Switch between Kiswahili and English","./settings.html")+card("theme",lang==="sw"?"Muonekano wa App":"App Appearance",lang==="sw"?"Mipangilio ya muonekano wa ZUNE":"ZUNE display preferences","./settings.html")+card("help",t("help"),lang==="sw"?"Wasiliana na timu ya msaada":"Contact ZUNE support","./settings.html?section=contact")+card("about",lang==="sw"?"Kuhusu ZUNE":"About ZUNE",lang==="sw"?"Taarifa kuhusu ZUNE Marketplace":"About ZUNE Marketplace","./about-zune.html")+'</div></section>'+
  '<div class="account-logout-wrap"><button class="account-button danger full" id="account-logout">'+t("logout")+'</button></div>';
+ root.insertAdjacentHTML("afterbegin",accountProMarkup());
+ loadAccountProStats();
  const languageLink=root.querySelector('.account-row-list a[href="./settings.html"]');
  if(languageLink){languageLink.dataset.languageSwitch="true";languageLink.addEventListener("click",event=>{event.preventDefault();event.stopImmediatePropagation();lang=lang==="sw"?"en":"sw";localStorage.setItem("zune_language",lang);localStorage.setItem("zune-language",lang);document.getElementById("account-language").textContent=lang==="sw"?"EN":"SW";document.documentElement.lang=lang;render();});}
  bindAccountWaveLinks();
@@ -86,7 +118,7 @@ async function init(){
  if(!session?.user){root.innerHTML='<div class="account-error">'+t("login")+' <a href="./index.html">Login</a></div>';return;}
  user=session.user;
  const [p,a,s]=await Promise.all([
-  supabase.from("profiles").select("id,full_name,role,is_verified,avatar_path,created_at").eq("id",user.id).maybeSingle(),
+  supabase.from("profiles").select("id,full_name,phone_number,role,is_verified,zune_id,avatar_path,created_at").eq("id",user.id).maybeSingle(),
   supabase.from("seller_applications").select("id,store_name,status,admin_note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(1).maybeSingle(),
   supabase.from("stores").select("id,store_name,verification_status").eq("owner_id",user.id).limit(1).maybeSingle()
  ]);
