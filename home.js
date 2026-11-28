@@ -3,7 +3,7 @@
 // HOME.JS — SEHEMU YA 1/4
 // ============================================
 
-import { supabase } from "./supabase.js";
+import { supabase, unregisterZunePushToken } from "./supabase.js";
 import { openZuneAssistant } from "./smart-assistant.js?v=20261125-composer-cache-3";
 import { renderZuneReelsPage, bindZuneReelsPage } from "./reels-marketplace.js?v=20261125-public-feed-2";
 
@@ -4273,6 +4273,8 @@ function bindAccountEvents() {
   document.querySelector("[data-account-cart]")?.addEventListener("click",()=>navigateWithZuneWave(()=>renderMarketplacePage("cart")));
   document.querySelector("[data-account-shopping-tools]")?.addEventListener("click",()=>navigateWithZuneWave(()=>renderMarketplacePage("features")));
   document.getElementById("z-logout-button")?.addEventListener("click",async()=>{
+    try { await unregisterZunePushToken(); }
+    catch (error) { console.warn("ZUNE push token cleanup:", error); }
     if (typeof homeState.onLogout === "function") { await homeState.onLogout(); return; }
     const {error} = await supabase.auth.signOut({scope: "local"}); if (error) alert(error.message);
   });
