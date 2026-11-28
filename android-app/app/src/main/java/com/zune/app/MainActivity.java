@@ -31,10 +31,6 @@ import android.widget.Toast;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import android.util.Base64;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -47,8 +43,6 @@ public class MainActivity extends Activity {
     private static final String SELLER_URL = "https://mrnehemiah.github.io/zuneacts/";
     private static final String RELEASE_API = "https://api.github.com/repos/mrnehemiah/mrnehemiah.github.io/releases/latest";
     private static final int FILE_CHOOSER_REQUEST = 4201;
-    private static final String SUPABASE_URL = "https://rpkogiieegqgxqbzwxwo.supabase.co";
-    private static final String SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2TEqZv-NBM9n5knU46ngqA_wqO3V1uf";
     private static MainActivity activeActivity;
 
     private WebView webView;
@@ -242,46 +236,6 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String getFcmToken() {
             return getSharedPreferences("zune_fcm", MODE_PRIVATE).getString("fcm_token", "");
-        }
-
-        @JavascriptInterface
-        public void registerToken(String userId, String accessToken) {
-            if (userId == null || accessToken == null || accessToken.isEmpty()) return;
-            String token = getFcmToken();
-            if (token.isEmpty()) return;
-            new Thread(() -> upsertNativePushToken(userId, accessToken, token)).start();
-        }
-    }
-
-    private void upsertNativePushToken(String userId, String accessToken, String token) {
-        HttpURLConnection connection = null;
-        try {
-            JSONObject payload = new JSONObject();
-            payload.put("user_id", userId);
-            payload.put("fcm_token", token);
-            payload.put("platform", "android");
-            payload.put("user_agent", "ZUNE Android");
-
-            URL url = new URL(SUPABASE_URL + "/rest/v1/zune_push_tokens?on_conflict=user_id,fcm_token");
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setConnectTimeout(15000);
-            connection.setReadTimeout(15000);
-            connection.setDoOutput(true);
-            connection.setRequestProperty("apikey", SUPABASE_PUBLISHABLE_KEY);
-            connection.setRequestProperty("Authorization", "Bearer " + accessToken);
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal");
-            byte[] body = payload.toString().getBytes(StandardCharsets.UTF_8);
-            try (OutputStream output = connection.getOutputStream()) {
-                output.write(body);
-            }
-            int status = connection.getResponseCode();
-            android.util.Log.i("ZUNE-PUSH", "Native token sync HTTP " + status);
-        } catch (Exception error) {
-            android.util.Log.w("ZUNE-PUSH", "Native token sync failed", error);
-        } finally {
-            if (connection != null) connection.disconnect();
         }
     }
 
