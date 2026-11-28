@@ -120,20 +120,16 @@
         var reason = event && event.reason;
         showStartupFailure(reason && (reason.stack || reason.message) || reason || "Unhandled startup rejection");
       });
+      // Standalone/PWA launches can retain an older document or stall before
+      // the module entry point executes. Always replace an endless animated
+      // splash with a visible retry screen if the app-ready signal never arrives.
       window.setTimeout(function () {
-        if (!app || appReady) return;
-        var loading = app.querySelector(".app-loading, .zune-wave");
-        if (loading && Date.now() - started >= 10000) {
-          showStartupFailure("Marketplace haijamaliza kuanza ndani ya sekunde 10. Angalia intaneti kisha jaribu tena.");
-          return;
-        }
-        if (!shown && !appReady) {
-          showStartupFailure("ZUNE haijaanzisha programu ndani ya sekunde 15. Inawezekana main.js au faili lake halijapakiwa. Jaribu tena au tuma taarifa hii kwa support.");
-        }
-      }, 15000);
+        if (!app || appReady || shown) return;
+        showStartupFailure("ZUNE haijaanzisha programu ndani ya sekunde 12. Inawezekana app iliyosakinishwa inatumia faili za zamani au main.js haijapakiwa. Gusa Jaribu tena.");
+      }, 12000);
     })();
   </script>
-  <script type="module" src="./main.js?v=20261128-splash-overlay-fix-2"></script>
+  <script type="module" src="./main.js?v=20261128-installed-app-splash-watchdog-3"></script>
   <script type="module" src="./notification-bell.js"></script>
   <script type="module" src="./marketplace-template.js?v=1"></script>
 </body>
