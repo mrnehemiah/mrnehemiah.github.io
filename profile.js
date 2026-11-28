@@ -238,9 +238,12 @@ async function savePersonal(event) {
     profile = { ...profile, ...data };
     if (uploadedPath) {
       const { data: blob, error: downloadError } = await supabase.storage.from("zune-avatars").download(uploadedPath);
-      if (downloadError) throw downloadError;
-      if (avatarUrl.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
-      avatarUrl = URL.createObjectURL(blob);
+      if (!downloadError && blob) {
+        if (avatarUrl.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
+        avatarUrl = URL.createObjectURL(blob);
+      } else {
+        console.warn("Avatar saved but preview could not be refreshed:", downloadError?.message);
+      }
       if (oldAvatarPath && oldAvatarPath !== uploadedPath) {
         const { error: removeError } = await supabase.storage.from("zune-avatars").remove([oldAvatarPath]);
         if (removeError) console.warn("Old avatar cleanup failed:", removeError.message);
