@@ -1,7 +1,7 @@
 import { supabase } from "./supabase.js";
 const root=document.getElementById("account-data-root"),esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let user=null,profile=null;
-async function own(table,columns,filter){let q=supabase.from(table).select(columns);if(filter)q=q.eq(filter[0],filter[1]);const {data,error}=await q.limit(1000);if(error)throw new Error(table+": "+error.message);return data||[];}
+async function own(table,columns,filter){let rows=[],start=0;for(;;){let q=supabase.from(table).select(columns);if(filter)q=q.eq(filter[0],filter[1]);const {data,error}=await q.order("created_at",{ascending:true}).range(start,start+999);if(error)throw new Error(table+": "+error.message);const batch=data||[];rows.push(...batch);if(batch.length<1000)break;start+=1000;}return rows;}
 async function exportData(){
  const button=document.getElementById("export-account-data"),status=document.getElementById("data-export-status");button.disabled=true;button.textContent="Inaandaa nakala...";
  try{
