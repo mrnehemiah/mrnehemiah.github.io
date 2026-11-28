@@ -40,12 +40,32 @@ async function openThread(id){
  selected=conversations.find(x=>x.id===id);if(!selected)return;
  const isBuyer=selected.buyer_id===user.id;const counterpartId=isBuyer?selected.seller_id:selected.buyer_id;const seller=isBuyer?(stores[selected.seller_id]?.store_name||profiles[counterpartId]?.full_name||tr("Muuzaji","Seller")):(profiles[counterpartId]?.full_name||tr("Mnunuzi","Buyer"));
  const product=products[selected.product_id]?.title||tr("Bidhaa","Product");
- root.innerHTML='<section class="messages-panel"><div class="thread-top"><button type="button" id="thread-back">‹ '+tr("Rudi","Back")+'</button><div><strong>'+esc(seller)+'</strong><small>'+esc(product)+'</small></div></div><div class="thread-history" id="thread-history"><div class="messages-loading">'+tr("Inapakia ujumbe...","Loading messages...")+'</div></div><form class="thread-form" id="thread-form"><input name="message" maxlength="4000" autocomplete="off" placeholder="'+tr("Andika ujumbe...","Write a message...")+'" required><button type="submit">'+tr("Tuma","Send")+'</button></form></section>';
+ root.innerHTML='<section class="messages-panel"><div class="thread-top"><button type="button" id="thread-back">‹ '+tr("Rudi","Back")+'</button><div><strong>'+esc(seller)+'</strong><small>'+esc(product)+'</small></div></div><div class="thread-history" id="thread-history"><div class="messages-loading">'+tr("Inapakia ujumbe...","Loading messages...")+'</div></div><form class="thread-form" id="thread-form"><button type="button" id="chat-attach" aria-label="'+tr("Ambatisha picha au video","Attach photo or video")+'">＋</button><input type="file" id="chat-media-file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" hidden><input name="message" maxlength="4000" autocomplete="off" placeholder="'+tr("Andika ujumbe...","Write a message...")+'" required><button type="submit">'+tr("Tuma","Send")+'</button></form></section>';
  document.getElementById("thread-back").onclick=async()=>{selected=null;await loadList();};
  await refreshThread();
+ const mediaInput=document.getElementById("chat-media-file");
+ document.getElementById("chat-attach")?.addEventListener("click",()=>mediaInput?.click());
+ mediaInput?.addEventListener("change",async()=>{
+  const file=mediaInput.files?.[0];mediaInput.value="";if(!file)return;
+  const allowed=/^(image\\/(jpeg|png|webp|gif)|video\\/(mp4|webm|quicktime))$/i.test(file.type);
+  if(!allowed){alert(tr("Chagua picha au video inayoruhusiwa.","Choose a supported image or video."));return;}
+  if(file.size>15*1024*1024){alert(tr("Faili lisizidi MB 15.","File must be 15 MB or smaller."));return;}
+  const button=document.getElementById("chat-attach");if(button)button.disabled=true;
+  let path="";
+  try{
+   const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,8)||"bin";
+   path=id+"/"+user.id+"/"+crypto.randomUUID()+"."+ext;
+   const uploaded=await supabase.storage.from("zune-chat-media").upload(path,file,{contentType:file.type,upsert:false});
+   if(uploaded.error)throw uploaded.error;
+   const saved=await supabase.from("chat_messages").insert({conversation_id:id,sender_id:user.id,message:"",image_url:path});
+   if(saved.error)throw saved.error;
+   await refreshThread();
+  }catch(error){if(path)await supabase.storage.from("zune-chat-media").remove([path]).catch(()=>{});alert(error.message||tr("Faili halikutumwa.","Attachment could not be sent."));}
+  finally{if(button)button.disabled=false;}
+ });
  const form=document.getElementById("thread-form");form.addEventListener("submit",async e=>{e.preventDefault();const input=form.elements.message,msg=input.value.trim(),button=form.querySelector("button");if(!msg||button.disabled)return;button.disabled=true;try{const q=await supabase.from("chat_messages").insert({conversation_id:id,sender_id:user.id,message:msg});if(q.error)throw q.error;input.value="";await refreshThread();}catch(err){alert(err.message||tr("Ujumbe haukutumwa.","Message could not be sent."));}finally{button.disabled=false;input.focus();}});
 }
-async function refreshThread(){if(!selected)return;const id=selected.id;const q=await supabase.from("chat_messages").select("id,sender_id,message,is_read,created_at").eq("conversation_id",id).order("created_at",{ascending:true}).limit(200);if(q.error)throw q.error;const box=document.getElementById("thread-history");if(!box)return;box.innerHTML=q.data?.length?q.data.map(m=>'<div class="thread-message '+(m.sender_id===user.id?"mine":"")+'">'+esc(m.message)+'<small>'+esc(date(m.created_at))+'</small></div>').join(""):'<div class="messages-empty">'+tr("Anza mazungumzo kwa kutuma ujumbe.","Start the conversation by sending a message.")+'</div>';box.scrollTop=box.scrollHeight;const upd=await supabase.from("chat_messages").update({is_read:true}).eq("conversation_id",id).neq("sender_id",user.id).eq("is_read",false);if(upd.error)console.warn("Could not mark messages as read:",upd.error.message);}
+async function refreshThread(){if(!selected)return;const id=selected.id;const q=await supabase.from("chat_messages").select("id,sender_id,message,image_url,is_read,created_at").eq("conversation_id",id).order("created_at",{ascending:true}).limit(200);if(q.error)throw q.error;const box=document.getElementById("thread-history");if(!box)return;const rows=await Promise.all((q.data||[]).map(async m=>{if(!m.image_url)return m;const signed=await supabase.storage.from("zune-chat-media").createSignedUrl(m.image_url,3600);return {...m,mediaUrl:signed.error?"":signed.data?.signedUrl||""};}));box.innerHTML=rows.length?rows.map(m=>{const path=m.image_url||"",isVideo=/\\.(mp4|webm|mov)(\\?|$)/i.test(path),media=m.mediaUrl?(isVideo?'<video controls playsinline preload="metadata" src="'+esc(m.mediaUrl)+'"></video>':'<img loading="lazy" src="'+esc(m.mediaUrl)+'" alt="Chat attachment">'):"";return '<div class="thread-message '+(m.sender_id===user.id?"mine":"")+'">'+(m.message?'<div>'+esc(m.message)+'</div>':"")+media+'<small>'+esc(date(m.created_at))+'</small></div>';}).join(""):'<div class="messages-empty">'+tr("Anza mazungumzo kwa kutuma ujumbe.","Start the conversation by sending a message.")+'</div>';box.scrollTop=box.scrollHeight;const upd=await supabase.from("chat_messages").update({is_read:true}).eq("conversation_id",id).neq("sender_id",user.id).eq("is_read",false);if(upd.error)console.warn("Could not mark messages as read:",upd.error.message);}
 function subscribeToMessages(){
  if(realtimeChannel) supabase.removeChannel(realtimeChannel);
  realtimeChannel=supabase.channel("zune-buyer-messages-"+user.id)
