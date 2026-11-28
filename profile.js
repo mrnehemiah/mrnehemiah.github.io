@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import QRCode from "https://esm.sh/qrcode@1.5.4";
 
 const root = document.getElementById("profile-root");
 const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -35,6 +36,10 @@ function avatarMarkup(name, extraClass = "") {
     : '<div class="personal-avatar personal-avatar-fallback ' + extraClass + '">' + esc(initials(name)) + '</div>';
 }
 
+function verifiedBadge() {
+  if (profile.is_verified !== true) return "";
+  return `<span class="personal-verified-badge" role="img" aria-label="Akaunti imethibitishwa" title="Verified Account"><svg viewBox="-30 -30 60 60" aria-hidden="true"><g fill="#F28C28"><rect x="-22" y="-22" width="44" height="44" rx="6"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(30)"/><rect x="-22" y="-22" width="44" height="44" rx="6" transform="rotate(60)"/></g><path d="M-9 0 L-3 6 L10 -7" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+}
 function statusLabel() {
   const status = String(profile.account_status || "active").toLowerCase();
   if (status === "suspended") return "Akaunti imesitishwa";
@@ -61,7 +66,7 @@ function render() {
           ${editing ? '<label class="photo-edit" for="profile-photo" title="Badilisha picha" aria-label="Badilisha picha">✎</label><input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden>' : ""}
         </div>
         <div class="identity-copy">
-          <h3>${esc(name)}</h3>
+          <h3>${verifiedBadge()}${esc(name)}</h3>
           <p>${esc(user.email || "")}</p>
           <div class="identity-badges">
             <span class="status-pill">${esc(profile.role === "vendor" ? "MUUZAJI" : profile.role === "admin" ? "ADMIN" : "MTEJA")}</span>
@@ -77,6 +82,18 @@ function render() {
     <p class="page-footnote">ⓏⓊⓃⒺ MARKETPLACE · 2.0</p>
   `;
 
+  if (!editing && profile.zune_id) {
+    const canvas = $("#zune-id-qr");
+    QRCode.toCanvas(canvas, `ZUNE:${profile.zune_id}`, { width: 148, margin: 1, errorCorrectionLevel: "M", color: { dark: "#123d2c", light: "#ffffff" } }).catch(error => {
+      console.warn("ZUNE ID QR generation failed:", error);
+      const context = canvas?.getContext("2d");
+      if (context) { context.clearRect(0, 0, canvas.width, canvas.height); context.fillStyle = "#64756b"; context.font = "11px sans-serif"; context.textAlign = "center"; context.fillText("QR haipatikani", 74, 74); }
+    });
+    $("#copy-zune-id")?.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(String(profile.zune_id)); showMessage("ZUNE ID imenakiliwa."); }
+      catch { showMessage("Imeshindikana kunakili. Nakili ZUNE ID mwenyewe.", true); }
+    });
+  }
   if (editing) {
     $("#personal-form").addEventListener("submit", savePersonal);
     $("#cancel-personal").addEventListener("click", () => {
@@ -120,6 +137,14 @@ function readOnlyMarkup() {
       <div class="detail-item detail-wide"><span>Anwani ya makazi</span><strong>${display(profile.residential_address)}</strong></div>
     </div>
     <div class="details-heading secondary-heading">UTAMBULISHO WA ZUNE</div>
+    <section class="zune-id-card" aria-label="ZUNE ID QR Code">
+      <div class="zune-id-copy">
+        <span class="zune-id-label">ZUNE ID YAKO</span>
+        <strong id="zune-id-value">${display(profile.zune_id)}</strong>
+        <button type="button" class="copy-zune-id" id="copy-zune-id" ${profile.zune_id ? "" : "disabled"}>Nakili ZUNE ID</button>
+      </div>
+      <div class="zune-qr-wrap"><canvas id="zune-id-qr" width="148" height="148" aria-label="QR Code ya ZUNE ID"></canvas><small>Scan ZUNE ID</small></div>
+    </section>
     <div class="details-grid identity-grid">
       <div class="detail-item"><span>ZUNE ID</span><strong>${display(profile.zune_id)}</strong></div>
       <div class="detail-item"><span>Tarehe ya kufungua akaunti</span><strong>${profile.created_at ? esc(new Date(profile.created_at).toLocaleDateString("sw-TZ", {day:"numeric",month:"long",year:"numeric"})) : '<span class="muted">Haijulikani</span>'}</strong></div>
