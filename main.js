@@ -15,7 +15,7 @@ import {
   getCustomerSession,
   getCurrentCustomer,
   logoutCustomer
-} from "./auth.js";
+} from "./auth.js?v=jsdelivr-sdk-20261128";
 
 
 
