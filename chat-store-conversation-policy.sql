@@ -17,3 +17,8 @@ with check (
       and s.is_active = true
   )
 );
+
+-- Keep one general (non-product) chat per buyer and seller.
+create unique index if not exists unique_direct_seller_chat
+on public.chat_conversations (buyer_id, seller_id)
+where product_id is null;
