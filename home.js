@@ -2386,7 +2386,7 @@ function updateProductArea() {
   if(arrivals){
     const newest=source.filter(p=>p.stock_quantity==null||Number(p.stock_quantity)>0)
       .sort((a,b)=>new Date(b.created_at||0).getTime()-new Date(a.created_at||0).getTime()).slice(0,6);
-    arrivals.innerHTML=newest.length?newest.map(productCard).join():'<div class="z-empty-state">'+tx("empty")+'</div>';
+    arrivals.innerHTML=newest.length?newest.map(productCard).join(""):'<div class="z-empty-state">'+tx("empty")+'</div>';
   }
   const trending=document.getElementById("z-trending-products");
   if(trending)trending.innerHTML=renderProductCards(rankHomeProducts(source,"trending"));
