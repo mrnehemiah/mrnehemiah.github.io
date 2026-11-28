@@ -69,13 +69,33 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const expectedSecret = Deno.env.get("ZUNE_PUSH_WEBHOOK_SECRET");
-  if (!expectedSecret) return json({ error: "ZUNE_PUSH_WEBHOOK_SECRET is not configured" }, 500);
-  if (req.headers.get("x-zune-push-secret") !== expectedSecret) {
-    return json({ error: "Unauthorized" }, 401);
-  }
+  const suppliedSecret = req.headers.get("x-zune-push-secret");
+  if (!suppliedSecret) return json({ error: "Unauthorized" }, 401);
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+      ?? JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}").default;
+    if (!serviceKey) return json({ error: "Supabase server key is unavailable" }, 500);
+
+    const admin = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    // Keep the current webhook secret valid during rotation. Once the database
+    // trigger switches to Vault, the new verifier path authenticates it.
+    const legacySecret = Deno.env.get("ZUNE_PUSH_WEBHOOK_SECRET");
+    let authorized = Boolean(legacySecret && suppliedSecret === legacySecret);
+    if (!authorized) {
+      const { data: validSecret, error: secretError } = await admin.rpc(
+        "zune_verify_push_webhook_secret",
+        { p_secret: suppliedSecret },
+      );
+      if (secretError) throw secretError;
+      authorized = validSecret === true;
+    }
+    if (!authorized) return json({ error: "Unauthorized" }, 401);
+
     const firebaseRaw = Deno.env.get("FIREBASE_SERVICE_ACCOUNT_JSON");
     if (!firebaseRaw) return json({ error: "FIREBASE_SERVICE_ACCOUNT_JSON is not configured" }, 500);
     const serviceAccount = JSON.parse(firebaseRaw);
@@ -87,15 +107,6 @@ Deno.serve(async (req: Request) => {
     const notification = event.record ?? event.notification ?? event;
     const userId = notification.user_id;
     if (!userId || !notification.id) return json({ error: "Notification record is missing id or user_id" }, 400);
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
-      ?? JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}").default;
-    if (!serviceKey) return json({ error: "Supabase server key is unavailable" }, 500);
-
-    const admin = createClient(supabaseUrl, serviceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
 
     const { data: tokens, error: tokenError } = await admin
       .from("zune_push_tokens")
